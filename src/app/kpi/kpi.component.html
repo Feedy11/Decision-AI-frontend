@@ -1,0 +1,198 @@
+<div class="upload-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <div>
+        <h1>KPIs</h1>
+        <p>Indicateurs clés calculés depuis votre dernier dashboard IA</p>
+      </div>
+    </div>
+    <span class="ai-badge">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+      </svg>
+      Gemini RAG
+    </span>
+  </div>
+
+  <!-- Sélection dataset -->
+  <div class="upload-card" style="margin-bottom:16px">
+    <div class="table-toolbar" style="border:none; padding:0">
+      <select
+        class="form-select"
+        [(ngModel)]="selectedDatasetId"
+        (ngModelChange)="onDatasetChange()"
+        style="width:340px"
+      >
+        <option [ngValue]="null">-- Sélectionner un dataset --</option>
+        <option *ngFor="let d of datasets" [ngValue]="d.id">
+          #{{ d.id }} — {{ d.original_filename }}
+        </option>
+      </select>
+
+      <!-- Refresh -->
+      <button
+        class="btn-save"
+        style="margin-left:10px"
+        [disabled]="!lastDashboard || isExecuting"
+        (click)="executeDashboard()"
+      >
+        <svg *ngIf="!isExecuting" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10"></polyline>
+          <path d="M3.51 15a9 9 0 1 0 .49-3.5"></path>
+        </svg>
+        <svg *ngIf="isExecuting" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        </svg>
+        {{ isExecuting ? 'Calcul...' : 'Recalculer' }}
+      </button>
+
+      <!-- Info dashboard source -->
+      <div class="dashboard-source" *ngIf="lastDashboard && !isLoadingDashboard">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        Dashboard #{{ lastDashboard.id }} · {{ formatDate(lastDashboard.created_at) }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Loader -->
+  <div class="table-loader" *ngIf="isLoadingDashboard || isExecuting">
+    <svg class="spin" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5">
+      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+    </svg>
+    {{ isLoadingDashboard ? 'Chargement du dashboard...' : 'Calcul des KPIs...' }}
+  </div>
+
+  <!-- KPIs calculés -->
+  <div *ngIf="executeResult && !isExecuting">
+
+    <!-- Grille KPIs principaux -->
+    <div class="kpi-grid">
+      <div class="kpi-big-card" *ngFor="let kpi of successfulKpis">
+        <div class="kbi-top">
+          <div class="kbi-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+          </div>
+          <div class="kbi-trend" [class.up]="getTrend(kpi)==='up'" [class.down]="getTrend(kpi)==='down'">
+            <svg *ngIf="getTrend(kpi)==='up'" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+            <svg *ngIf="getTrend(kpi)==='down'" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+        </div>
+
+        <div class="kbi-value">{{ getKpiValue(kpi) }}</div>
+        <div class="kbi-name">{{ kpi.kpi_name }}</div>
+        <div class="kbi-col">{{ kpi.target_column }}</div>
+
+        <!-- Description depuis la spec Gemini -->
+        <p class="kbi-desc" *ngIf="getKpiSpec(kpi.kpi_name)">
+          {{ getKpiSpec(kpi.kpi_name)!.description }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Tableau détaillé -->
+    <div class="upload-card table-card" style="margin-top:20px">
+      <div class="table-toolbar">
+        <span class="section-title-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+          Détail des KPIs
+        </span>
+        <span class="total-count">{{ successfulKpis.length }} calculés · {{ failedKpis.length }} erreurs</span>
+      </div>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>KPI</th>
+              <th>Colonne cible</th>
+              <th>Valeur calculée</th>
+              <th>Formule</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- KPIs réussis -->
+            <tr *ngFor="let kpi of successfulKpis">
+              <td>
+                <div>
+                  <span class="file-name-cell">{{ kpi.kpi_name }}</span>
+                  <span class="file-id" *ngIf="getKpiSpec(kpi.kpi_name)">
+                    {{ getKpiSpec(kpi.kpi_name)!.pandas_function }}
+                  </span>
+                </div>
+              </td>
+              <td><span class="type-chip">{{ kpi.target_column || '—' }}</span></td>
+              <td>
+                <span class="kpi-val-cell">{{ getKpiValue(kpi) }}</span>
+              </td>
+              <td>
+                <code class="formula-cell" *ngIf="getKpiSpec(kpi.kpi_name)">
+                  {{ getKpiSpec(kpi.kpi_name)!.logic_hint }}
+                </code>
+                <span class="muted-cell" *ngIf="!getKpiSpec(kpi.kpi_name)">{{ kpi.function_used || '—' }}</span>
+              </td>
+              <td>
+                <span class="status-badge status-processed">✓ OK</span>
+              </td>
+            </tr>
+            <!-- KPIs en erreur -->
+            <tr *ngFor="let kpi of failedKpis">
+              <td><span class="file-name-cell">{{ kpi.kpi_name }}</span></td>
+              <td><span class="type-chip">{{ kpi.target_column || '—' }}</span></td>
+              <td><span class="muted-cell">—</span></td>
+              <td><span class="muted-cell">—</span></td>
+              <td>
+                <span class="status-badge status-failed" [title]="kpi.error || ''">✗ Erreur</span>
+              </td>
+            </tr>
+            <!-- Vide -->
+            <tr *ngIf="successfulKpis.length === 0 && failedKpis.length === 0">
+              <td colspan="5" class="empty-cell">
+                <div class="empty-state"><p>Aucun KPI disponible.</p></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Redirect si pas de dashboard -->
+    <div class="no-dashboard upload-card" *ngIf="!lastDashboard && selectedDatasetId && !isLoadingDashboard">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+      </svg>
+      <h3>Aucun dashboard trouvé</h3>
+      <p>Générez d'abord un dashboard depuis la page <strong>Dashboard IA</strong> pour ce dataset.</p>
+      <a routerLink="/dashboard" class="btn-save" style="text-decoration:none; display:inline-flex">
+        Aller au Dashboard IA
+      </a>
+    </div>
+  </div>
+
+  <!-- Empty state initial -->
+  <div class="empty-state-full" *ngIf="!selectedDatasetId">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+    </svg>
+    <h3>Sélectionnez un dataset</h3>
+    <p>Choisissez un dataset pour afficher ses KPIs calculés par l'IA.</p>
+  </div>
+
+</div>

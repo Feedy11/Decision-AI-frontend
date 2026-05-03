@@ -1,0 +1,219 @@
+<!-- ===== Bouton flottant Chat IA (fixé en bas à droite) ===== -->
+<button
+  *ngIf="!isPublicRoute"
+  class="chat-fab"
+  [class.open]="isOpen"
+  (click)="togglePanel()"
+  title="{{ isOpen ? 'Fermer le chat' : 'Ouvrir l\'assistant IA' }}"
+>
+  <svg *ngIf="!isOpen" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+  </svg>
+  <svg *ngIf="isOpen" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <line x1="18" y1="6" x2="6" y2="18"></line>
+    <line x1="6" y1="6" x2="18" y2="18"></line>
+  </svg>
+  <span class="fab-badge" *ngIf="unreadCount > 0 && !isOpen"></span>
+</button>
+
+<!-- ===== Panel chat push (largeur 0 → 360px, pleine hauteur) ===== -->
+<div class="chat-panel" [class.open]="isOpen" *ngIf="!isPublicRoute">
+
+  <!-- Header -->
+  <div class="chat-header">
+    <div class="chat-header-left">
+      <div class="chat-avatar">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+      </div>
+      <div>
+        <span class="chat-title">Assistant IA</span>
+        <span class="chat-status">
+          <span class="status-dot" [class.online]="!isTyping" [class.typing]="isTyping"></span>
+          {{ isTyping ? 'En train d\'écrire...' : 'En ligne' }}
+        </span>
+      </div>
+    </div>
+    <div style="display:flex; gap:4px">
+      <!-- Effacer -->
+      <button class="hdr-btn" (click)="clearMessages()" title="Effacer">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+        </svg>
+      </button>
+      <!-- Fermer (X) -->
+      <button class="hdr-btn" (click)="togglePanel()" title="Fermer">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Context bar -->
+  <div class="context-bar" *ngIf="activeDatasetName">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+      <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+      <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+    </svg>
+    <span>Contexte : <strong>{{ activeDatasetName }}</strong></span>
+    <button class="ctx-clear" (click)="clearContext()">×</button>
+  </div>
+
+  <!-- Dataset picker -->
+  <div class="dataset-picker" *ngIf="!activeDatasetId || showDatasetPicker">
+    <div class="picker-label">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+      </svg>
+      <span>Sélectionnez un dataset :</span>
+    </div>
+    <div class="picker-list">
+      <button
+        class="picker-item"
+        *ngFor="let ds of datasets"
+        [class.active]="ds.id === activeDatasetId"
+        (click)="onDatasetSelect(ds.id)"
+      >
+        {{ ds.original_filename }}
+      </button>
+      <div class="picker-empty" *ngIf="datasets.length === 0">
+        Aucun dataset disponible. Uploadez-en un d'abord.
+      </div>
+    </div>
+  </div>
+
+  <!-- Conversation list toggle -->
+  <div class="conv-bar" *ngIf="activeDatasetId && conversations.length > 1">
+    <button class="conv-toggle-btn" (click)="showConvList = !showConvList">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+      </svg>
+      {{ showConvList ? 'Masquer' : 'Conversations' }} ({{ conversations.length }})
+    </button>
+    <button class="conv-new-btn" (click)="createNewConversation()" title="Nouvelle conversation">+</button>
+    <button class="conv-new-btn" *ngIf="isAdmin" (click)="rebuildIndex()" title="Reconstruire l'index">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="conv-list" *ngIf="showConvList && conversations.length > 0">
+    <button
+      class="conv-item"
+      *ngFor="let conv of conversations"
+      [class.active]="conv.id === activeConvId"
+      (click)="selectConversation(conv)"
+    >
+      <span class="conv-title">{{ getConvTitle(conv) }}</span>
+      <span class="conv-date">{{ formatConvDate(conv.created_at) }}</span>
+    </button>
+  </div>
+
+  <!-- Messages -->
+  <div class="chat-messages" #messagesContainer>
+
+    <!-- Welcome screen -->
+    <div class="msg-welcome" *ngIf="messages.length === 0">
+      <div class="welcome-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+      </div>
+      <h3>Bonjour, je suis votre assistant IA</h3>
+      <p>Posez-moi des questions sur vos données, vos KPIs ou demandez-moi d'analyser un dataset.</p>
+      <div class="suggestions">
+        <button class="suggestion-chip" *ngFor="let s of suggestions" (click)="sendSuggestion(s)">
+          {{ s }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Messages list -->
+    <div
+      class="msg-row"
+      *ngFor="let msg of messages"
+      [class.msg-user]="msg.role === 'user'"
+      [class.msg-ai]="msg.role === 'assistant'"
+    >
+      <div class="msg-avatar" *ngIf="msg.role === 'assistant'">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+      </div>
+      <div class="msg-bubble">
+        <div class="msg-content" [innerHTML]="msg.content"></div>
+
+        <!-- ApexChart Container -->
+        <div *ngIf="msg.chartSpec" class="msg-chart-container" style="margin-top: 10px; border-radius: 8px; background: white; padding: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; width: 100%; min-width: 250px;">
+          <div [id]="'chat-chart-' + msg.id"></div>
+        </div>
+
+        <!-- Chunks / Sources -->
+        <div *ngIf="msg.chunk_ids && msg.chunk_ids.length > 0" class="msg-chunks" style="margin-top: 8px; font-size: 11px; color: #64748b; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block;">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px; margin-top: -2px;">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Sources: {{ msg.chunk_ids.join(', ') }}
+        </div>
+
+        <div class="msg-time">{{ formatTime(msg.timestamp) }}</div>
+      </div>
+    </div>
+
+    <!-- Typing indicator -->
+    <div class="msg-row msg-ai" *ngIf="isTyping">
+      <div class="msg-avatar">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+      </div>
+      <div class="msg-bubble typing-bubble">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Input area -->
+  <div class="chat-input-area">
+    <div class="quick-actions" *ngIf="messages.length > 0 && quickActions.length > 0">
+      <button class="quick-btn" *ngFor="let q of quickActions" (click)="sendSuggestion(q)">{{ q }}</button>
+    </div>
+    <div class="input-row">
+      <textarea
+        class="chat-input"
+        [(ngModel)]="inputText"
+        (keydown)="onKeydown($event)"
+        [disabled]="isTyping"
+        placeholder="Posez une question sur vos données..."
+        rows="1"
+        #inputRef
+      ></textarea>
+      <button class="send-btn" (click)="sendMessage()" [disabled]="!inputText.trim() || isTyping">
+        <svg *ngIf="!isTyping" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+        <svg *ngIf="isTyping" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        </svg>
+      </button>
+    </div>
+    <div class="input-hint">
+      <kbd>Enter</kbd> envoyer · <kbd>Shift+Enter</kbd> nouvelle ligne
+    </div>
+  </div>
+
+</div>

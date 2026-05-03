@@ -1,0 +1,84 @@
+<div class="users-page">
+  <h1>Gestion des utilisateurs</h1>
+
+  <div class="error" *ngIf="error">{{ error }}</div>
+
+  <!-- Create user -->
+  <section class="card">
+    <h2>Créer un utilisateur</h2>
+    <form (ngSubmit)="create()" #form="ngForm">
+      <div class="field">
+        <label>Email</label>
+        <input
+          type="email"
+          name="email"
+          [(ngModel)]="newUser.email"
+          required
+        />
+      </div>
+      <div class="field">
+        <label>Mot de passe</label>
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="newUser.password"
+          required
+          minlength="8"
+        />
+      </div>
+      <div class="field">
+        <label>Nom complet</label>
+        <input
+          type="text"
+          name="full_name"
+          [(ngModel)]="newUser.full_name"
+        />
+      </div>
+      <div class="field checkbox">
+        <label>
+          <input
+            type="checkbox"
+            name="is_superuser"
+            [(ngModel)]="newUser.is_superuser"
+          />
+          Super administrateur
+        </label>
+      </div>
+      <button type="submit" [disabled]="creating || form.invalid">
+        {{ creating ? 'Création...' : 'Créer' }}
+      </button>
+    </form>
+  </section>
+
+  <!-- List users -->
+  <section class="card">
+    <h2>Utilisateurs ({{ total }})</h2>
+    <div *ngIf="loading">Chargement...</div>
+    <table *ngIf="!loading && users.length">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Nom</th>
+          <th>Rôle</th>
+          <th>Actif</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of users">
+          <td>{{ u.email }}</td>
+          <td>{{ u.full_name || '-' }}</td>
+          <td>{{ u.is_superuser ? 'Admin' : 'Utilisateur' }}</td>
+          <td>{{ u.is_active ? 'Oui' : 'Non' }}</td>
+          <td>
+            <button type="button" (click)="deleteUser(u)">Supprimer</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div *ngIf="!loading && !users.length">
+      Aucun utilisateur.
+    </div>
+  </section>
+</div>
+

@@ -1,0 +1,186 @@
+<div class="auth-wrapper">
+
+  <!-- Left Panel -->
+  <div class="brand-panel">
+    <div class="brand-content">
+
+      <div class="brand-logo">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="12" fill="white" fill-opacity="0.15"/>
+          <path d="M10 20 L20 10 L30 20 L20 30 Z" fill="white" fill-opacity="0.8"/>
+          <circle cx="20" cy="20" r="5" fill="white"/>
+        </svg>
+        <span class="brand-name">DataInsight AI</span>
+      </div>
+
+      <div class="brand-tagline">
+        <h1>Transformez vos données<br/>en décisions</h1>
+        <p>
+          Analyses intelligentes optimisées par l'IA. Importez, analysez et
+          visualisez vos indicateurs clés de performance en quelques secondes.
+        </p>
+      </div>
+
+      <div class="brand-stats">
+        <div class="stat">
+          <span class="stat-number">98%</span>
+          <span class="stat-label">Précision</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-number">3s</span>
+          <span class="stat-label">Avg. aperçu</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-number">500+</span>
+          <span class="stat-label">KPI modèles</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="form-panel">
+    <div class="form-card">
+
+      <div class="form-header">
+        <div class="header-icon">
+          <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+            <rect width="40" height="40" rx="10" fill="url(#hGrad)"/>
+            <path d="M10 20 L20 10 L30 20 L20 30 Z" fill="white" fill-opacity="0.85"/>
+            <circle cx="20" cy="20" r="5" fill="white"/>
+            <defs>
+              <linearGradient id="hGrad" x1="0" y1="0" x2="40" y2="40">
+                <stop offset="0%" stop-color="#2563EB"/>
+                <stop offset="100%" stop-color="#7C3AED"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <h2>Se connecter</h2>
+        <p>Accédez à votre espace DataInsight AI</p>
+      </div>
+
+      <!-- Erreur globale backend -->
+      <div class="alert-error" *ngIf="errorMsg">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        {{ errorMsg }}
+      </div>
+
+      <!-- FORM — ReactiveFormsModule -->
+      <form class="auth-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+
+        <!-- EMAIL -->
+        <div class="field-group" [class.has-error]="email?.invalid && email?.touched">
+          <label for="email">Adresse email</label>
+
+          <div class="input-wrapper">
+            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4
+                       c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            <input
+              type="email"
+              id="email"
+              class="form-input"
+              placeholder="votre@email.com"
+              formControlName="email"
+              autocomplete="email"
+            />
+          </div>
+
+          <!-- Erreurs email -->
+          <span class="field-error" *ngIf="email?.touched && email?.hasError('required')">
+            L'adresse email est obligatoire.
+          </span>
+          <span class="field-error" *ngIf="email?.touched && email?.hasError('email')">
+            Format d'email invalide.
+          </span>
+        </div>
+
+        <!-- PASSWORD -->
+        <div class="field-group" [class.has-error]="password?.invalid && password?.touched">
+          <label for="password">
+            Mot de passe
+            <a routerLink="/forgot-password" class="forgot-link">Mot de passe oublié ?</a>
+          </label>
+
+          <div class="input-wrapper">
+            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              id="password"
+              class="form-input"
+              placeholder="••••••••"
+              formControlName="password"
+              autocomplete="current-password"
+            />
+            <button type="button" class="toggle-password" (click)="togglePassword()" tabindex="-1">
+              <svg *ngIf="!showPassword" width="18" height="18" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg *ngIf="showPassword" width="18" height="18" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20
+                         c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94
+                         M9.9 4.24A9.12 9.12 0 0 1 12 4
+                         c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19
+                         m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Erreurs password -->
+          <span class="field-error" *ngIf="password?.touched && password?.hasError('required')">
+            Le mot de passe est obligatoire.
+          </span>
+          <span class="field-error" *ngIf="password?.touched && password?.hasError('minlength')">
+            Minimum 6 caractères requis.
+          </span>
+        </div>
+
+        <!-- SUBMIT -->
+        <button type="submit" class="btn-primary" [disabled]="loginForm.invalid || isLoading">
+          <span *ngIf="!isLoading">Se connecter</span>
+          <span class="btn-loader" *ngIf="isLoading">
+            <svg class="spin" width="18" height="18" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83
+                       M16.24 16.24l2.83 2.83M2 12h4M18 12h4
+                       M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+            </svg>
+            Connexion...
+          </span>
+        </button>
+
+      </form>
+
+      <div class="info-note">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        L'accès à votre compte est géré par votre administrateur.
+      </div>
+
+    </div>
+  </div>
+
+</div>

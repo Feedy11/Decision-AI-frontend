@@ -1,0 +1,241 @@
+<div class="dash-page">
+
+  <!-- Header -->
+  <div class="dash-header">
+    <div>
+      <h1 class="dash-title">Dashboard IA</h1>
+      <p class="dash-sub">Générez des KPIs et visualisations depuis vos données via Gemini</p>
+    </div>
+    <span class="ai-badge">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+      </svg>
+      Gemini RAG
+    </span>
+  </div>
+
+  <!-- Barre de génération -->
+  <div class="gen-bar">
+    <select class="form-select" [(ngModel)]="selectedDatasetId" (ngModelChange)="loadSavedDashboards()">
+      <option [ngValue]="null">-- Sélectionner un dataset --</option>
+      <option *ngFor="let d of datasets" [ngValue]="d.id">#{{ d.id }} — {{ d.original_filename }}</option>
+    </select>
+
+    <button class="btn-gen" [disabled]="!selectedDatasetId || isGenerating" (click)="generateDashboard()">
+      <svg *ngIf="!isGenerating" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+      </svg>
+      <svg *ngIf="isGenerating" class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+      </svg>
+      {{ isGenerating ? 'Génération Gemini...' : 'Générer le dashboard' }}
+    </button>
+
+    <button class="btn-report" [disabled]="!selectedDatasetId" (click)="goToReport()" id="dashboard-generate-report-btn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+      </svg>
+      Générer le rapport
+    </button>
+
+    <!-- Loader global discret -->
+    <div class="loading-pill" *ngIf="isLoading">
+      <svg class="spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+      </svg>
+      {{ isExecuting ? 'Calcul des KPIs...' : 'Chargement des graphiques...' }}
+    </div>
+  </div>
+
+  <!-- Layout principal -->
+  <div class="dash-layout" *ngIf="selectedDashboard">
+
+    <!-- Sidebar historique -->
+    <div class="dash-sidebar">
+      <div class="sidebar-title">Versions sauvegardées</div>
+      <div class="dash-history">
+        <div
+          class="history-item"
+          *ngFor="let d of savedDashboards"
+          [class.active]="selectedDashboard.id === d.id"
+          (click)="selectDashboard(d)"
+        >
+          <div class="hi-top">
+            <span class="hi-id">#{{ d.id }}</span>
+            <span class="hi-count">{{ d.dashboard_charts.length }} charts</span>
+          </div>
+          <div class="hi-date">{{ formatDate(d.created_at) }}</div>
+          <div class="hi-kpis">{{ d.executive_summary_kpis.length }} KPIs</div>
+        </div>
+        <div class="history-empty" *ngIf="savedDashboards.length === 0">
+          <p>Aucune version</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenu principal -->
+    <div class="dash-main">
+
+      <!-- Tabs -->
+      <div class="dash-tabs">
+        <button class="dtab" [class.active]="activeTab==='overview'" (click)="activeTab='overview'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect>
+          </svg>
+          Vue d'ensemble
+        </button>
+        <button class="dtab" [class.active]="activeTab==='charts'" (click)="activeTab='charts'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          Graphiques
+          <span class="dtab-count" *ngIf="successfulCharts.length > 0">{{ successfulCharts.length }}</span>
+        </button>
+      </div>
+
+      <!-- ══ Vue d'ensemble ══ -->
+      <div [hidden]="activeTab!=='overview'">
+
+        <!-- KPIs calculés (après exécution) -->
+        <div class="kpi-row" *ngIf="successfulKpis.length > 0">
+          <div class="kpi-tile" *ngFor="let kpi of successfulKpis">
+            <span class="kpi-tile-name">{{ kpi.kpi_name }}</span>
+            <span class="kpi-tile-val">{{ getKpiValue(kpi) }}</span>
+            <span class="kpi-tile-col">{{ kpi.target_column }}</span>
+          </div>
+        </div>
+
+        <!-- Skeleton KPIs si en cours de calcul -->
+        <div class="kpi-row" *ngIf="isExecuting">
+          <div class="kpi-tile skeleton" *ngFor="let _ of selectedDashboard!.executive_summary_kpis">
+            <span class="skel-line short"></span>
+            <span class="skel-line tall"></span>
+            <span class="skel-line short"></span>
+          </div>
+        </div>
+
+        <!-- Specs KPI Gemini -->
+        <div class="section-title" style="margin-top:20px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          KPIs recommandés par l'IA
+        </div>
+
+        <div class="kpi-cards">
+          <div class="kpi-card" *ngFor="let kpi of selectedDashboard!.executive_summary_kpis">
+            <div class="kpi-card-top">
+              <span class="kpi-icon">📊</span>
+              <span class="kpi-card-name">{{ kpi.kpi_name }}</span>
+            </div>
+            <div class="kpi-card-col">{{ kpi.target_column }}</div>
+            <p class="kpi-card-desc">{{ kpi.description }}</p>
+            <div class="kpi-card-hint"><code>{{ kpi.logic_hint }}</code></div>
+          </div>
+        </div>
+
+        <!-- Specs graphiques -->
+        <div class="section-title" style="margin-top:24px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          Graphiques recommandés
+        </div>
+
+        <div class="chart-specs">
+          <div class="chart-spec-row" *ngFor="let c of selectedDashboard!.dashboard_charts">
+            <div class="csr-left">
+              <span class="chart-rank">#{{ c.rank }}</span>
+              <span class="chart-type-icon">{{ getChartTypeIcon(c.chart_type) }}</span>
+              <div>
+                <span class="csr-title">{{ c.title }}</span>
+                <span class="csr-rel">{{ c.relationship }}</span>
+              </div>
+            </div>
+            <div class="csr-right">
+              <div class="strength-mini">
+                <div class="sm-bar">
+                  <div class="sm-fill" [style.width.%]="getStrengthPct(c.strength_score)"></div>
+                </div>
+                <span>{{ getStrengthPct(c.strength_score) }}%</span>
+              </div>
+              <span class="csr-type">{{ c.chart_type }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ Graphiques ══ -->
+      <div [hidden]="activeTab!=='charts'">
+
+        <!-- En cours de chargement -->
+        <div class="charts-grid" *ngIf="isLoading">
+          <div class="chart-card skeleton-card" *ngFor="let _ of [1,2,3,4]">
+            <div class="skel-line short" style="margin-bottom:8px"></div>
+            <div class="skel-chart"></div>
+          </div>
+        </div>
+
+        <!-- Graphiques prêts -->
+        <div class="charts-grid" *ngIf="!isLoading && successfulCharts.length > 0">
+          <div class="chart-card" *ngFor="let c of successfulCharts">
+            <div class="chart-card-header">
+              <div>
+                <span class="chart-card-title">{{ c.chart_title }}</span>
+                <span class="chart-card-sub">{{ c.x_axis }} × {{ c.y_axis }}</span>
+              </div>
+              <span class="csr-type">{{ c.chart_type }}</span>
+            </div>
+            <p class="chart-insight" *ngIf="c.insight">{{ c.insight }}</p>
+
+            <!-- Erreur data -->
+            <div class="apex-error" *ngIf="chartDataMap[c.chart_index] && !chartDataMap[c.chart_index].execution_success">
+              ⚠️ {{ chartDataMap[c.chart_index].error }}
+            </div>
+
+            <!-- Container ApexCharts -->
+            <div [id]="'chart-' + c.chart_index" class="apex-container"></div>
+          </div>
+
+          <!-- Charts en erreur -->
+          <div class="chart-card err-card" *ngFor="let c of executeResult!.chart_results | failedCharts">
+            <div class="chart-card-header">
+              <span class="chart-card-title">{{ c.chart_title }}</span>
+              <span class="err-badge">Erreur</span>
+            </div>
+            <p class="err-msg">{{ c.error }}</p>
+          </div>
+        </div>
+
+        <!-- Pas encore exécuté -->
+        <div class="no-exec" *ngIf="!isLoading && successfulCharts.length === 0">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          <p>Les graphiques se chargent automatiquement...</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div class="dash-empty" *ngIf="!selectedDashboard">
+    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+    </svg>
+    <h3>Aucun dashboard sélectionné</h3>
+    <p>Choisissez un dataset et cliquez sur <strong>Générer le dashboard</strong> pour commencer.</p>
+  </div>
+
+</div>

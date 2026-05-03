@@ -1,0 +1,463 @@
+<div class="upload-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+
+      <div class="header-divider"></div>
+      <div>
+        <h1>Nettoyage des données</h1>
+        <p>Appliquez des règles de nettoyage et analysez la qualité de vos données</p>
+      </div>
+    </div>
+    <span class="ai-badge">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+      </svg>
+      IA activée
+    </span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-bar">
+    <button class="tab-btn" [class.active]="activeTab==='clean'" (click)="activeTab='clean'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="3 6 5 6 21 6"></polyline>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+      </svg>
+      Nettoyer
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='quality'" (click)="setTab('quality')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+      </svg>
+      Qualité
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='profiles'" (click)="setTab('profiles')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+      </svg>
+      Profils
+    </button>
+    <button class="tab-btn" [class.active]="activeTab==='history'" (click)="setTab('history')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      Historique
+    </button>
+  </div>
+
+  <!-- ===== TAB : NETTOYER ===== -->
+  <div *ngIf="activeTab==='clean'">
+    <div class="upload-layout">
+
+      <div class="upload-card">
+        <div class="card-head">
+          <div class="card-head-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+            </svg>
+          </div>
+          <div><h2>Nettoyer un dataset</h2><p>Sélectionnez un dataset et un profil de nettoyage</p></div>
+        </div>
+
+        <div class="field" style="margin-bottom:16px">
+          <label>Dataset à nettoyer <span class="req">*</span></label>
+          <select class="form-select" [(ngModel)]="selectedDatasetId">
+            <option [ngValue]="null">-- Sélectionner un dataset --</option>
+            <option *ngFor="let d of datasets" [ngValue]="d.id">
+              #{{ d.id }} — {{ d.original_filename }} ({{ d.status }})
+            </option>
+          </select>
+        </div>
+
+        <div class="field" style="margin-bottom:16px">
+          <label>Profil de nettoyage</label>
+          <select class="form-select" [(ngModel)]="selectedProfileId">
+            <option [ngValue]="null">-- Profil par défaut --</option>
+            <option *ngFor="let p of profiles" [ngValue]="p.id">
+              {{ p.name }}{{ p.is_default ? ' ✓ défaut' : '' }}
+            </option>
+          </select>
+        </div>
+
+        <div class="pref-row" style="margin-bottom:20px">
+          <div>
+            <span class="pref-name">Sauvegarder comme nouveau dataset</span>
+            <span class="pref-hint">Garde l'original intact et crée une copie nettoyée</span>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" [(ngModel)]="saveAsNew"/>
+            <span class="track"><span class="thumb"></span></span>
+          </label>
+        </div>
+
+        <!-- Résultat nettoyage -->
+        <div class="result-clean" *ngIf="cleanResult">
+          <div class="result-header">
+            <div class="result-icon-ok">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <strong>Nettoyage terminé !</strong>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-chip"><span class="stat-chip-val">{{ cleanResult.rows_before }}</span><span class="stat-chip-label">Lignes avant</span></div>
+            <div class="stat-chip green"><span class="stat-chip-val">{{ cleanResult.rows_after }}</span><span class="stat-chip-label">Lignes après</span></div>
+            <div class="stat-chip blue"><span class="stat-chip-val">{{ cleanResult.duplicates_removed }}</span><span class="stat-chip-label">Doublons supprimés</span></div>
+            <div class="stat-chip orange"><span class="stat-chip-val">{{ cleanResult.missing_values_handled }}</span><span class="stat-chip-label">Valeurs manquantes</span></div>
+            <div class="stat-chip purple"><span class="stat-chip-val">{{ cleanResult.outliers_detected }}</span><span class="stat-chip-label">Outliers détectés</span></div>
+            <div class="stat-chip"><span class="stat-chip-val">{{ cleanResult.data_types_fixed }}</span><span class="stat-chip-label">Types corrigés</span></div>
+          </div>
+          <div class="ops-list">
+            <span class="op-tag" *ngFor="let op of cleanResult.operations_performed">{{ op }}</span>
+          </div>
+        </div>
+
+        <!-- Résultat validation -->
+        <div class="validation-result" *ngIf="validationResult">
+          <div class="val-header" [class.val-ok]="validationResult.valid" [class.val-err]="!validationResult.valid">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline *ngIf="validationResult.valid" points="20 6 9 17 4 12"></polyline>
+              <circle *ngIf="!validationResult.valid" cx="12" cy="12" r="10"></circle>
+              <line *ngIf="!validationResult.valid" x1="12" y1="8" x2="12" y2="12"></line>
+              <line *ngIf="!validationResult.valid" x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            {{ validationResult.valid ? 'Dataset valide' : 'Dataset invalide' }} — {{ validationResult.total_checks }} vérifications
+          </div>
+          <div *ngIf="validationResult.errors.length > 0" class="val-list error-list">
+            <p *ngFor="let e of validationResult.errors">❌ {{ e }}</p>
+          </div>
+          <div *ngIf="validationResult.warnings.length > 0" class="val-list warn-list">
+            <p *ngFor="let w of validationResult.warnings">⚠️ {{ w }}</p>
+          </div>
+        </div>
+
+        <div class="form-actions" style="border-top:none; padding-top:0">
+          <button class="btn-save" [disabled]="!selectedDatasetId || isCleaning" (click)="cleanDataset()">
+            <svg *ngIf="!isCleaning" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>
+            <svg *ngIf="isCleaning" class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            {{ isCleaning ? 'Nettoyage...' : 'Lancer le nettoyage' }}
+          </button>
+          <button class="btn-cancel" [disabled]="!selectedDatasetId || isValidating" (click)="validateDataset()">
+            <svg *ngIf="!isValidating" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <svg *ngIf="isValidating" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            {{ isValidating ? 'Validation...' : 'Valider' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Side panel -->
+      <div class="side-panel">
+        <div class="info-card">
+          <div class="info-card-header">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            Opérations disponibles
+          </div>
+          <ul class="steps">
+            <li><span class="step-n">1</span><span>Valeurs manquantes — drop / fill / interpolate</span></li>
+            <li><span class="step-n">2</span><span>Doublons — suppression automatique</span></li>
+            <li><span class="step-n">3</span><span>Types de données — détection auto</span></li>
+            <li><span class="step-n">4</span><span>Outliers — IQR ou Z-Score</span></li>
+            <li><span class="step-n">5</span><span>Texte — espaces, minuscules</span></li>
+            <li><span class="step-n">6</span><span>Dates — standardisation format</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB : QUALITÉ ===== -->
+  <div *ngIf="activeTab==='quality'">
+    <div class="upload-card" style="margin-bottom:16px">
+      <div class="table-toolbar" style="border:none; padding:0 0 16px">
+        <select class="form-select" [(ngModel)]="selectedDatasetId" style="width:300px">
+          <option [ngValue]="null">-- Choisir un dataset --</option>
+          <option *ngFor="let d of datasets" [ngValue]="d.id">#{{ d.id }} — {{ d.original_filename }}</option>
+        </select>
+        <button class="btn-save" [disabled]="!selectedDatasetId || isLoadingQuality" (click)="loadQuality()" style="margin-left:12px">
+          <svg *ngIf="isLoadingQuality" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          Analyser la qualité
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="qualityData" class="quality-grid">
+      <div class="upload-card quality-score-card">
+        <div class="score-circle" [class.score-high]="qualityData.quality_score>=75" [class.score-mid]="qualityData.quality_score>=50 && qualityData.quality_score<75" [class.score-low]="qualityData.quality_score<50">
+          <span class="score-num">{{ qualityData.quality_score }}</span>
+          <span class="score-label">/ 100</span>
+        </div>
+        <div class="score-meta">
+          <h3>Score de qualité</h3>
+          <p>Dataset #{{ qualityData.dataset_id }}</p>
+          <div class="score-stats"><span>{{ qualityData.total_rows | number }} lignes</span><span>{{ qualityData.total_columns }} colonnes</span></div>
+        </div>
+      </div>
+      <div class="upload-card">
+        <div class="card-header"><div class="card-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></div><div><h3>Valeurs manquantes</h3><p>{{ qualityData.missing_values.percentage }}% du total</p></div></div>
+        <div class="quality-bar-wrap"><div class="quality-bar"><div class="quality-bar-fill warn" [style.width.%]="qualityData.missing_values.percentage"></div></div><span>{{ qualityData.missing_values.total }} valeurs</span></div>
+        <div class="col-list" *ngIf="getMissingCols().length > 0"><div class="col-row" *ngFor="let col of getMissingCols()"><span class="col-name">{{ col.name }}</span><span class="col-count warn-text">{{ col.count }} manquants</span></div></div>
+      </div>
+      <div class="upload-card">
+        <div class="card-header"><div class="card-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></div><div><h3>Doublons</h3><p>{{ qualityData.duplicates.percentage }}% des lignes</p></div></div>
+        <div class="quality-bar-wrap"><div class="quality-bar"><div class="quality-bar-fill err" [style.width.%]="qualityData.duplicates.percentage"></div></div><span>{{ qualityData.duplicates.count }} doublons</span></div>
+      </div>
+      <div class="upload-card" *ngIf="qualityData.validation_errors.length > 0 || qualityData.validation_warnings.length > 0">
+        <div class="card-header"><div class="card-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg></div><div><h3>Validation</h3><p>{{ qualityData.validation_errors.length }} erreurs</p></div></div>
+        <div class="val-list error-list" *ngIf="qualityData.validation_errors.length > 0"><p *ngFor="let e of qualityData.validation_errors">❌ {{ e }}</p></div>
+        <div class="val-list warn-list" *ngIf="qualityData.validation_warnings.length > 0"><p *ngFor="let w of qualityData.validation_warnings">⚠️ {{ w }}</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB : PROFILS ===== -->
+  <div *ngIf="activeTab==='profiles'">
+    <div class="upload-layout">
+
+      <!-- Liste profils -->
+      <div class="upload-card table-card">
+        <div class="table-toolbar">
+          <span class="total-count">{{ profiles.length }} profil(s)</span>
+          <button class="btn-save" (click)="showCreateProfile=true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Nouveau profil
+          </button>
+        </div>
+
+        <div class="table-loader" *ngIf="isLoadingProfiles">
+          <svg class="spin" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          Chargement...
+        </div>
+
+        <div class="table-container" *ngIf="!isLoadingProfiles">
+          <table class="data-table">
+            <thead>
+              <tr><th>Nom</th><th>Val. manquantes</th><th>Doublons</th><th>Outliers</th><th>Défaut</th><th class="text-right">Actions</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngIf="profiles.length === 0">
+                <td colspan="6" class="empty-cell"><div class="empty-state"><p>Aucun profil. Créez-en un !</p></div></td>
+              </tr>
+              <tr *ngFor="let p of profiles">
+                <td><div><span class="file-name-cell">{{ p.name }}</span><span class="file-id">{{ p.description }}</span></div></td>
+                <td><span class="type-chip">{{ p.handle_missing }}</span></td>
+                <td><span class="status-badge" [class.status-processed]="p.remove_duplicates" [class.status-failed]="!p.remove_duplicates">{{ p.remove_duplicates ? 'Oui' : 'Non' }}</span></td>
+                <td><span class="type-chip">{{ p.outlier_method }} / {{ p.outlier_action }}</span></td>
+                <td><span class="status-badge" [class.status-processed]="p.is_default">{{ p.is_default ? '✓ Défaut' : '—' }}</span></td>
+                <td class="actions-cell">
+                  <button class="btn-icon-sm" title="Supprimer" (click)="deleteProfile(p.id, p.name)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Formulaire nouveau profil — avec explications -->
+      <div class="side-panel" *ngIf="showCreateProfile" style="min-width:360px">
+        <div class="upload-card profile-form-card">
+          <div class="card-head">
+            <div class="card-head-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            </div>
+            <div><h2>Nouveau profil</h2></div>
+          </div>
+
+          <!-- Nom & description -->
+          <div class="field"><label>Nom <span class="req">*</span></label>
+            <input type="text" class="form-input" [(ngModel)]="newProfile.name" placeholder="Ex: Profil ventes"/></div>
+          <div class="field mt12"><label>Description</label>
+            <input type="text" class="form-input" [(ngModel)]="newProfile.description" placeholder="Optionnel"/></div>
+
+          <!-- Section : Valeurs manquantes -->
+          <div class="profile-section">
+            <div class="profile-section-title">
+              <span>🕳️ Valeurs manquantes</span>
+            </div>
+
+            <div class="field mt12">
+              <label>Stratégie principale
+                <span class="field-hint">Comment traiter les cellules vides ?</span>
+              </label>
+              <div class="option-cards">
+                <div class="option-card" [class.selected]="newProfile.handle_missing==='fill'" (click)="newProfile.handle_missing='fill'">
+                  <span class="option-icon">🔄</span>
+                  <span class="option-label">fill</span>
+                  <span class="option-desc">Remplacer par une valeur calculée</span>
+                </div>
+                <div class="option-card" [class.selected]="newProfile.handle_missing==='drop'" (click)="newProfile.handle_missing='drop'">
+                  <span class="option-icon">🗑️</span>
+                  <span class="option-label">drop</span>
+                  <span class="option-desc">Supprimer les lignes incomplètes</span>
+                </div>
+                <div class="option-card" [class.selected]="newProfile.handle_missing==='interpolate'" (click)="newProfile.handle_missing='interpolate'">
+                  <span class="option-icon">📐</span>
+                  <span class="option-label">interpolate</span>
+                  <span class="option-desc">Calculer mathématiquement entre deux points</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="field mt12" *ngIf="newProfile.handle_missing==='fill'">
+              <label>Méthode de remplissage
+                <span class="field-hint">Quelle valeur utiliser ?</span>
+              </label>
+              <div class="option-cards">
+                <div class="option-card" [class.selected]="newProfile.missing_fill_strategy==='mean'" (click)="newProfile.missing_fill_strategy='mean'">
+                  <span class="option-icon">➗</span>
+                  <span class="option-label">mean</span>
+                  <span class="option-desc">Moyenne de la colonne</span>
+                </div>
+                <div class="option-card" [class.selected]="newProfile.missing_fill_strategy==='median'" (click)="newProfile.missing_fill_strategy='median'">
+                  <span class="option-icon">📊</span>
+                  <span class="option-label">median</span>
+                  <span class="option-desc">Valeur centrale (ignore les extrêmes)</span>
+                </div>
+                <div class="option-card" [class.selected]="newProfile.missing_fill_strategy==='mode'" (click)="newProfile.missing_fill_strategy='mode'">
+                  <span class="option-icon">🔢</span>
+                  <span class="option-label">mode</span>
+                  <span class="option-desc">Valeur la plus fréquente</span>
+                </div>
+                <div class="option-card" [class.selected]="newProfile.missing_fill_strategy==='constant'" (click)="newProfile.missing_fill_strategy='constant'">
+                  <span class="option-icon">✍️</span>
+                  <span class="option-label">constant</span>
+                  <span class="option-desc">Valeur fixe définie manuellement</span>
+                </div>
+              </div>
+              <div *ngIf="newProfile.missing_fill_strategy==='constant'" class="field mt12">
+                <label>Valeur de remplacement <span class="field-hint">Ex: "Inconnu", 0, "N/A"</span></label>
+                <input type="text" class="form-input" [(ngModel)]="newProfile.missing_fill_value" placeholder="Ex: Inconnu"/>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section : Outliers -->
+          <div class="profile-section">
+            <div class="profile-section-title">
+              <span>🎯 Outliers (valeurs aberrantes)</span>
+            </div>
+            <p class="section-desc">Les outliers sont des anomalies extrêmes (ex: une quantité de 999 quand la normale est 1 ou 2).</p>
+
+            <div class="pref-row">
+              <div><span class="pref-name">Activer la détection</span></div>
+              <label class="toggle"><input type="checkbox" [(ngModel)]="newProfile.detect_outliers"/><span class="track"><span class="thumb"></span></span></label>
+            </div>
+
+            <div *ngIf="newProfile.detect_outliers">
+              <div class="field mt12">
+                <label>Méthode de détection</label>
+                <div class="option-cards">
+                  <div class="option-card" [class.selected]="newProfile.outlier_method==='iqr'" (click)="newProfile.outlier_method='iqr'">
+                    <span class="option-icon">📦</span>
+                    <span class="option-label">IQR</span>
+                    <span class="option-desc">Interquartile — recommandé pour données normales</span>
+                  </div>
+                  <div class="option-card" [class.selected]="newProfile.outlier_method==='zscore'" (click)="newProfile.outlier_method='zscore'">
+                    <span class="option-icon">📉</span>
+                    <span class="option-label">Z-Score</span>
+                    <span class="option-desc">Écarts-types depuis la moyenne</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field mt12">
+                <label>Action sur les outliers</label>
+                <div class="option-cards">
+                  <div class="option-card" [class.selected]="newProfile.outlier_action==='flag'" (click)="newProfile.outlier_action='flag'">
+                    <span class="option-icon">🚩</span>
+                    <span class="option-label">flag</span>
+                    <span class="option-desc">Marquer dans une nouvelle colonne (ne détruit pas les données)</span>
+                  </div>
+                  <div class="option-card" [class.selected]="newProfile.outlier_action==='cap'" (click)="newProfile.outlier_action='cap'">
+                    <span class="option-icon">🔒</span>
+                    <span class="option-label">cap</span>
+                    <span class="option-desc">Plafonner à la limite acceptable (ne supprime pas)</span>
+                  </div>
+                  <div class="option-card danger-card" [class.selected]="newProfile.outlier_action==='remove'" (click)="newProfile.outlier_action='remove'">
+                    <span class="option-icon">❌</span>
+                    <span class="option-label">remove</span>
+                    <span class="option-desc">Supprimer les lignes — irréversible</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section : Options rapides -->
+          <div class="profile-section">
+            <div class="profile-section-title"><span>⚙️ Options rapides</span></div>
+            <div class="pref-list">
+              <div class="pref-row">
+                <div><span class="pref-name">Supprimer les doublons</span><span class="pref-hint">Supprime les lignes 100% identiques</span></div>
+                <label class="toggle"><input type="checkbox" [(ngModel)]="newProfile.remove_duplicates"/><span class="track"><span class="thumb"></span></span></label>
+              </div>
+              <div class="pref-row">
+                <div><span class="pref-name">Corriger les types</span><span class="pref-hint">Convertit les textes en nombres/dates si possible</span></div>
+                <label class="toggle"><input type="checkbox" [(ngModel)]="newProfile.fix_data_types"/><span class="track"><span class="thumb"></span></span></label>
+              </div>
+              <div class="pref-row">
+                <div><span class="pref-name">Nettoyer les espaces</span><span class="pref-hint">Supprime les espaces avant/après les valeurs texte</span></div>
+                <label class="toggle"><input type="checkbox" [(ngModel)]="newProfile.strip_whitespace"/><span class="track"><span class="thumb"></span></span></label>
+              </div>
+              <div class="pref-row">
+                <div><span class="pref-name">Standardiser les dates</span><span class="pref-hint">Uniformise le format des colonnes dates</span></div>
+                <label class="toggle"><input type="checkbox" [(ngModel)]="newProfile.standardize_dates"/><span class="track"><span class="thumb"></span></span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions" style="border-top:none; padding-top:16px">
+            <button class="btn-cancel" (click)="showCreateProfile=false">Annuler</button>
+            <button class="btn-save" [disabled]="!newProfile.name || isSavingProfile" (click)="createProfile()">
+              <svg *ngIf="isSavingProfile" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+              {{ isSavingProfile ? 'Sauvegarde...' : 'Créer le profil' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== TAB : HISTORIQUE ===== -->
+  <div *ngIf="activeTab==='history'">
+    <div class="upload-card table-card">
+      <div class="table-toolbar">
+        <select class="form-select" [(ngModel)]="selectedDatasetId" style="width:280px">
+          <option [ngValue]="null">-- Choisir un dataset --</option>
+          <option *ngFor="let d of datasets" [ngValue]="d.id">#{{ d.id }} — {{ d.original_filename }}</option>
+        </select>
+        <button class="btn-save" [disabled]="!selectedDatasetId || isLoadingHistory" (click)="loadHistory()" style="margin-left:10px">
+          Charger l'historique
+        </button>
+      </div>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr><th>Date</th><th>Lignes avant</th><th>Lignes après</th><th>Doublons</th><th>Manquantes</th><th>Outliers</th><th>Opérations</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="history.length === 0"><td colspan="7" class="empty-cell"><div class="empty-state"><p>Aucun historique</p></div></td></tr>
+            <tr *ngFor="let h of history">
+              <td class="muted-cell">{{ formatDate(h.created_at) }}</td>
+              <td class="muted-cell">{{ h.rows_before | number }}</td>
+              <td class="muted-cell">{{ h.rows_after | number }}</td>
+              <td><span class="type-chip">{{ h.duplicates_removed }}</span></td>
+              <td><span class="type-chip">{{ h.missing_values_handled }}</span></td>
+              <td><span class="type-chip">{{ h.outliers_detected }}</span></td>
+              <td><span class="op-tag" *ngFor="let op of h.operations_performed">{{ op }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>

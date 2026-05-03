@@ -1,0 +1,398 @@
+/* ═══════════════════════════════════════════════
+   SIDEBAR — Miroir du Chat Panel (pousse le contenu)
+   ═══════════════════════════════════════════════ */
+
+* {
+  box-sizing: border-box;
+}
+
+:host {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  flex-shrink: 0;
+}
+
+/* ── Bouton toggle latéral (collé au bord droit, toujours visible) ── */
+.sidebar-toggle-btn {
+  position: relative;
+  width: 28px;
+  flex-shrink: 0;
+  background: #fff;
+  border: none;
+  border-right: 1px solid #E2E8F0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  padding: 0;
+}
+
+.sidebar-toggle-btn:hover {
+  background: #F8FAFC;
+}
+
+.toggle-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: #94A3B8;
+  transition: color 0.15s;
+}
+
+.sidebar-toggle-btn:hover .toggle-icon {
+  color: #2563EB;
+}
+
+.sidebar-toggle-btn.panel-open .toggle-icon {
+  color: #2563EB;
+}
+
+.toggle-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: inherit;
+  margin-top: 4px;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* ── Panel principal (width 0 → 260px, comme le chat panel) ── */
+.sidebar-panel {
+  width: 0;
+  overflow: hidden;
+  background: #fff;
+  border-right: 1px solid #E2E8F0;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.sidebar-panel.open {
+  width: 260px;
+}
+
+/* ── HEADER ── */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 14px;
+  border-bottom: 1px solid #F1F5F9;
+  flex-shrink: 0;
+  min-width: 260px;
+}
+
+.sidebar-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94A3B8;
+  white-space: nowrap;
+}
+
+.close-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: transparent;
+  border: 1px solid #E2E8F0;
+  color: #94A3B8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.close-btn:hover {
+  background: #F1F5F9;
+  color: #1E293B;
+  border-color: #CBD5E1;
+}
+
+/* ── NAVIGATION ── */
+.sidebar-nav {
+  flex: 1;
+  padding: 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: 'Segoe UI', sans-serif;
+  min-width: 260px;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 3px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: #E2E8F0;
+  border-radius: 2px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: #CBD5E1;
+}
+
+.nav-section {
+  margin-bottom: 6px;
+}
+
+.nav-section-label {
+  display: block;
+  font-size: 0.63rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #CBD5E1;
+  padding: 8px 8px 4px;
+}
+
+/* ── NAV ITEMS ── */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 9px;
+  border-radius: 9px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #64748B;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.nav-item:hover {
+  background: #F8FAFC;
+  color: #1E293B;
+}
+
+.nav-item.active {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(124, 58, 237, 0.06));
+  color: #2563EB;
+}
+
+.nav-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: #F8FAFC;
+  border: 1px solid #F1F5F9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94A3B8;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  font-size: 1rem;
+}
+
+.nav-item:hover .nav-icon {
+  background: #F1F5F9;
+  border-color: #E2E8F0;
+  color: #1E293B;
+}
+
+.nav-item.active .nav-icon {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.18);
+  color: #2563EB;
+}
+
+.nav-badge {
+  margin-left: auto;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563EB;
+  font-size: 0.67rem;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+/* ── ADMIN ITEMS ── */
+.admin-item {
+  color: #7C3AED;
+}
+
+.admin-item:hover {
+  background: rgba(124, 58, 237, 0.06);
+  color: #6D28D9;
+}
+
+.admin-item.active {
+  background: rgba(124, 58, 237, 0.1);
+  color: #7C3AED;
+}
+
+.admin-item .nav-icon {
+  background: rgba(124, 58, 237, 0.06);
+  border-color: rgba(124, 58, 237, 0.12);
+  color: #7C3AED;
+}
+
+/* ── FOOTER ── */
+.sidebar-footer {
+  padding: 12px;
+  border-top: 1px solid #F1F5F9;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 260px;
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 9px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-decoration: none;
+}
+
+.user-card:hover {
+  background: #F8FAFC;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #2563EB, #7C3AED);
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.user-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1E293B;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.user-role {
+  font-size: 0.68rem;
+  color: #64748B;
+  margin-top: 2px;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 9px;
+  border-radius: 9px;
+  background: transparent;
+  border: 1px solid transparent;
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #94A3B8;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border 0.15s;
+  font-family: inherit;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.logout-btn:hover {
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.12);
+  color: #EF4444;
+}
+
+/* ═══════════════════════════════════════════════
+   WORKFLOW SECTION — Sidebar
+   ═══════════════════════════════════════════════ */
+
+/* Workflow launch button */
+.workflow-item {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.06), rgba(124, 58, 237, 0.04));
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  color: #2563EB !important;
+  font-weight: 700 !important;
+  margin-bottom: 6px;
+}
+
+.workflow-item:hover {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(124, 58, 237, 0.07)) !important;
+}
+
+.workflow-icon {
+  background: linear-gradient(135deg, #2563EB, #7C3AED) !important;
+  border-color: transparent !important;
+  color: white !important;
+}
+
+.nav-arrow {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: #2563EB;
+  font-weight: 700;
+}
+
+/* Sub-items (workflow steps in sidebar) */
+.nav-item--sub {
+  padding-left: 20px;
+  font-size: 0.8rem;
+  position: relative;
+}
+
+.nav-item--sub .nav-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+}
+
+/* Locked step */
+.nav-item--locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Completed checkmark in sidebar */
+.step-done-icon {
+  margin-left: auto;
+  color: #10B981;
+  flex-shrink: 0;
+}
+
+/* Lock icon in sidebar */
+.step-lock-icon {
+  margin-left: auto;
+  color: #CBD5E1;
+  flex-shrink: 0;
+}

@@ -1,0 +1,50 @@
+/* ── Layout global ── */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Zone principale : sidebar toggle + contenu + chat côte à côte */
+.app-body {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Contenu principal — flex: 1 pour prendre tout l'espace disponible */
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+  background: #F8FAFC;
+  z-index: 1;
+}
+
+/* Scrollbar personnalisée */
+.app-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.app-content::-webkit-scrollbar-track {
+  background: #F8FAFC;
+}
+
+.app-content::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+
+.app-content::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}

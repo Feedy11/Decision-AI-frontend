@@ -1,0 +1,125 @@
+<div class="profile-page">
+
+  <!-- Header -->
+  <div class="page-header header-flex">
+    <div>
+      <div class="breadcrumb">
+        <a routerLink="/admin/users" class="breadcrumb-link">Utilisateurs</a>
+        <svg class="breadcrumb-sep" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+        <span>{{ isEditMode ? 'Modifier' : 'Ajouter' }}</span>
+      </div>
+      <h1>{{ isEditMode ? 'Modifier utilisateur' : 'Ajouter un utilisateur' }}</h1>
+    </div>
+  </div>
+
+  <div class="profile-grid single-col-form">
+    <div class="right-col">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div>
+            <h3>Informations du compte</h3>
+            <p>Veuillez {{ isEditMode ? 'mettre à jour' : 'remplir' }} les informations ci-dessous.</p>
+          </div>
+        </div>
+
+        <div class="alert-error" *ngIf="errorMsg">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          {{ errorMsg }}
+        </div>
+        
+        <div class="alert-success" *ngIf="successMsg">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          {{ successMsg }}
+        </div>
+
+        <div *ngIf="isLoading" class="table-loader">
+          <svg class="spin" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+          Chargement...
+        </div>
+
+        <form *ngIf="!isLoading" class="form" [formGroup]="userForm" (ngSubmit)="onSubmit()">
+          
+          <div class="field">
+            <label>Nom complet <span class="req">*</span></label>
+            <input type="text" class="form-input" formControlName="fullName" placeholder="Nom complet" />
+          </div>
+
+          <div class="field" style="margin-top: 14px;">
+            <label>Adresse email <span class="req">*</span></label>
+            <div class="input-wrap">
+              <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              <input type="email" class="form-input has-icon" formControlName="email" placeholder="votre@email.com" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Mot de passe <span class="req" *ngIf="!isEditMode">*</span> <span class="hint" *ngIf="isEditMode">(Laisser vide pour ne pas modifier)</span></label>
+            <div class="input-wrap">
+              <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <input type="password" class="form-input has-icon" formControlName="password" placeholder="Min. 8 caractères" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label>Rôle <span class="req">*</span></label>
+              <select class="form-select" formControlName="role">
+                <option value="user">Utilisateur standard</option>
+                <option value="admin">Administrateur</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="pref-list" style="margin-top: 10px; margin-bottom: 5px;">
+            <div class="pref-row">
+              <div>
+                <span class="pref-name">Compte actif</span>
+                <span class="pref-hint">Autoriser cet utilisateur à se connecter</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" formControlName="isActive">
+                <span class="track"><span class="thumb"></span></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-cancel" routerLink="/admin/users">Annuler</button>
+            <button type="submit" class="btn-save" [disabled]="userForm.invalid || isSaving">
+              <svg *ngIf="!isSaving" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <svg *ngIf="isSaving" class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+              </svg>
+              {{ isSaving ? 'Sauvegarde...' : 'Sauvegarder' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>

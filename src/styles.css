@@ -1,0 +1,194 @@
+/* You can add global styles to this file, and also import other style files */
+@import 'ngx-toastr/toastr';
+
+
+/* === TOAST CONTAINER === */
+.toast-container {
+  pointer-events: none;
+}
+
+.toast-container .ngx-toastr {
+  pointer-events: auto;
+}
+
+/* === CUSTOM TOAST BASE === */
+.custom-toast {
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: blur(10px);
+  padding: 1.2rem 1.5rem !important;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 70px;
+  border: none !important;
+  overflow: hidden;
+}
+
+/* === TOAST TITLE === */
+.custom-toast .toast-title {
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  margin-bottom: 0.3rem !important;
+  letter-spacing: 0.3px;
+}
+
+/* === TOAST MESSAGE === */
+.custom-toast .toast-message {
+  font-size: 0.9rem !important;
+  opacity: 0.95;
+  line-height: 1.5;
+}
+
+/* === CLOSE BUTTON === */
+.custom-toast .toast-close-button {
+  position: absolute;
+  right: 0.8rem;
+  top: 0.8rem;
+  font-size: 1.3rem;
+  font-weight: 400;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  text-shadow: none;
+}
+
+.custom-toast .toast-close-button:hover {
+  opacity: 1;
+  transform: rotate(90deg);
+}
+
+/* === PROGRESS BAR === */
+.custom-toast .toast-progress {
+  height: 4px !important;
+  opacity: 0.8;
+  border-radius: 0 0 12px 12px;
+}
+
+/* === SUCCESS TOAST === */
+.toast-success.custom-toast {
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%) !important;
+  background-image: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%) !important;
+}
+
+.toast-success .toast-progress {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* === ERROR TOAST === */
+.toast-error.custom-toast {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+  background-image: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+}
+
+.toast-error .toast-progress {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* === INFO TOAST === */
+.toast-info.custom-toast {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important;
+  background-image: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important;
+}
+
+.toast-info .toast-progress {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* === WARNING TOAST === */
+.toast-warning.custom-toast {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%) !important;
+  background-image: linear-gradient(135deg, #f39c12 0%, #e67e22 100%) !important;
+}
+
+.toast-warning .toast-progress {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* === ANIMATIONS PERSONNALISÉES === */
+
+/* Animation d'entrée - Slide + Fade */
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Animation de sortie - Slide + Fade */
+@keyframes toastSlideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+}
+
+/* Appliquer les animations */
+.toast-top-right .custom-toast,
+.toast-bottom-right .custom-toast {
+  animation: toastSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Animation Bounce au hover */
+.custom-toast:hover {
+  transform: scale(1.02);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* === ICÔNES PERSONNALISÉES === */
+.custom-toast::before {
+  font-family: 'bootstrap-icons' !important;
+  font-size: 1.8rem;
+  margin-right: 1rem;
+  float: left;
+  line-height: 1;
+}
+
+.toast-success.custom-toast::before {
+  content: '\f26b'; /* bi-check-circle-fill */
+}
+
+.toast-error.custom-toast::before {
+  content: '\f33a'; /* bi-x-circle-fill */
+}
+
+.toast-info.custom-toast::before {
+  content: '\f431'; /* bi-info-circle-fill */
+}
+
+.toast-warning.custom-toast::before {
+  content: '\f33b'; /* bi-exclamation-triangle-fill */
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 767.98px) {
+  .toast-container .custom-toast {
+    width: calc(100vw - 2rem) !important;
+    margin: 0 1rem;
+    border-radius: 10px !important;
+    padding: 1rem !important;
+  }
+
+  .custom-toast .toast-title {
+    font-size: 0.9rem !important;
+  }
+
+  .custom-toast .toast-message {
+    font-size: 0.85rem !important;
+  }
+}
+html, body {
+  height: 100%;
+   margin: 0;
+
+  overflow: hidden; /* ❌ empêche double scroll */
+}
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

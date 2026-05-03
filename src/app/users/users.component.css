@@ -1,0 +1,70 @@
+.users-page {
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+}
+
+.field {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.field label {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.field input[type='text'],
+.field input[type='email'],
+.field input[type='password'] {
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  padding: 0.5rem 0.75rem;
+}
+
+.field.checkbox {
+  flex-direction: row;
+  align-items: center;
+}
+
+button {
+  background: #2563eb;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+th,
+td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.error {
+  color: #b91c1c;
+  margin-bottom: 1rem;
+}
+

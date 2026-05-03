@@ -1,0 +1,95 @@
+<!-- ═══ Workflow Stepper (affiché uniquement sur les routes /workflow/*) ═══ -->
+<div class="stepper-bar" *ngIf="isVisible">
+
+  <!-- Progress bar background -->
+  <div class="stepper-progress-track">
+    <div class="stepper-progress-fill" [style.width.%]="wf.progressPercent"></div>
+  </div>
+
+  <div class="stepper-inner">
+
+    <!-- Steps row -->
+    <div class="stepper-steps">
+      <ng-container *ngFor="let step of steps; let i = index; let last = last">
+
+        <!-- Step circle + label -->
+        <div class="step"
+             [class.step--active]="step.active"
+             [class.step--completed]="step.completed && !step.active"
+             [class.step--locked]="!step.accessible"
+             (click)="onStepClick(i)">
+
+          <div class="step__circle">
+            <!-- Completed checkmark -->
+            <lucide-icon *ngIf="step.completed && !step.active"
+                         name="check" [size]="18" [strokeWidth]="2.5"
+                         class="step__icon step__icon--check">
+            </lucide-icon>
+
+            <!-- Lock icon for locked steps -->
+            <lucide-icon *ngIf="!step.accessible && !step.completed"
+                         name="lock" [size]="16" [strokeWidth]="2"
+                         class="step__icon step__icon--lock">
+            </lucide-icon>
+
+            <!-- Normal icon for current or accessible -->
+            <lucide-icon *ngIf="(step.active || (step.accessible && !step.completed))"
+                         [name]="step.icon" [size]="18" [strokeWidth]="2"
+                         class="step__icon">
+            </lucide-icon>
+          </div>
+
+          <div class="step__text">
+            <span class="step__label">{{ step.label }}</span>
+            <span class="step__desc">{{ step.description }}</span>
+          </div>
+        </div>
+
+        <!-- Connector line -->
+        <div class="step-connector" *ngIf="!last"
+             [class.step-connector--done]="step.completed">
+        </div>
+
+      </ng-container>
+    </div>
+
+    <!-- Navigation buttons -->
+    <div class="stepper-nav">
+      <button class="stepper-btn stepper-btn--outline"
+              [disabled]="currentIndex === 0"
+              (click)="onPrevious()">
+        <lucide-icon name="chevron-left" [size]="16" [strokeWidth]="2"></lucide-icon>
+        Précédent
+      </button>
+
+      <span class="stepper-counter">
+        Étape {{ currentIndex + 1 }} / {{ steps.length }}
+      </span>
+
+      <button class="stepper-btn stepper-btn--primary"
+              *ngIf="currentIndex < steps.length - 1"
+              [disabled]="currentIndex >= steps.length - 1"
+              (click)="onNext()">
+        Suivant
+        <lucide-icon name="chevron-right" [size]="16" [strokeWidth]="2"></lucide-icon>
+      </button>
+
+      <!-- Dernière étape : Actions, affichées uniquement si le dashboard est chargé/calculé -->
+      <div class="stepper-actions-done" *ngIf="currentIndex === steps.length - 1 && steps[currentIndex].completed">
+        <span class="stepper-badge-done">
+          <lucide-icon name="check" [size]="16" [strokeWidth]="2.5"></lucide-icon>
+          Terminé
+        </span>
+        
+        <button class="stepper-btn stepper-btn--outline" (click)="onExit()">
+          Quitter
+        </button>
+        <button class="stepper-btn stepper-btn--primary" (click)="onRestart()">
+          <lucide-icon name="plus" [size]="16" [strokeWidth]="2"></lucide-icon>
+          Nouveau
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

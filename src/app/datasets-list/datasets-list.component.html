@@ -1,0 +1,176 @@
+<div class="upload-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1>Mes datasets</h1>
+      <p>Gérez et consultez tous vos fichiers importés</p>
+    </div>
+    <button class="btn-upload-new" routerLink="/upload">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="17 8 12 3 7 8"></polyline>
+        <line x1="12" y1="3" x2="12" y2="15"></line>
+      </svg>
+      Importer un fichier
+    </button>
+  </div>
+
+  <!-- Tabs Admin / Mes fichiers -->
+  <div class="tabs-bar" *ngIf="isAdmin">
+    <button class="tab-btn" [class.active]="activeTab === 'mine'" (click)="setTab('mine')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+      Mes datasets
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'all'" (click)="setTab('all')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"></rect>
+        <rect x="14" y="3" width="7" height="7"></rect>
+        <rect x="3" y="14" width="7" height="7"></rect>
+        <rect x="14" y="14" width="7" height="7"></rect>
+      </svg>
+      Tous les datasets
+      <span class="tab-count">{{ totalAll }}</span>
+    </button>
+  </div>
+
+  <!-- Card table -->
+  <div class="upload-card table-card">
+
+    <!-- Toolbar -->
+    <div class="table-toolbar">
+      <div class="search-wrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Rechercher un fichier..."
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearch()"
+        />
+      </div>
+      <div class="toolbar-right">
+        <span class="total-count">{{ filteredDatasets.length }} dataset(s)</span>
+      </div>
+    </div>
+
+    <!-- Loader -->
+    <div class="table-loader" *ngIf="isLoading">
+      <svg class="spin" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5">
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+      </svg>
+      Chargement...
+    </div>
+
+    <!-- Table -->
+    <div class="table-container" *ngIf="!isLoading">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Fichier</th>
+            <th>Type</th>
+            <th>Taille</th>
+            <th>Lignes</th>
+            <th>Statut</th>
+            <th>Date</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="filteredDatasets.length === 0">
+            <td colspan="7" class="empty-cell">
+              <div class="empty-state">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                <p>Aucun dataset trouvé</p>
+                <button class="btn-upload-new sm" routerLink="/upload">Importer maintenant</button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngFor="let d of paginatedDatasets">
+            <td>
+              <div class="file-cell">
+                <div class="file-icon-sm" [class.csv]="d.file_type === 'csv'" [class.excel]="d.file_type !== 'csv'">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                  </svg>
+                </div>
+                <div>
+                  <span class="file-name-cell">{{ d.original_filename }}</span>
+                  <span class="file-id">#{{ d.id }}</span>
+                </div>
+              </div>
+            </td>
+            <td><span class="type-chip">{{ d.file_type.toUpperCase() }}</span></td>
+            <td class="muted-cell">{{ formatSize(d.file_size) }}</td>
+            <td class="muted-cell">{{ d.row_count !== null ? (d.row_count | number) : '—' }}</td>
+            <td>
+              <span class="status-badge" [class]="getStatusClass(d.status)">
+                {{ d.status }}
+              </span>
+            </td>
+            <td class="muted-cell">{{ formatDate(d.created_at) }}</td>
+            <td class="actions-cell">
+              <button class="btn-icon-sm" title="Supprimer" (click)="confirmDelete(d)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                </svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalPages > 1 && !isLoading">
+      <span class="page-info">
+        {{ (currentPage - 1) * pageSize + 1 }} – {{ Math.min(currentPage * pageSize, filteredDatasets.length) }}
+        sur {{ filteredDatasets.length }}
+      </span>
+      <div class="page-controls">
+        <button class="btn-page" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">Préc</button>
+        <span class="page-current">{{ currentPage }} / {{ totalPages }}</span>
+        <button class="btn-page" [disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)">Suiv</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal suppression -->
+  <div class="modal-overlay" *ngIf="showDeleteModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-icon danger-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+          </svg>
+        </div>
+        <h3>Supprimer ce dataset ?</h3>
+      </div>
+      <div class="modal-body">
+        <p>Êtes-vous sûr de vouloir supprimer <strong>{{ datasetToDelete?.original_filename }}</strong> ?<br/>Cette action est irréversible.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="cancelDelete()" [disabled]="isDeleting">Annuler</button>
+        <button class="btn-save btn-danger" (click)="deleteDataset()" [disabled]="isDeleting">
+          <svg *ngIf="isDeleting" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+          {{ isDeleting ? 'Suppression...' : 'Oui, supprimer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

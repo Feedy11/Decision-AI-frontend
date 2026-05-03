@@ -1,0 +1,116 @@
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { Component, HostListener, OnInit } from '@angular/core';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
+import { IaServicesService } from '../../core/services/ia-services.service';
+import { WorkflowService } from '../../core/services/workflow.service';
+import { filter } from 'rxjs/operators';
+import { LucideAngularModule } from 'lucide-angular';
+
+// Routes publiques : on cache la sidebar
+const PUBLIC_ROUTES = ['/login', '/pass', '/reset-password'];
+
+@Component({
+  selector: 'app-data-sidebar',
+  standalone: true,
+  imports: [CommonModule, RouterModule, LucideAngularModule],
+  templateUrl: './data-sidebar.component.html',
+  styleUrl: './data-sidebar.component.css'
+})
+export class DataSidebarComponent implements OnInit {
+
+  isOpen = false;
+  datasetCount = 0;
+  isAdmin = false;
+  isMobile = false;
+  isPublicRoute = false;
+
+  // User info (from navbar)
+  userFullName = '';
+  userInitials = '';
+
+  constructor(
+    private http: HttpClient,
+    private auth: AuthService,
+    private iaService: IaServicesService,
+    private router: Router,
+    public wf: WorkflowService
+  ) {
+    this.checkMobile();
+  }
+
+  ngOnInit(): void {
+    this.isAdmin = this.auth.isSuperuser();
+    this.loadDatasetCount();
+    this.loadUser();
+    this.checkRoute(this.router.url);
+
+    this.router.events
+      .pipe(filter(e => e instanceof NavigationEnd))
+      .subscribe((e: any) => {
+        this.checkRoute(e.urlAfterRedirects);
+        this.loadUser();
+      });
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.checkMobile();
+  }
+
+  private checkMobile(): void {
+    this.isMobile = window.innerWidth < 768;
+  }
+
+  private checkRoute(url: string): void {
+    this.isPublicRoute = PUBLIC_ROUTES.some(r => url.startsWith(r));
+  }
+
+  private loadUser(): void {
+    const user = this.auth.getUser();
+    if (user) {
+      this.userFullName = user.full_name || 'Utilisateur';
+      this.userInitials = (user.full_name || 'U')
+        .split(' ')
+        .map((n: string) => n[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+      this.isAdmin = user.is_superuser;
+    }
+  }
+
+  private loadDatasetCount(): void {
+    this.http
+      .get<{ total: number }>(
+        `${this.iaService.getAllDatasets()}/datasets/my-datasets?page=1&page_size=1`
+      )
+      .subscribe({
+        next: (res) => {
+          this.datasetCount = res.total ?? 0;
+        },
+        error: () => { }
+      });
+  }
+
+  togglePanel(): void {
+    this.isOpen = !this.isOpen;
+  }
+
+  close(): void {
+    this.isOpen = false;
+  }
+
+  goToDashboard(): void { this.router.navigate(['/dashboard']); }
+  goToProfile(): void { this.router.navigate(['/profile']); }
+
+  startWorkflow(): void {
+    this.close();
+    this.router.navigate(['/workflow/upload']);
+  }
+
+  logout(): void {
+    this.auth.logout();
+  }
+}
