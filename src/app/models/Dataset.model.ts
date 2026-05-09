@@ -7,6 +7,7 @@ export interface Dataset {
   status           : 'UPLOADED' | 'PROCESSING' | 'PROCESSED' | 'FAILED';
   row_count        : number | null;
   column_count     : number | null;
+  user_id          : string | null;
   created_at       : string;
 }
 

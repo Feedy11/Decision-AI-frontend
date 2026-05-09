@@ -50,6 +50,10 @@ export class DatasetsListComponent implements OnInit {
 
   ngOnInit(): void {
     this.isAdmin = this.auth.isSuperuser();
+    // Admin defaults to seeing all datasets
+    if (this.isAdmin) {
+      this.activeTab = 'all';
+    }
     this.loadDatasets();
   }
 

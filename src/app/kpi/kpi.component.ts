@@ -114,6 +114,9 @@ export class KpiComponent implements OnInit {
           `${this.successfulKpis.length} KPIs calculés.`,
           'KPIs prêts', { timeOut: 3000, progressBar: true }
         );
+        // Track KPI count for profile stats
+        const currentKpiCount = parseInt(localStorage.getItem('kpi_count') || '0', 10);
+        localStorage.setItem('kpi_count', String(currentKpiCount + this.successfulKpis.length));
       },
       error: () => {
         this.isExecuting = false;

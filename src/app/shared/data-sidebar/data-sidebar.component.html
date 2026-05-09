@@ -146,7 +146,8 @@
   <!-- Footer : User info + logout -->
   <div class="sidebar-footer">
     <a class="user-card" (click)="goToProfile(); close()">
-      <div class="user-avatar">{{ userInitials }}</div>
+      <div class="user-avatar" *ngIf="!avatarUrl">{{ userInitials }}</div>
+      <img *ngIf="avatarUrl" [src]="avatarUrl" alt="Avatar" class="user-avatar-img" />
       <div class="user-info">
         <span class="user-name">{{ userFullName }}</span>
         <span class="user-role">{{ isAdmin ? 'Admin' : 'Utilisateur' }}</span>

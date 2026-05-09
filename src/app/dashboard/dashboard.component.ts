@@ -102,6 +102,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
           `${d.executive_summary_kpis.length} KPIs et ${d.dashboard_charts.length} graphiques générés.`,
           'Dashboard créé', { timeOut: 4000, progressBar: true }
         );
+        // Track dashboard count for profile stats
+        const count = parseInt(localStorage.getItem('dashboard_count') || '0', 10);
+        localStorage.setItem('dashboard_count', String(count + 1));
         // Auto-exécuter immédiatement après génération
         this.executeAndLoadCharts(d.id);
       },

@@ -26,9 +26,10 @@ export class DataSidebarComponent implements OnInit {
   isMobile = false;
   isPublicRoute = false;
 
-  // User info (from navbar)
+  // User info
   userFullName = '';
   userInitials = '';
+  avatarUrl: string | null = null;
 
   constructor(
     private http: HttpClient,
@@ -52,6 +53,13 @@ export class DataSidebarComponent implements OnInit {
         this.checkRoute(e.urlAfterRedirects);
         this.loadUser();
       });
+
+    // Listen for avatar changes from profile page
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'user_avatar') {
+        this.avatarUrl = e.newValue;
+      }
+    });
   }
 
   @HostListener('window:resize')
@@ -79,12 +87,14 @@ export class DataSidebarComponent implements OnInit {
         .substring(0, 2);
       this.isAdmin = user.is_superuser;
     }
+    // Load avatar from localStorage
+    this.avatarUrl = localStorage.getItem('user_avatar') || null;
   }
 
   private loadDatasetCount(): void {
     this.http
       .get<{ total: number }>(
-        `${this.iaService.getAllDatasets()}/datasets/my-datasets?page=1&page_size=1`
+        `http://localhost:8001/api/v1/datasets/my-datasets?page=1&page_size=1`
       )
       .subscribe({
         next: (res) => {

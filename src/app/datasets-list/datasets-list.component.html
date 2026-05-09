@@ -74,6 +74,7 @@
         <thead>
           <tr>
             <th>Fichier</th>
+            <th *ngIf="isAdmin && activeTab === 'all'">Propriétaire (ID)</th>
             <th>Type</th>
             <th>Taille</th>
             <th>Lignes</th>
@@ -84,7 +85,7 @@
         </thead>
         <tbody>
           <tr *ngIf="filteredDatasets.length === 0">
-            <td colspan="7" class="empty-cell">
+            <td [colSpan]="(isAdmin && activeTab === 'all') ? 8 : 7" class="empty-cell">
               <div class="empty-state">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -109,6 +110,9 @@
                   <span class="file-id">#{{ d.id }}</span>
                 </div>
               </div>
+            </td>
+            <td *ngIf="isAdmin && activeTab === 'all'">
+              <span class="type-chip" style="background: #E2E8F0; color: #475569;">Utilisateur #{{ d['user_id'] || 'N/A' }}</span>
             </td>
             <td><span class="type-chip">{{ d.file_type.toUpperCase() }}</span></td>
             <td class="muted-cell">{{ formatSize(d.file_size) }}</td>

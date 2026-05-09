@@ -288,6 +288,15 @@
   flex-shrink: 0;
 }
 
+.user-avatar-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid rgba(37, 99, 235, 0.2);
+}
+
 .user-info {
   display: flex;
   flex-direction: column;

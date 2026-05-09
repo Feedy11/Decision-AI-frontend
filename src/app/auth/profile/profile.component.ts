@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastrService } from 'ngx-toastr';
 
@@ -62,7 +63,14 @@ export class ProfileComponent implements OnInit {
 
   successPreferences = '';
 
-  constructor(private authService: AuthService, private toastr: ToastrService) { }
+  private readonly IA_API = 'http://localhost:8001/api/v1';
+
+  constructor(
+    private authService: AuthService,
+    private toastr: ToastrService,
+    private http: HttpClient
+  ) { }
+
   ngOnInit(): void {
     // Load avatar from local storage
     this.avatarUrl = localStorage.getItem('user_avatar') || null;
@@ -87,6 +95,27 @@ export class ProfileComponent implements OnInit {
       error: () => {
       }
     });
+
+    // Load real stats from IA backend
+    this.loadStats();
+  }
+
+  private loadStats(): void {
+    // Fetch dataset count as "analyses" metric
+    this.http.get<{ total: number }>(
+      `${this.IA_API}/datasets/my-datasets?page=1&page_size=1`
+    ).subscribe({
+      next: (res) => {
+        this.stats.analyses = res.total ?? 0;
+      },
+      error: () => { /* silent */ }
+    });
+
+    // Load dashboard & KPI counts from localStorage tracking
+    const dashCount = localStorage.getItem('dashboard_count');
+    const kpiCount = localStorage.getItem('kpi_count');
+    this.stats.dashboards = dashCount ? parseInt(dashCount, 10) : 0;
+    this.stats.kpis = kpiCount ? parseInt(kpiCount, 10) : 0;
   }
 
   // ── Photo upload (client-side) ──
