@@ -1,6 +1,7 @@
 import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHighcharts } from 'highcharts-angular';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth.interceptor';
@@ -18,8 +19,17 @@ import {
   FileText
 } from 'lucide-angular';
 
+import { HIGHCHARTS_GLOBAL_OPTIONS } from './shared/highcharts/highcharts-global-defaults';
+
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideHighcharts({
+      modules: () => [
+        import('highcharts/modules/accessibility'),
+        import('highcharts/modules/heatmap'),
+      ],
+      options: HIGHCHARTS_GLOBAL_OPTIONS,
+    }),
     provideAnimations(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),

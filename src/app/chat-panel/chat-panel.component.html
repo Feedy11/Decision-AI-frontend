@@ -151,10 +151,13 @@
       <div class="msg-bubble">
         <div class="msg-content" [innerHTML]="msg.content"></div>
 
-        <!-- ApexChart Container -->
-        <div *ngIf="msg.chartSpec" class="msg-chart-container" style="margin-top: 10px; border-radius: 8px; background: white; padding: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; width: 100%; min-width: 250px;">
-          <div [id]="'chat-chart-' + msg.id"></div>
-        </div>
+        <app-highcharts-base
+          *ngIf="msg.chartSpec"
+          class="msg-chart-container"
+          [chartOptions]="chartOptionsFromSpec(msg.chartSpec)"
+          [heightPx]="250"
+          [chartVisible]="isOpen"
+        />
 
         <!-- Chunks / Sources -->
         <div *ngIf="msg.chunk_ids && msg.chunk_ids.length > 0" class="msg-chunks" style="margin-top: 8px; font-size: 11px; color: #64748b; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: inline-block;">

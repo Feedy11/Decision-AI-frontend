@@ -7,21 +7,22 @@ import { FormsModule }   from '@angular/forms';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter }        from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
+import type { Options } from 'highcharts';
 
 import { Dataset } from '../models/Dataset.model';
-import { Conversation, UiMessage } from '../models/chat.model';
+import { ChartSpec, Conversation, UiMessage } from '../models/chat.model';
 import { ChatService } from '../core/services/chat.service';
 import { IaServicesService } from '../core/services/ia-services.service';
 import { AuthService } from '../core/services/auth.service';
-
-declare const ApexCharts: any;
+import { HighchartsBaseComponent } from '../shared/highcharts/highcharts-base.component';
+import { buildChatChartOptions } from '../shared/highcharts/highcharts-chat.adapter';
 
 const PUBLIC_ROUTES = ['/login', '/pass', '/reset-password'];
 
 @Component({
   selector  : 'app-chat-panel',
   standalone: true,
-  imports   : [CommonModule, FormsModule],
+  imports   : [CommonModule, FormsModule, HighchartsBaseComponent],
   templateUrl: './chat-panel.component.html',
   styleUrls : ['./chat-panel.component.css']
 })
@@ -62,9 +63,6 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
   private typewriterActive = false;
   private readonly TYPEWRITER_DELAY_MS = 18; // ms per word
 
-  //Charts Tracking
-  private chartInstances : Record<string, any> = {};
-
   //Suggestions
   readonly suggestions = [
     'Analyse mes données de ventes',
@@ -100,12 +98,6 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.closeEventSource();
-    this.destroyAllCharts();
-  }
-
-  private destroyAllCharts(): void {
-    Object.values(this.chartInstances).forEach(c => { try { c.destroy(); } catch {} });
-    this.chartInstances = {};
   }
 
   private checkRoute(url: string): void {
@@ -141,7 +133,6 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
     this.activeConvId      = null;
     this.messages          = [];
     this.showDatasetPicker = false;
-    this.destroyAllCharts();
 
     // Lancer automatiquement l'indexation en arrière-plan pour faciliter le chat
     this.chatSvc.rebuildIndex(datasetId).subscribe({
@@ -169,7 +160,6 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
 
     this.chatSvc.createConversation(this.activeDatasetId, { title }).subscribe({
       next: (res) => {
-        this.destroyAllCharts();
         this.activeConvId  = res.conversation_id;
         this.messages      = [];
         this.showConvList  = false;
@@ -186,7 +176,6 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
 
   //Sélectionner conversation
   selectConversation(conv: Conversation): void {
-    this.destroyAllCharts();
     this.activeConvId = conv.id;
     this.messages     = [];
     this.showConvList = false;
@@ -288,7 +277,6 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
         const msg  = this.messages.find(m => m.id === streamId);
         if (msg) {
           msg.chartSpec = data.chart_spec;
-          setTimeout(() => this.renderChart(streamId, data.chart_spec), 100);
         }
         this.cdr.detectChanges();
       });
@@ -380,13 +368,11 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
   // ── Clear
   clearMessages(): void {
     this.closeEventSource();
-    this.destroyAllCharts();
     this.isTyping = false;
     this.createNewConversation();
   }
 
   clearContext(): void {
-    this.destroyAllCharts();
     this.activeDatasetId = null; this.activeDatasetName = null;
     this.activeConvId    = null; this.messages = []; this.conversations = [];
   }
@@ -432,81 +418,7 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
     return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
   }
 
-  // ── Rendering ApexCharts
-  private renderChart(msgId: string | number, spec: any): void {
-    const elId = `chat-chart-${msgId}`;
-    const el = document.getElementById(elId);
-    if (!el) {
-      setTimeout(() => {
-        const retryEl = document.getElementById(elId);
-        if (retryEl) this.initChart(retryEl, msgId, spec);
-      }, 150);
-      return;
-    }
-    this.initChart(el, msgId, spec);
-  }
-
-  private initChart(el: HTMLElement, msgId: string | number, spec: any): void {
-    if (this.chartInstances[msgId]) {
-      this.chartInstances[msgId].destroy();
-    }
-    const opts = this.buildApexOptions(spec);
-    try {
-      const chart = new ApexCharts(el, opts);
-      chart.render();
-      this.chartInstances[msgId] = chart;
-    } catch (err) {
-      console.error('ApexCharts render error', err);
-    }
-  }
-
-  private buildApexOptions(spec: any): any {
-    const isPie = spec.chart_type === 'pie';
-    const hasData = spec.data && Array.isArray(spec.data.axis_x) && Array.isArray(spec.data.axis_y);
-    const series = isPie
-      ? (hasData ? spec.data.axis_y : [])
-      : [{ name: spec.y_col || 'Valeur', data: hasData ? spec.data.axis_y : [] }];
-
-    const opts: any = {
-      series,
-      chart: {
-        type: spec.chart_type === 'histogram' ? 'bar' : spec.chart_type,
-        height: 250,
-        toolbar: { show: false },
-        animations: { enabled: true, speed: 400 },
-        background: 'transparent'
-      },
-      title: {
-        text: spec.title || '',
-        align: 'left',
-        style: { fontSize: '13px', fontWeight: '600', color: '#1E293B', fontFamily: 'inherit' }
-      },
-      colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'],
-      dataLabels: { enabled: false },
-      stroke: { curve: 'smooth', width: spec.chart_type === 'line' ? 3 : 1 },
-      theme: { mode: 'light' },
-    };
-
-    if (!isPie) {
-      if (spec.chart_type === 'bar') {
-        opts.plotOptions = { bar: { borderRadius: 4, horizontal: false, columnWidth: '40%' } };
-      }
-      opts.xaxis = {
-        categories: hasData ? spec.data.axis_x : [],
-        labels: { show: true, style: { cssClass: 'apex-axis-label', fontFamily: 'inherit' } },
-        axisBorder: { show: false },
-        axisTicks: { show: false }
-      };
-      opts.yaxis = {
-        labels: {
-          formatter: (v: any) => typeof v === 'number' ? v.toLocaleString() : v,
-          style: { fontFamily: 'inherit' }
-        }
-      };
-    } else {
-      opts.labels = hasData ? spec.data.axis_x : [];
-      opts.legend = { position: 'bottom', fontFamily: 'inherit' };
-    }
-    return opts;
+  chartOptionsFromSpec(spec: ChartSpec): Options {
+    return buildChatChartOptions(spec);
   }
 }

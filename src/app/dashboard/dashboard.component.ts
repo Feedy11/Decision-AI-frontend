@@ -1,8 +1,9 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule }       from '@angular/common';
 import { FormsModule }        from '@angular/forms';
 import { RouterModule, Router }       from '@angular/router';
 import { ToastrService }      from 'ngx-toastr';
+import type { Options } from 'highcharts';
 import { DashboardService }   from '../core/services/dashboard.service';
 import { IaServicesService }  from '../core/services/ia-services.service';
 import { WorkflowService }    from '../core/services/workflow.service';
@@ -15,13 +16,13 @@ import {
 } from '../models/Dashboard.model';
 import { Dataset } from '../models/Dataset.model';
 import { catchError, forkJoin, of } from 'rxjs';
-
-declare const ApexCharts: any;
+import { HighchartsBaseComponent } from '../shared/highcharts/highcharts-base.component';
+import { buildDashboardChartOptions } from '../shared/highcharts/highcharts-dashboard.adapter';
 
 @Component({
   selector   : 'app-dashboard',
   standalone : true,
-  imports    : [CommonModule, FormsModule, RouterModule],
+  imports    : [CommonModule, FormsModule, RouterModule, HighchartsBaseComponent],
   templateUrl: './dashboard.component.html',
   styleUrls  : ['./dashboard.component.css']
 })
@@ -38,7 +39,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // ── Résultats exécution ───────────────────────────────────
   executeResult     : DashboardExecuteResponse | null = null;
   chartDataMap      : Record<number, ChartDataResponse> = {};
-  apexInstances     : any[] = [];
+  /** Stable Highcharts options per chart index (avoids re-creating options each CD cycle). */
+  chartHighchartsOptions: Record<number, Options> = {};
 
   // ── UI states ─────────────────────────────────────────────
   isGenerating        = false;
@@ -53,7 +55,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private dashSvc  : DashboardService,
     private iaService: IaServicesService,
     private toastr   : ToastrService,
-    private ngZone   : NgZone,
     private wf       : WorkflowService,
     private router   : Router
   ) {}
@@ -63,7 +64,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.destroyCharts();
+    this.chartHighchartsOptions = {};
   }
 
   private loadDatasets(): void {
@@ -93,8 +94,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.selectedDashboard = null;
     this.executeResult = null;
     this.chartDataMap = {};
+    this.chartHighchartsOptions = {};
     this.activeTab = 'overview';
-    this.destroyCharts();
 
     if (!datasetId) {
       this.isLoadingDashboards = false;
@@ -115,6 +116,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.selectedDashboard = d;
         this.executeResult     = null;
         this.chartDataMap      = {};
+        this.chartHighchartsOptions = {};
         this.savedDashboards   = [d, ...this.savedDashboards];
         this.toastr.success(
           `${d.executive_summary_kpis.length} KPIs et ${d.dashboard_charts.length} graphiques générés.`,
@@ -163,7 +165,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.selectedDashboard = d;
     this.executeResult     = null;
     this.chartDataMap      = {};
-    this.destroyCharts();
+    this.chartHighchartsOptions = {};
     this.activeTab = 'overview';
     // Auto-exécuter au clic sur un dashboard de l'historique
     this.executeAndLoadCharts(d.id);
@@ -172,7 +174,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // ── Exécuter + charger TOUS les graphiques automatiquement ─
   private executeAndLoadCharts(dashboardId: number): void {
     this.isExecuting = true;
-    this.destroyCharts();
+    this.chartDataMap = {};
+    this.chartHighchartsOptions = {};
 
     this.dashSvc.executeDashboard(dashboardId).subscribe({
       next: (res) => {
@@ -194,15 +197,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
           next: (results) => {
             this.isLoadingCharts = false;
             results.forEach((data, i) => {
-              if (data) this.chartDataMap[charts[i].chart_index] = data;
+              if (!data) return;
+              const idx = charts[i].chart_index;
+              this.chartDataMap[idx] = data;
+              if (data.execution_success) {
+                this.chartHighchartsOptions[idx] = buildDashboardChartOptions(data);
+              }
             });
-            // Les divs existent toujours dans le DOM grâce à [hidden]
-            // Un seul setTimeout suffit pour laisser Angular terminer le CD
-            setTimeout(() => {
-              this.destroyCharts();
-              charts.forEach(c => this.renderChart(c.chart_index));
-              this.wf.completeCurrentStep();
-            }, 100);
+            queueMicrotask(() => this.wf.completeCurrentStep());
           },
           error: () => { this.isLoadingCharts = false; }
         });
@@ -220,83 +222,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.executeAndLoadCharts(this.selectedDashboard.id);
   }
 
-  // ── Rendu ApexCharts ──────────────────────────────────────
-  private renderChart(index: number): void {
-    const data = this.chartDataMap[index];
-    if (!data?.execution_success) return;
-
-    const el = document.getElementById(`chart-${index}`);
-    if (!el) return;
-    // Vider le container avant de re-rendre
-    el.innerHTML = '';
-
-    const opts = this.buildApexOptions(data);
-    if (!opts) return;
-
-    try {
-      const chart = new ApexCharts(el, opts);
-      chart.render();
-      this.apexInstances.push(chart);
-    } catch (e) {}
-  }
-
-  private buildApexOptions(data: ChartDataResponse): any {
-    const type = this.normalizeChartType(data);
-    const d    = data.data;
-
-    const base = {
-      chart    : { type, height: 260, toolbar: { show: false }, fontFamily: 'inherit', background: 'transparent' },
-      theme    : { mode: 'light' },
-      colors   : ['#2563EB', '#7C3AED', '#22C55E', '#F59E0B', '#EF4444'],
-      dataLabels: { enabled: false },
-      grid     : { borderColor: '#F1F5F9', strokeDashArray: 4 },
-      tooltip  : { theme: 'light' },
-      xaxis    : { labels: { style: { fontSize: '11px', colors: '#64748B' } } },
-      yaxis    : { labels: { style: { fontSize: '11px', colors: '#64748B' } } },
-    };
-
-    if (type === 'bar' || type === 'line') {
-      return {
-        ...base,
-        series: [{ name: data.y_axis || 'Valeur', data: d['axis_y'] || [] }],
-        xaxis : { ...base.xaxis, categories: d['axis_x'] || [] }
-      };
-    }
-
-    if (type === 'scatter') {
-      const xs: number[] = d['axis_x'] || [];
-      const ys: number[] = d['axis_y'] || [];
-      return {
-        ...base,
-        series: [{ name: 'Points', data: xs.map((x, i) => ({ x, y: ys[i] })) }]
-      };
-    }
-
-    if (type === 'heatmap') {
-      const labelsY: string[]   = d['labels_y'] || [];
-      const matrix : number[][] = d['matrix']   || [];
-      const labelsX: string[]   = d['labels_x'] || [];
-      return {
-        ...base,
-        series: labelsY.map((label, i) => ({ name: label, data: matrix[i] || [] })),
-        xaxis : { ...base.xaxis, categories: labelsX }
-      };
-    }
-
-    return null;
-  }
-
-  private normalizeChartType(data: ChartDataResponse): string {
-    const raw = (data.chart_title + (data.aggregation || '')).toLowerCase();
-    if (raw.includes('scatter'))                     return 'scatter';
-    if (raw.includes('heat') || raw.includes('crosstab')) return 'heatmap';
-    if (raw.includes('line') || raw.includes('trend'))    return 'line';
-    return 'bar';
-  }
-
-  private destroyCharts(): void {
-    this.apexInstances.forEach(c => { try { c.destroy(); } catch {} });
-    this.apexInstances = [];
+  highchartsOptionsForIndex(index: number): Options | undefined {
+    return this.chartHighchartsOptions[index];
   }
 
   // ── Helpers ──────────────────────────────────────────────

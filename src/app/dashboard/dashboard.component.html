@@ -197,12 +197,17 @@
             <p class="chart-insight" *ngIf="c.insight">{{ c.insight }}</p>
 
             <!-- Erreur data -->
-            <div class="apex-error" *ngIf="chartDataMap[c.chart_index] && !chartDataMap[c.chart_index].execution_success">
+            <div class="hc-chart-error" *ngIf="chartDataMap[c.chart_index] && !chartDataMap[c.chart_index].execution_success">
               ⚠️ {{ chartDataMap[c.chart_index].error }}
             </div>
 
-            <!-- Container ApexCharts -->
-            <div [id]="'chart-' + c.chart_index" class="apex-container"></div>
+            <app-highcharts-base
+              class="hc-chart-slot"
+              *ngIf="chartDataMap[c.chart_index]?.execution_success && highchartsOptionsForIndex(c.chart_index)"
+              [chartOptions]="highchartsOptionsForIndex(c.chart_index)!"
+              [heightPx]="280"
+              [chartVisible]="activeTab === 'charts'"
+            />
           </div>
 
         </div>
