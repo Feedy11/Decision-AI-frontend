@@ -94,3 +94,46 @@ export const DEFAULT_PROFILE: CleaningProfileCreate = {
   normalize_numeric     : false,
   normalization_method  : null
 };
+
+// ── Scan (BEFORE cleaning) ──────────────────────────────────────────────────
+export type IssueType = 'missing' | 'missing_token' | 'outlier' | 'duplicate';
+export type IssueSeverity = 'error' | 'warning';
+
+export interface ScanIssue {
+  row_index    : number;
+  row_number   : number;
+  column       : string | null;
+  issue_type   : IssueType;
+  description  : string;
+  current_value: any;
+  severity     : IssueSeverity;
+}
+
+export interface ScanResult {
+  dataset_id  : number;
+  cached      : boolean;
+  total_issues: number;
+  summary     : Partial<Record<IssueType, number>>;
+  issues      : ScanIssue[];
+}
+
+// ── Repair diff (AFTER cleaning) ────────────────────────────────────────────
+export type ChangeType =
+  | 'filled_missing'
+  | 'text_stripped'
+  | 'text_normalized'
+  | 'value_capped'
+  | 'set_to_missing'
+  | 'row_removed'
+  | 'row_removed_duplicate'
+  | 'modified';
+
+export interface ChangeRecord {
+  row_index  : number;
+  row_number : number;
+  column     : string | null;
+  change_type: ChangeType | string;
+  before     : any;
+  after      : any;
+  description: string;
+}

@@ -20,6 +20,8 @@
     "@angular/platform-browser": "19.2.20",
     "@angular/platform-browser-dynamic": "19.2.20",
     "@angular/router": "19.2.20",
+    "highcharts": "^12.6.0",
+    "highcharts-angular": "^5.4.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "lucide-angular": "^1.0.0",

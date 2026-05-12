@@ -20,7 +20,7 @@ const PUBLIC_ROUTES = ['/login', '/pass', '/reset-password'];
 })
 export class DataSidebarComponent implements OnInit {
 
-  isOpen = false;
+  isOpen = true;
   datasetCount = 0;
   isAdmin = false;
   isMobile = false;

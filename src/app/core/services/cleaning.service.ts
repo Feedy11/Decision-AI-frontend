@@ -1,12 +1,13 @@
-import { Injectable }  from '@angular/core';
-import { HttpClient }  from '@angular/common/http';
-import { Observable }  from 'rxjs';
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import {
   CleaningProfile,
   CleaningProfileCreate,
   CleaningReport,
   DataQuality,
-  ValidationResult
+  ValidationResult,
+  ScanResult,
 } from '../../models/Cleaning.model';
 
 @Injectable({ providedIn: 'root' })
@@ -14,7 +15,7 @@ export class CleaningService {
 
   private readonly API = 'http://localhost:8001/api/v1';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   //Profils
 
@@ -35,10 +36,14 @@ export class CleaningService {
   //Nettoyage
 
   //datasets clean
-  cleanDataset(datasetId: number, profileId?: number, saveAsNew = false): Observable<CleaningReport> {
-    let url = `${this.API}/datasets/${datasetId}/clean?save_as_new=${saveAsNew}`;
-    if (profileId) url += `&profile_id=${profileId}`;
-    return this.http.post<CleaningReport>(url, {});
+  cleanDataset(datasetId: number, profileId?: number, saveAsNew = false, missingIdentifierAction = 'drop'): Observable<CleaningReport> {
+    const body = {
+      dataset_id: datasetId,
+      profile_id: profileId,
+      save_as_new: saveAsNew,
+      missing_identifier_action: missingIdentifierAction
+    };
+    return this.http.post<CleaningReport>(`${this.API}/datasets/${datasetId}/clean`, body);
   }
   getQuality(datasetId: number): Observable<DataQuality> {
     return this.http.get<DataQuality>(`${this.API}/datasets/${datasetId}/quality`);
@@ -52,5 +57,27 @@ export class CleaningService {
   //datasets validate
   validateDataset(datasetId: number): Observable<ValidationResult> {
     return this.http.post<ValidationResult>(`${this.API}/datasets/${datasetId}/validate`, {});
+  }
+
+  // Scan — pre-computed error sheet cached at upload time
+  // force=true  → bypass cache, always run a fresh scan
+  // method      -> "auto" (default) | "iqr" | "mad" | "log_iqr" | "zscore" | "lof"
+  // threshold   -> conservative outlier threshold (default 3.0)
+  scan(
+    datasetId: number,
+    force = true,
+    method = 'auto',
+    threshold = 3.0,
+  ): Observable<ScanResult> {
+    const params = new HttpParams()
+      .set('force', String(force))
+      .set('method', method)
+      .set('threshold', String(threshold));
+    return this.http.get<ScanResult>(`${this.API}/datasets/${datasetId}/scan`, { params });
+  }
+
+  // Preview raw data
+  getPreview(datasetId: number, limit = 100): Observable<any> {
+    return this.http.get<any>(`${this.API}/datasets/${datasetId}/preview?limit=${limit}`);
   }
 }

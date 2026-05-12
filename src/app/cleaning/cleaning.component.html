@@ -51,124 +51,426 @@
 
   <!-- ===== TAB : NETTOYER ===== -->
   <div *ngIf="activeTab==='clean'">
-    <div class="upload-layout">
 
-      <div class="upload-card">
-        <div class="card-head">
-          <div class="card-head-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="3 6 5 6 21 6"></polyline>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
-            </svg>
-          </div>
-          <div><h2>Nettoyer un dataset</h2><p>Sélectionnez un dataset et un profil de nettoyage</p></div>
-        </div>
+    <!-- ══════════════════════════════════════════════════════════════
+         PHASE 1 — SCAN  (before cleaning, error sheet)
+    ══════════════════════════════════════════════════════════════════ -->
+    <div *ngIf="phase === 'scan'">
+      <div class="upload-layout">
 
-        <div class="field" style="margin-bottom:16px">
-          <label>Dataset à nettoyer <span class="req">*</span></label>
-          <select class="form-select" [(ngModel)]="selectedDatasetId">
-            <option [ngValue]="null">-- Sélectionner un dataset --</option>
-            <option *ngFor="let d of datasets" [ngValue]="d.id">
-              #{{ d.id }} — {{ d.original_filename }} ({{ d.status }})
-            </option>
-          </select>
-        </div>
-
-        <div class="field" style="margin-bottom:16px">
-          <label>Profil de nettoyage</label>
-          <select class="form-select" [(ngModel)]="selectedProfileId">
-            <option [ngValue]="null">-- Profil par défaut --</option>
-            <option *ngFor="let p of profiles" [ngValue]="p.id">
-              {{ p.name }}{{ p.is_default ? ' ✓ défaut' : '' }}
-            </option>
-          </select>
-        </div>
-
-        <div class="pref-row" style="margin-bottom:20px">
-          <div>
-            <span class="pref-name">Sauvegarder comme nouveau dataset</span>
-            <span class="pref-hint">Garde l'original intact et crée une copie nettoyée</span>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" [(ngModel)]="saveAsNew"/>
-            <span class="track"><span class="thumb"></span></span>
-          </label>
-        </div>
-
-        <!-- Résultat nettoyage -->
-        <div class="result-clean" *ngIf="cleanResult">
-          <div class="result-header">
-            <div class="result-icon-ok">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"></polyline>
+        <!-- Main scan card -->
+        <div class="upload-card" style="flex:1">
+          <div class="card-head">
+            <div class="card-head-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
             </div>
-            <strong>Nettoyage terminé !</strong>
+            <div><h2>Analyse des erreurs</h2><p>Détection automatique avant nettoyage</p></div>
           </div>
-          <div class="stats-grid">
-            <div class="stat-chip"><span class="stat-chip-val">{{ cleanResult.rows_before }}</span><span class="stat-chip-label">Lignes avant</span></div>
-            <div class="stat-chip green"><span class="stat-chip-val">{{ cleanResult.rows_after }}</span><span class="stat-chip-label">Lignes après</span></div>
-            <div class="stat-chip blue"><span class="stat-chip-val">{{ cleanResult.duplicates_removed }}</span><span class="stat-chip-label">Doublons supprimés</span></div>
-            <div class="stat-chip orange"><span class="stat-chip-val">{{ cleanResult.missing_values_handled }}</span><span class="stat-chip-label">Valeurs manquantes</span></div>
-            <div class="stat-chip purple"><span class="stat-chip-val">{{ cleanResult.outliers_detected }}</span><span class="stat-chip-label">Outliers détectés</span></div>
-            <div class="stat-chip"><span class="stat-chip-val">{{ cleanResult.data_types_fixed }}</span><span class="stat-chip-label">Types corrigés</span></div>
-          </div>
-          <div class="ops-list">
-            <span class="op-tag" *ngFor="let op of cleanResult.operations_performed">{{ op }}</span>
-          </div>
-        </div>
 
-        <!-- Résultat validation -->
-        <div class="validation-result" *ngIf="validationResult">
-          <div class="val-header" [class.val-ok]="validationResult.valid" [class.val-err]="!validationResult.valid">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline *ngIf="validationResult.valid" points="20 6 9 17 4 12"></polyline>
-              <circle *ngIf="!validationResult.valid" cx="12" cy="12" r="10"></circle>
-              <line *ngIf="!validationResult.valid" x1="12" y1="8" x2="12" y2="12"></line>
-              <line *ngIf="!validationResult.valid" x1="12" y1="16" x2="12.01" y2="16"></line>
+          <!-- Dataset selector -->
+          <div class="field" style="margin-bottom:16px">
+            <label>Dataset à analyser <span class="req">*</span></label>
+            <select class="form-select" [(ngModel)]="selectedDatasetId">
+              <option [ngValue]="null">-- Sélectionner un dataset --</option>
+              <option *ngFor="let d of datasets" [ngValue]="d.id">
+                #{{ d.id }} — {{ d.original_filename }} ({{ d.status }})
+              </option>
+            </select>
+          </div>
+
+          <!-- Scan loading spinner -->
+          <div *ngIf="isScanning" class="table-loader" style="padding:32px 0">
+            <svg class="spin" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
             </svg>
-            {{ validationResult.valid ? 'Dataset valide' : 'Dataset invalide' }} — {{ validationResult.total_checks }} vérifications
+            Scan en cours...
           </div>
-          <div *ngIf="validationResult.errors.length > 0" class="val-list error-list">
-            <p *ngFor="let e of validationResult.errors">❌ {{ e }}</p>
+
+          <!-- ── Error sheet ── -->
+          <div *ngIf="scanResult && !isScanning">
+
+            <!-- Summary badges -->
+            <div class="scan-summary">
+              <span class="scan-total" [class.scan-ok]="scanResult.total_issues === 0">
+                {{ scanResult.total_issues }} problème(s) détecté(s)
+                <span *ngIf="scanResult.cached" class="cached-badge">⚡ pré-calculé</span>
+              </span>
+              <div class="scan-badges">
+                <span *ngIf="scanResult.summary['missing']"       class="sbadge sbadge-error">
+                  ⬜ {{ scanResult.summary['missing'] }} manquant(s)
+                </span>
+                <span *ngIf="scanResult.summary['missing_token']" class="sbadge sbadge-error">
+                  🔤 {{ scanResult.summary['missing_token'] }} token(s) nul(s)
+                </span>
+                <span *ngIf="scanResult.summary['outlier']"       class="sbadge sbadge-warn">
+                  📊 {{ scanResult.summary['outlier'] }} aberrant(s)
+                </span>
+                <span *ngIf="scanResult.summary['duplicate']"     class="sbadge sbadge-warn">
+                  🔁 {{ scanResult.summary['duplicate'] }} doublon(s)
+                </span>
+              </div>
+            </div>
+
+            <!-- View Toggle -->
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom: 12px;" *ngIf="previewData">
+               <button class="tab-btn" [class.active]="!showPreview" (click)="showPreview = false" style="padding:6px 12px; font-size:0.75rem;">
+                 📋 Rapport d'erreurs
+               </button>
+               <button class="tab-btn" [class.active]="showPreview" (click)="showPreview = true" style="padding:6px 12px; font-size:0.75rem;">
+                 🗃️ Aperçu des données
+               </button>
+            </div>
+
+            <!-- Data Preview Table -->
+            <div *ngIf="showPreview && previewData" class="scan-table-wrap" style="max-height: 400px; overflow-y: auto;">
+              <table class="scan-table">
+                <thead>
+                  <tr>
+                    <th *ngFor="let col of previewData.columns">{{ col }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of previewData.rows">
+                    <td *ngFor="let col of previewData.columns">
+                      <span [class.muted]="row[col] === null">{{ row[col] !== null ? row[col] : 'vide' }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- No issues state -->
+            <div *ngIf="scanResult.total_issues === 0 && !showPreview" class="no-issues-state">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <p>Aucune erreur détectée — vos données sont propres !</p>
+            </div>
+
+            <!-- Issues table -->
+            <div *ngIf="scanResult.total_issues > 0 && !showPreview" class="scan-table-wrap">
+
+              <!-- Active filter indicator -->
+              <div class="filter-bar" *ngIf="activeIssueFilter">
+                <span class="filter-label">
+                  Filtré par : <strong>{{ issueLabel(activeIssueFilter) }}</strong>
+                  ({{ totalFilteredIssues }} résultat(s))
+                </span>
+                <button class="filter-clear" (click)="setIssueFilter(null)">✕ Effacer le filtre</button>
+              </div>
+
+              <table class="scan-table">
+                <thead>
+                  <tr>
+                    <th>Ligne</th>
+                    <th>Colonne</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Valeur actuelle</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let issue of paginatedIssues"
+                      [class.row-error]="issue.severity === 'error'"
+                      [class.row-warn]="issue.severity === 'warning'">
+                    <td><span class="row-pill">{{ issue.row_number }}</span></td>
+                    <td><span class="col-pill" *ngIf="issue.column">{{ issue.column }}</span>
+                        <span class="muted" *ngIf="!issue.column">(ligne entière)</span></td>
+                    <td>
+                      <span class="issue-pill issue-{{ issue.issue_type }}">
+                        {{ issueIcon(issue.issue_type) }} {{ issueLabel(issue.issue_type) }}
+                      </span>
+                    </td>
+                    <td class="desc-cell">{{ issue.description }}</td>
+                    <td><code *ngIf="issue.current_value !== null" class="val-code">{{ issue.current_value }}</code>
+                        <span class="muted" *ngIf="issue.current_value === null">—</span></td>
+                  </tr>
+                  <tr *ngIf="paginatedIssues.length === 0">
+                    <td colspan="5" class="empty-cell"><div class="empty-state"><p>Aucun problème pour ce filtre.</p></div></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- Pagination -->
+              <div class="pagination-bar" *ngIf="totalPages > 1">
+                <span class="pagination-info">
+                  Affichage {{ (currentPage - 1) * pageSize + 1 }}–{{ currentPage * pageSize > totalFilteredIssues ? totalFilteredIssues : currentPage * pageSize }}
+                  sur {{ totalFilteredIssues }}
+                </span>
+                <div class="pagination-controls">
+                  <button class="pg-btn" [disabled]="currentPage === 1" (click)="goToPage(1)" title="Première page">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>
+                  </button>
+                  <button class="pg-btn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)" title="Page précédente">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                  </button>
+                  <button *ngFor="let p of visiblePages"
+                          class="pg-btn pg-num" [class.pg-active]="p === currentPage"
+                          (click)="goToPage(p)">{{ p }}</button>
+                  <button class="pg-btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)" title="Page suivante">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                  </button>
+                  <button class="pg-btn" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)" title="Dernière page">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-          <div *ngIf="validationResult.warnings.length > 0" class="val-list warn-list">
-            <p *ngFor="let w of validationResult.warnings">⚠️ {{ w }}</p>
+
+          <!-- Actions -->
+          <div class="form-actions" style="border-top:none; padding-top:16px; margin-top:8px; flex-wrap: wrap; justify-content: space-between; align-items: center;">
+            <div style="display:flex; gap:10px;">
+              <button class="btn-scan" [disabled]="!selectedDatasetId || isScanning" (click)="loadScan()">
+                <svg *ngIf="!isScanning" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <svg *ngIf="isScanning" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                </svg>
+                {{ isScanning ? 'Scan...' : 'Scanner' }}
+              </button>
+
+              <button class="btn-save"
+                      [disabled]="!selectedDatasetId || isCleaning || !scanResult"
+                      (click)="cleanDataset()">
+                <svg *ngIf="!isCleaning" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                </svg>
+                <svg *ngIf="isCleaning" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                </svg>
+                {{ isCleaning ? 'Nettoyage...' : 'Lancer le nettoyage' }}
+              </button>
+            </div>
+            
+            <div class="pref-row" style="margin: 0;" *ngIf="!selectedProfileId">
+              <label class="toggle" style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.85rem; font-weight:600; color:#475569;">
+                <input type="checkbox" [(ngModel)]="fillIdentifiersUnknown"/>
+                <span class="track" style="margin:0"><span class="thumb"></span></span>
+                Remplir IDs manquants par "Inconnu"
+              </label>
+            </div>
           </div>
         </div>
 
-        <div class="form-actions" style="border-top:none; padding-top:0">
-          <button class="btn-save" [disabled]="!selectedDatasetId || isCleaning" (click)="cleanDataset()">
-            <svg *ngIf="!isCleaning" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>
-            <svg *ngIf="isCleaning" class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-            {{ isCleaning ? 'Nettoyage...' : 'Lancer le nettoyage' }}
-          </button>
-          <button class="btn-cancel" [disabled]="!selectedDatasetId || isValidating" (click)="validateDataset()">
-            <svg *ngIf="!isValidating" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <svg *ngIf="isValidating" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-            {{ isValidating ? 'Validation...' : 'Valider' }}
-          </button>
-        </div>
-      </div>
+        <!-- Side panel -->
+        <div class="side-panel">
+          <div class="info-card chart-card">
+            <div class="info-card-header">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              Erreurs détectées
+            </div>
 
-      <!-- Side panel -->
-      <div class="side-panel">
-        <div class="info-card">
-          <div class="info-card-header">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-            Opérations disponibles
+            <!-- 3D Pie Chart -->
+            <div id="error-pie-chart" *ngIf="scanResult"></div>
+            <div *ngIf="!scanResult" class="chart-placeholder">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5">
+                <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                <path d="M12 3a9 9 0 019 9"></path>
+              </svg>
+              <span>Lancez un scan pour voir la répartition</span>
+            </div>
+
+            <!-- Clickable legend buttons -->
+            <div class="chart-legend" *ngIf="scanResult">
+              <button class="legend-btn" [class.active]="activeIssueFilter === null" (click)="setIssueFilter(null)">
+                <span class="legend-dot" style="background:#22C55E"></span> Tout afficher
+              </button>
+              <button class="legend-btn" *ngIf="scanResult.summary['missing']" [class.active]="activeIssueFilter === 'missing'" (click)="setIssueFilter('missing')">
+                <span class="legend-dot" style="background:#EF4444"></span> ⬜ Manquantes ({{ scanResult.summary['missing'] }})
+              </button>
+              <button class="legend-btn" *ngIf="scanResult.summary['missing_token']" [class.active]="activeIssueFilter === 'missing_token'" (click)="setIssueFilter('missing_token')">
+                <span class="legend-dot" style="background:#F59E0B"></span> 🔤 Tokens nuls ({{ scanResult.summary['missing_token'] }})
+              </button>
+              <button class="legend-btn" *ngIf="scanResult.summary['outlier']" [class.active]="activeIssueFilter === 'outlier'" (click)="setIssueFilter('outlier')">
+                <span class="legend-dot" style="background:#8B5CF6"></span> 📊 Aberrantes ({{ scanResult.summary['outlier'] }})
+              </button>
+              <button class="legend-btn" *ngIf="scanResult.summary['duplicate']" [class.active]="activeIssueFilter === 'duplicate'" (click)="setIssueFilter('duplicate')">
+                <span class="legend-dot" style="background:#3B82F6"></span> 🔁 Dupliquées ({{ scanResult.summary['duplicate'] }})
+              </button>
+            </div>
           </div>
-          <ul class="steps">
-            <li><span class="step-n">1</span><span>Valeurs manquantes — drop / fill / interpolate</span></li>
-            <li><span class="step-n">2</span><span>Doublons — suppression automatique</span></li>
-            <li><span class="step-n">3</span><span>Types de données — détection auto</span></li>
-            <li><span class="step-n">4</span><span>Outliers — IQR ou Z-Score</span></li>
-            <li><span class="step-n">5</span><span>Texte — espaces, minuscules</span></li>
-            <li><span class="step-n">6</span><span>Dates — standardisation format</span></li>
-          </ul>
+
+          <!-- Profile selector in side panel -->
+          <div class="info-card" style="margin-top:14px">
+            <div class="info-card-header">⚙️ Profil de nettoyage</div>
+            <div class="field" style="padding:10px 0 0">
+              <select class="form-select" [(ngModel)]="selectedProfileId">
+                <option [ngValue]="null">-- Profil par défaut --</option>
+                <option *ngFor="let p of profiles" [ngValue]="p.id">
+                  {{ p.name }}{{ p.is_default ? ' ✓' : '' }}
+                </option>
+              </select>
+            </div>
+            <div class="pref-row" style="padding:10px 0 0">
+              <div><span class="pref-name">Sauvegarder comme nouveau</span><span class="pref-hint">Garde l'original intact</span></div>
+              <label class="toggle">
+                <input type="checkbox" [(ngModel)]="saveAsNew"/>
+                <span class="track"><span class="thumb"></span></span>
+              </label>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         PHASE 2 — REPAIR  (after cleaning, diff table)
+    ══════════════════════════════════════════════════════════════════ -->
+    <div *ngIf="phase === 'repair' && cleanResult">
+      <div class="upload-card">
+
+        <!-- Header -->
+        <div class="card-head">
+          <div class="card-head-icon" style="background:rgba(34,197,94,.15)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <div>
+            <h2>Nettoyage terminé !</h2>
+            <p>{{ cleanResult.rows_before - cleanResult.rows_after }} ligne(s) supprimée(s) · {{ cleanResult.missing_values_handled }} cellule(s) remplie(s)</p>
+          </div>
+          <button class="btn-cancel" style="margin-left:auto" (click)="goBackToScan()">
+            ← Retour au scan
+          </button>
+        </div>
+
+        <!-- Operations tags -->
+        <div class="ops-list" style="margin-bottom:20px">
+          <span class="op-tag" *ngFor="let op of cleanResult.operations_performed">{{ op }}</span>
+        </div>
+
+        <!-- Toggle View (Moved above) -->
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:16px;" *ngIf="previewData">
+          <button class="tab-btn" [class.active]="!showPreview" (click)="showPreview = false" style="padding:6px 12px; font-size:0.75rem;">
+            📋 Résumé
+          </button>
+          <button class="tab-btn" [class.active]="showPreview" (click)="showPreview = true" style="padding:6px 12px; font-size:0.75rem;">
+            🗃️ Aperçu des données nettoyées
+          </button>
+        </div>
+
+        <div *ngIf="!showPreview">
+          <!-- ═══ Comparison Parent: 2 boxes side by side (Charts) ═══ -->
+          <div class="repair-comparison-parent" style="margin-bottom: 20px;">
+            <!-- ── Box 1 : Avant ── -->
+            <div class="repair-cmp-box">
+              <div class="repair-cmp-title avant-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                Avant le nettoyage
+              </div>
+              <div class="repair-cmp-inner">
+                <div id="chart-avant" class="repair-chart"></div>
+              </div>
+            </div>
+
+            <!-- ── Box 2 : Après ── -->
+            <div class="repair-cmp-box">
+              <div class="repair-cmp-title apres-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Après le nettoyage
+              </div>
+              <div class="repair-cmp-inner">
+                <div id="chart-apres" class="repair-chart"></div>
+              </div>
+            </div>
+          </div><!-- /.repair-comparison-parent -->
+
+          <!-- ── Unified Diff Table ── -->
+          <div class="upload-card table-card" style="margin-bottom: 20px;">
+            <div class="table-toolbar">
+              <h3>Détail des modifications</h3>
+            </div>
+            <div class="scan-table-wrap" style="max-height:220px; overflow-y:auto; margin-top:0; border-radius:10px;">
+              <table class="scan-table">
+                <thead>
+                  <tr>
+                    <th>Colonne</th>
+                    <th>Changement</th>
+                    <th>Avant</th>
+                    <th>Après</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of diffRows">
+                    <td>
+                      <span class="col-pill" *ngIf="row.column">{{ row.column }}</span>
+                      <span class="muted" *ngIf="!row.column">(ligne)</span>
+                    </td>
+                    <td><span class="change-pill">{{ changeIcon(row.change_type) }} {{ row.change_type }}</span></td>
+                    <td><code class="val-before" style="color: #ef4444; background: #fef2f2; padding: 2px 6px; border-radius: 4px;">{{ row.before ?? '—' }}</code></td>
+                    <td><code class="val-after" style="color: #22c55e; background: #f0fdf4; padding: 2px 6px; border-radius: 4px;">{{ row.after ?? '—' }}</code></td>
+                  </tr>
+                  <tr *ngIf="diffRows.length === 0">
+                    <td colspan="4" class="empty-cell">
+                      <div class="empty-state"><p>Aucune modification.</p></div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ═══ Stats chips below the comparison ═══ -->
+          <div class="stats-grid repair-stats-grid">
+            <div class="stat-chip">
+              <span class="stat-chip-val">{{ cleanResult.rows_before }}</span>
+              <span class="stat-chip-label">Lignes avant</span>
+            </div>
+            <div class="stat-chip green">
+              <span class="stat-chip-val">{{ cleanResult.rows_after }}</span>
+              <span class="stat-chip-label">Lignes après</span>
+            </div>
+            <div class="stat-chip blue">
+              <span class="stat-chip-val">{{ cleanResult.duplicates_removed }}</span>
+              <span class="stat-chip-label">Doublons supprimés</span>
+            </div>
+            <div class="stat-chip orange">
+              <span class="stat-chip-val">{{ cleanResult.missing_values_handled }}</span>
+              <span class="stat-chip-label">Valeurs remplies</span>
+            </div>
+            <div class="stat-chip purple">
+              <span class="stat-chip-val">{{ cleanResult.outliers_detected }}</span>
+              <span class="stat-chip-label">Outliers traités</span>
+            </div>
+            <div class="stat-chip">
+              <span class="stat-chip-val">{{ cleanResult.data_types_fixed }}</span>
+              <span class="stat-chip-label">Types corrigés</span>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="showPreview && previewData" class="scan-table-wrap" style="max-width: 100%; max-height: 400px; overflow: auto; margin-top:8px;">
+          <table class="scan-table">
+            <thead><tr><th *ngFor="let col of previewData.columns">{{ col }}</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of previewData.rows; let idx = index">
+                <td *ngFor="let col of previewData.columns">
+                  <ng-container *ngIf="getOldCellValue(row, col, idx) as oldVal; else normalCell">
+                    <span style="color: #ef4444; text-decoration: line-through; margin-right: 6px; font-size: 0.75rem;">{{ oldVal }}</span>
+                    <span style="color: #22c55e; font-weight: 600;">{{ row[col] !== null ? row[col] : 'vide' }}</span>
+                  </ng-container>
+                  <ng-template #normalCell>
+                    <span [class.muted]="row[col] === null">{{ row[col] !== null ? row[col] : 'vide' }}</span>
+                  </ng-template>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 
   <!-- ===== TAB : QUALITÉ ===== -->
