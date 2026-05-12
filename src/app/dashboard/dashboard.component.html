@@ -16,7 +16,7 @@
 
   <!-- Barre de génération -->
   <div class="gen-bar">
-    <select class="form-select" [(ngModel)]="selectedDatasetId" (ngModelChange)="loadSavedDashboards()">
+    <select class="form-select" [(ngModel)]="selectedDatasetId" (ngModelChange)="onDatasetChange($event)">
       <option [ngValue]="null">-- Sélectionner un dataset --</option>
       <option *ngFor="let d of datasets" [ngValue]="d.id">#{{ d.id }} — {{ d.original_filename }}</option>
     </select>
@@ -103,8 +103,8 @@
       <div [hidden]="activeTab!=='overview'">
 
         <!-- KPIs calculés (après exécution) -->
-        <div class="kpi-row" *ngIf="successfulKpis.length > 0">
-          <div class="kpi-tile" *ngFor="let kpi of successfulKpis">
+        <div class="kpi-row" *ngIf="visibleKpis.length > 0">
+          <div class="kpi-tile" *ngFor="let kpi of visibleKpis">
             <span class="kpi-tile-name">{{ kpi.kpi_name }}</span>
             <span class="kpi-tile-val">{{ getKpiValue(kpi) }}</span>
             <span class="kpi-tile-col">{{ kpi.target_column }}</span>
@@ -113,7 +113,7 @@
 
         <!-- Skeleton KPIs si en cours de calcul -->
         <div class="kpi-row" *ngIf="isExecuting">
-          <div class="kpi-tile skeleton" *ngFor="let _ of selectedDashboard!.executive_summary_kpis">
+          <div class="kpi-tile skeleton" *ngFor="let _ of selectedDashboard!.executive_summary_kpis.slice(0, 8)">
             <span class="skel-line short"></span>
             <span class="skel-line tall"></span>
             <span class="skel-line short"></span>
@@ -121,14 +121,14 @@
         </div>
 
         <!-- Specs KPI Gemini -->
-        <div class="section-title" style="margin-top:20px">
+        <div class="section-title" style="margin-top:20px" *ngIf="false">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
           </svg>
           KPIs recommandés par l'IA
         </div>
 
-        <div class="kpi-cards">
+        <div class="kpi-cards" *ngIf="false">
           <div class="kpi-card" *ngFor="let kpi of selectedDashboard!.executive_summary_kpis">
             <div class="kpi-card-top">
               <span class="kpi-icon">📊</span>
@@ -141,7 +141,7 @@
         </div>
 
         <!-- Specs graphiques -->
-        <div class="section-title" style="margin-top:24px">
+        <div class="section-title" style="margin-top:24px" *ngIf="false">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="20" x2="18" y2="10"></line>
             <line x1="12" y1="20" x2="12" y2="4"></line>
@@ -150,7 +150,7 @@
           Graphiques recommandés
         </div>
 
-        <div class="chart-specs">
+        <div class="chart-specs" *ngIf="false">
           <div class="chart-spec-row" *ngFor="let c of selectedDashboard!.dashboard_charts">
             <div class="csr-left">
               <span class="chart-rank">#{{ c.rank }}</span>
@@ -205,14 +205,6 @@
             <div [id]="'chart-' + c.chart_index" class="apex-container"></div>
           </div>
 
-          <!-- Charts en erreur -->
-          <div class="chart-card err-card" *ngFor="let c of executeResult!.chart_results | failedCharts">
-            <div class="chart-card-header">
-              <span class="chart-card-title">{{ c.chart_title }}</span>
-              <span class="err-badge">Erreur</span>
-            </div>
-            <p class="err-msg">{{ c.error }}</p>
-          </div>
         </div>
 
         <!-- Pas encore exécuté -->
@@ -234,8 +226,10 @@
     <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
       <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
     </svg>
-    <h3>Aucun dashboard sélectionné</h3>
-    <p>Choisissez un dataset et cliquez sur <strong>Générer le dashboard</strong> pour commencer.</p>
+    <h3>{{ isLoadingDashboards ? 'Chargement des dashboards...' : 'Aucun dashboard sélectionné' }}</h3>
+    <p *ngIf="!selectedDatasetId">Choisissez un dataset pour afficher son dernier dashboard.</p>
+    <p *ngIf="selectedDatasetId && isLoadingDashboards">Recherche du dernier dashboard sauvegardé pour ce dataset.</p>
+    <p *ngIf="selectedDatasetId && !isLoadingDashboards">Aucun dashboard sauvegardé pour ce dataset. Vous pouvez en générer un nouveau.</p>
   </div>
 
 </div>

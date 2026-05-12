@@ -6,7 +6,6 @@ import { ToastrService }      from 'ngx-toastr';
 import { DashboardService }   from '../core/services/dashboard.service';
 import { IaServicesService }  from '../core/services/ia-services.service';
 import { WorkflowService }    from '../core/services/workflow.service';
-import { FailedChartsPipe }   from '../chartsPipe/Failed charts.pipe';
 import {
   DashboardRecord,
   DashboardExecuteResponse,
@@ -22,7 +21,7 @@ declare const ApexCharts: any;
 @Component({
   selector   : 'app-dashboard',
   standalone : true,
-  imports    : [CommonModule, FormsModule, RouterModule, FailedChartsPipe],
+  imports    : [CommonModule, FormsModule, RouterModule],
   templateUrl: './dashboard.component.html',
   styleUrls  : ['./dashboard.component.css']
 })
@@ -48,6 +47,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isLoadingDashboards = false;
 
   activeTab: 'overview' | 'charts' = 'overview';
+  private dashboardLoadSeq = 0;
 
   constructor(
     private dashSvc  : DashboardService,
@@ -74,7 +74,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           if (wfDatasetId) {
             this.datasets = res.datasets.filter(d => d.id === wfDatasetId);
             this.selectedDatasetId = wfDatasetId;
-            this.loadSavedDashboards();
+            this.onDatasetChange(wfDatasetId);
           } else {
             this.datasets = res.datasets; 
           }
@@ -84,6 +84,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
       },
       error: () => {}
     });
+  }
+
+  onDatasetChange(datasetId: number | null): void {
+    this.dashboardLoadSeq++;
+    this.selectedDatasetId = datasetId;
+    this.savedDashboards = [];
+    this.selectedDashboard = null;
+    this.executeResult = null;
+    this.chartDataMap = {};
+    this.activeTab = 'overview';
+    this.destroyCharts();
+
+    if (!datasetId) {
+      this.isLoadingDashboards = false;
+      return;
+    }
+
+    this.loadSavedDashboards(true);
   }
 
   // ── Générer → exécuter → charger graphiques automatiquement ──
@@ -119,16 +137,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   // ── Charger les dashboards sauvegardés ────────────────────
-  loadSavedDashboards(): void {
+  loadSavedDashboards(autoSelectLatest = false): void {
     if (!this.selectedDatasetId) return;
+    const loadSeq = this.dashboardLoadSeq;
     this.isLoadingDashboards = true;
 
     this.dashSvc.getDashboards(this.selectedDatasetId).subscribe({
       next: (list) => {
+        if (loadSeq !== this.dashboardLoadSeq) return;
         this.isLoadingDashboards = false;
         this.savedDashboards     = list;
+        if (autoSelectLatest && list.length > 0) {
+          this.selectDashboard(list[0]);
+        }
       },
-      error: () => { this.isLoadingDashboards = false; }
+      error: () => {
+        if (loadSeq === this.dashboardLoadSeq) this.isLoadingDashboards = false;
+      }
     });
   }
 
@@ -303,6 +328,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   get successfulKpis(): KpiExecutionResult[] {
     return this.executeResult?.kpi_results.filter(k => k.execution_success) ?? [];
+  }
+
+  get visibleKpis(): KpiExecutionResult[] {
+    return this.successfulKpis.slice(0, 8);
   }
 
   get successfulCharts(): ChartMetadata[] {
