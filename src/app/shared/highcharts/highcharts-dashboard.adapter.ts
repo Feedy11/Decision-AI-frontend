@@ -15,20 +15,35 @@ function axisLabelFormatter(this: Highcharts.AxisLabelsFormatterContextObject): 
   return String(v ?? '');
 }
 
-function normalizeDashboardKind(data: ChartDataResponse): 'heatmap' | 'scatter' | 'line' | 'column' {
+function normalizeDashboardKind(data: ChartDataResponse): 'heatmap' | 'scatter' | 'line' | 'column' | 'pie' | 'bar' {
   const raw = `${data.chart_title} ${data.aggregation ?? ''}`.toLowerCase();
+  if (raw.includes('pie') || raw.includes('donut') || raw.includes('camembert')) {
+    return 'pie';
+  }
   if (raw.includes('scatter')) {
     return 'scatter';
   }
   if (raw.includes('heat') || raw.includes('crosstab')) {
     return 'heatmap';
   }
-  if (raw.includes('line') || raw.includes('trend')) {
+  if (raw.includes('line') || raw.includes('trend') || raw.includes('evolution') || raw.includes('temporal')) {
     return 'line';
+  }
+  if (raw.includes('bar') || raw.includes('horizontal')) {
+    return 'bar';
   }
   return 'column';
 }
 
+/**
+ * Build professional Highcharts options from a dashboard chart data response.
+ * Features:
+ * - Professional axis titles (bold, visible) with axis lines & ticks
+ * - Centered bottom legend with colored dots for each series
+ * - Dark tooltip with series color indicators
+ * - Smooth animations and crosshair
+ * - Exporting / fullscreen via hamburger menu (global)
+ */
 export function buildDashboardChartOptions(data: ChartDataResponse): Options {
   const kind = normalizeDashboardKind(data);
   const titleText = data.chart_title;
@@ -37,11 +52,20 @@ export function buildDashboardChartOptions(data: ChartDataResponse): Options {
   const baseTitle: Options['title'] = {
     text: titleText,
     align: 'left',
-    margin: 12,
+    margin: 16,
   };
+
+  /** Build a subtitle from axes info */
+  const subtitleParts: string[] = [];
+  if (data.x_axis) subtitleParts.push(data.x_axis);
+  if (data.y_axis) subtitleParts.push(data.y_axis);
+  const baseSubtitle: Options['subtitle'] = subtitleParts.length > 0
+    ? { text: subtitleParts.join(' × '), align: 'left' }
+    : undefined;
 
   const tooltipDecimals = (y: number) => (Number.isFinite(y) && Math.abs(y) >= 1000 ? 0 : 2);
 
+  /* ═══ HEATMAP ═══ */
   if (kind === 'heatmap') {
     const labelsX: string[] = (d['labels_x'] as string[]) ?? [];
     const labelsY: string[] = (d['labels_y'] as string[]) ?? [];
@@ -73,11 +97,15 @@ export function buildDashboardChartOptions(data: ChartDataResponse): Options {
     return {
       chart: { type: 'heatmap' },
       title: baseTitle,
+      subtitle: baseSubtitle,
       colorAxis: {
         min,
         max: max === min ? min + 1e-9 : max,
-        minColor: '#F8FAFC',
+        minColor: '#F0F4FF',
         maxColor: HC_COLORS.primary,
+        labels: {
+          style: { color: HC_COLORS.slate500, fontSize: '11px' },
+        },
       },
       xAxis: {
         type: 'category',
@@ -90,6 +118,11 @@ export function buildDashboardChartOptions(data: ChartDataResponse): Options {
         title: data.y_axis ? { text: data.y_axis } : undefined,
         reversed: true,
       },
+      legend: {
+        enabled: true,
+        align: 'center',
+        verticalAlign: 'bottom',
+      },
       tooltip: {
         formatter(this: Highcharts.Point) {
           const xIdx = Number(this.x);
@@ -98,9 +131,8 @@ export function buildDashboardChartOptions(data: ChartDataResponse): Options {
           const ly = labelsY[yIdx] ?? String(this.y);
           const val = Number(this.value);
           return (
-            `<b>${escapeHtml(String(ly))}</b> × ` +
-            `<b>${escapeHtml(String(lx))}</b><br/>` +
-            `Valeur: <b>${formatTooltipNumber(Highcharts, val, tooltipDecimals(val))}</b>`
+            `<div style="padding:2px 0"><span style="color:#CBD5E1;font-size:11px;font-weight:600">${escapeHtml(String(ly))} × ${escapeHtml(String(lx))}</span></div>` +
+            `<div><span style="color:#CBD5E1">Valeur:</span> <b style="color:#fff">${formatTooltipNumber(Highcharts, val, tooltipDecimals(val))}</b></div>`
           );
         },
       },
@@ -108,14 +140,15 @@ export function buildDashboardChartOptions(data: ChartDataResponse): Options {
         {
           type: 'heatmap',
           name: data.y_axis || 'Intensité',
-          borderWidth: 0.5,
-          borderColor: HC_COLORS.border,
+          borderWidth: 1,
+          borderColor: '#FFFFFF',
           data: heatData,
         },
       ],
     };
   }
 
+  /* ═══ SCATTER ═══ */
   if (kind === 'scatter') {
     const xs = (d['axis_x'] as number[]) ?? [];
     const ys = (d['axis_y'] as number[]) ?? [];
@@ -126,26 +159,33 @@ export function buildDashboardChartOptions(data: ChartDataResponse): Options {
     return {
       chart: { type: 'scatter', zooming: { type: 'xy' } },
       title: baseTitle,
+      subtitle: baseSubtitle,
       xAxis: {
         type: 'linear',
         title: data.x_axis ? { text: data.x_axis } : undefined,
         labels: { formatter: axisLabelFormatter },
         gridLineWidth: 1,
+        gridLineDashStyle: 'Dot',
+        gridLineColor: HC_COLORS.grid,
       },
       yAxis: {
         type: 'linear',
         title: data.y_axis ? { text: data.y_axis } : undefined,
         labels: { formatter: axisLabelFormatter },
       },
+      legend: {
+        enabled: true,
+        verticalAlign: 'bottom',
+        align: 'center',
+      },
       tooltip: {
         formatter(this: Highcharts.Point) {
           const px = Number(this.x);
           const py = Number(this.y);
           return (
-            `<b>${escapeHtml(data.x_axis || 'X')}</b>: ` +
-            `<b>${formatTooltipNumber(Highcharts, px, tooltipDecimals(px))}</b><br/>` +
-            `<b>${escapeHtml(data.y_axis || 'Y')}</b>: ` +
-            `<b>${formatTooltipNumber(Highcharts, py, tooltipDecimals(py))}</b>`
+            `<div style="padding:2px 0"><span style="color:${this.color};font-size:12px">●</span> <b style="color:#fff">${escapeHtml(this.series?.name || '')}</b></div>` +
+            `<div><span style="color:#CBD5E1">${escapeHtml(data.x_axis || 'X')}:</span> <b style="color:#fff">${formatTooltipNumber(Highcharts, px, tooltipDecimals(px))}</b></div>` +
+            `<div><span style="color:#CBD5E1">${escapeHtml(data.y_axis || 'Y')}:</span> <b style="color:#fff">${formatTooltipNumber(Highcharts, py, tooltipDecimals(py))}</b></div>`
           );
         },
       },
@@ -160,42 +200,117 @@ export function buildDashboardChartOptions(data: ChartDataResponse): Options {
     };
   }
 
+  /* ═══ PIE ═══ */
+  if (kind === 'pie') {
+    const categories = (d['axis_x'] as (string | number)[]) ?? [];
+    const values = (d['axis_y'] as (number | null)[]) ?? [];
+    const pieData: PointOptionsObject[] = categories.map((name, i) => ({
+      name: String(name),
+      y: values[i] ?? 0,
+      color: HC_SERIES_COLORS[i % HC_SERIES_COLORS.length],
+    }));
+
+    return {
+      chart: { type: 'pie' },
+      title: baseTitle,
+      subtitle: baseSubtitle,
+      plotOptions: {
+        pie: {
+          allowPointSelect: true,
+          cursor: 'pointer',
+          borderRadius: 4,
+          borderWidth: 2,
+          borderColor: '#FFFFFF',
+          dataLabels: {
+            enabled: true,
+            format: '<b>{point.name}</b>: {point.percentage:.1f}%',
+            style: {
+              fontSize: '11px',
+              fontWeight: '600',
+              color: HC_COLORS.slate600,
+              textOutline: 'none',
+            },
+          },
+          showInLegend: true,
+        },
+      },
+      legend: {
+        enabled: true,
+        verticalAlign: 'bottom',
+        align: 'center',
+      },
+      tooltip: {
+        pointFormatter(this: Highcharts.Point) {
+          const y = Number(this.y);
+          return (
+            `<span style="color:${this.color};font-size:12px">●</span> ` +
+            `<span style="color:#CBD5E1">${escapeHtml(String(this.name))}:</span> ` +
+            `<b style="color:#fff">${formatTooltipNumber(Highcharts, y, tooltipDecimals(y))}</b> ` +
+            `<span style="color:#94A3B8">(${this.percentage?.toFixed(1)}%)</span>`
+          );
+        },
+      },
+      series: [{ type: 'pie', name: data.y_axis || 'Valeur', data: pieData }],
+    };
+  }
+
+  /* ═══ COLUMN / LINE / BAR ═══ */
   const categories = (d['axis_x'] as (string | number)[]) ?? [];
   const values = (d['axis_y'] as (number | null)[]) ?? [];
   const seriesData: (number | null)[] = values.map((v) => (v === null || v === undefined ? null : Number(v)));
-  const chartType = kind === 'line' ? 'line' : 'column';
+  const chartType = kind === 'line' ? 'line' : kind === 'bar' ? 'bar' : 'column';
 
   return {
     chart: { type: chartType },
     title: baseTitle,
+    subtitle: baseSubtitle,
     xAxis: {
       type: 'category',
       categories: categories.map((c) => String(c)),
       title: data.x_axis ? { text: data.x_axis } : undefined,
+      crosshair: chartType === 'column' ? { color: 'rgba(37, 99, 235, 0.06)', width: 1 } : undefined,
     },
     yAxis: {
       title: data.y_axis ? { text: data.y_axis } : undefined,
       labels: { formatter: axisLabelFormatter },
     },
+    legend: {
+      enabled: true,
+      verticalAlign: 'bottom',
+      align: 'center',
+    },
     plotOptions: {
       column: {
-        borderRadius: 3,
+        borderRadius: 5,
+        borderWidth: 0,
         pointPadding: 0.08,
         groupPadding: 0.12,
+        dataLabels: { enabled: false },
+        colorByPoint: categories.length <= 12,
+        colors: HC_SERIES_COLORS,
+      },
+      bar: {
+        borderRadius: 4,
+        borderWidth: 0,
+        pointPadding: 0.08,
+        groupPadding: 0.12,
+        colorByPoint: categories.length <= 12,
+        colors: HC_SERIES_COLORS,
       },
       line: {
-        marker: { radius: 3, symbol: 'circle' },
+        lineWidth: 2.5,
+        marker: { radius: 4, symbol: 'circle', lineWidth: 2, lineColor: '#FFFFFF' },
       },
     },
     tooltip: {
-      shared: chartType === 'column',
       formatter(this: Highcharts.Point) {
         const cat = this.category ?? this.x;
         const y = Number(this.y);
         const name = this.series?.name || data.y_axis || 'Valeur';
+        const dotColor = this.color || HC_SERIES_COLORS[0];
         return (
-          `<b>${escapeHtml(String(cat))}</b><br/>` +
-          `${escapeHtml(String(name))}: <b>${formatTooltipNumber(Highcharts, y, tooltipDecimals(y))}</b>`
+          `<div style="padding:2px 0"><span style="color:#CBD5E1;font-size:11px;font-weight:600">${escapeHtml(String(cat))}</span></div>` +
+          `<div><span style="color:${dotColor};font-size:12px">●</span> <span style="color:#CBD5E1">${escapeHtml(String(name))}:</span> <b style="color:#fff">${formatTooltipNumber(Highcharts, y, tooltipDecimals(y))}</b></div>`
         );
       },
     },

@@ -27,6 +27,9 @@ export const appConfig: ApplicationConfig = {
       modules: () => [
         import('highcharts/modules/accessibility'),
         import('highcharts/modules/heatmap'),
+        import('highcharts/modules/exporting'),
+        import('highcharts/modules/export-data'),
+        import('highcharts/modules/full-screen'),
       ],
       options: HIGHCHARTS_GLOBAL_OPTIONS,
     }),
