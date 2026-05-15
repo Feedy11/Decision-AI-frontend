@@ -25,8 +25,13 @@ export function buildChatChartOptions(spec: ChartSpec): Options {
   const hasData =
     d &&
     Array.isArray(d['axis_x']) &&
-    Array.isArray(d['axis_y']) &&
-    d['axis_x'].length > 0;
+    d['axis_x'].length > 0 &&
+    (Array.isArray(d['axis_y']) ||
+      (Array.isArray(d['series']) && (d['series'] as unknown[]).length > 0));
+  const multiSeries =
+    hasData &&
+    Array.isArray(d!['series']) &&
+    (d!['series'] as { name: string; values: number[] }[]).length > 0;
 
   const baseTitle: Options['title'] = {
     text: titleText,
@@ -243,7 +248,23 @@ export function buildChatChartOptions(spec: ChartSpec): Options {
         ? 'column'
         : 'column';
   const categories = hasData ? (d!['axis_x'] as (string | number)[]).map(String) : [];
-  const values = hasData ? (d!['axis_y'] as number[]) : [];
+  const values = hasData && Array.isArray(d!['axis_y']) ? (d!['axis_y'] as number[]) : [];
+
+  const hcSeries: Highcharts.SeriesOptionsType[] = multiSeries
+    ? (d!['series'] as { name: string; values: number[] }[]).map((s, i) => ({
+        type: chartType,
+        name: s.name,
+        data: s.values as (number | null | PointOptionsObject)[],
+        color: HC_SERIES_COLORS[i % HC_SERIES_COLORS.length],
+      }))
+    : [
+        {
+          type: chartType,
+          name: spec.y_col || 'Valeur',
+          data: values as (number | null | PointOptionsObject)[],
+          color: HC_SERIES_COLORS[0],
+        },
+      ];
 
   return {
     chart: { type: chartType },
@@ -268,7 +289,7 @@ export function buildChatChartOptions(spec: ChartSpec): Options {
       column: {
         borderRadius: 5,
         borderWidth: 0,
-        colorByPoint: categories.length <= 12,
+        colorByPoint: !multiSeries && categories.length <= 12,
         colors: HC_SERIES_COLORS,
         dataLabels: { enabled: false },
       },
@@ -289,13 +310,6 @@ export function buildChatChartOptions(spec: ChartSpec): Options {
         );
       },
     },
-    series: [
-      {
-        type: chartType,
-        name: spec.y_col || 'Valeur',
-        data: values as (number | null | PointOptionsObject)[],
-        color: HC_SERIES_COLORS[0],
-      },
-    ],
+    series: hcSeries,
   };
 }

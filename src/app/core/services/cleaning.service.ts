@@ -9,11 +9,12 @@ import {
   ValidationResult,
   ScanResult,
 } from '../../models/Cleaning.model';
+import { IA_API_BASE } from '../config/api-base';
 
 @Injectable({ providedIn: 'root' })
 export class CleaningService {
 
-  private readonly API = 'http://localhost:8001/api/v1';
+  private readonly API = IA_API_BASE;
 
   constructor(private http: HttpClient) { }
 

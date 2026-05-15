@@ -7,6 +7,7 @@ import { IaServicesService } from '../../core/services/ia-services.service';
 import { WorkflowService } from '../../core/services/workflow.service';
 import { filter } from 'rxjs/operators';
 import { LucideAngularModule } from 'lucide-angular';
+import { IA_API_BASE } from '../../core/config/api-base';
 
 // Routes publiques : on cache la sidebar
 const PUBLIC_ROUTES = ['/login', '/pass', '/reset-password'];
@@ -94,7 +95,7 @@ export class DataSidebarComponent implements OnInit {
   private loadDatasetCount(): void {
     this.http
       .get<{ total: number }>(
-        `http://localhost:8001/api/v1/datasets/my-datasets?page=1&page_size=1`
+        `${IA_API_BASE}/datasets/my-datasets?page=1&page_size=1`
       )
       .subscribe({
         next: (res) => {

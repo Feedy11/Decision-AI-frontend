@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastrService } from 'ngx-toastr';
+import { IA_API_BASE } from '../../core/config/api-base';
 
 @Component({
   selector: 'app-profile',
@@ -63,7 +64,7 @@ export class ProfileComponent implements OnInit {
 
   successPreferences = '';
 
-  private readonly IA_API = 'http://localhost:8001/api/v1';
+  private readonly IA_API = IA_API_BASE;
 
   constructor(
     private authService: AuthService,

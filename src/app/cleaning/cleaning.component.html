@@ -134,7 +134,7 @@
                 <tbody>
                   <tr *ngFor="let row of previewData.rows">
                     <td *ngFor="let col of previewData.columns">
-                      <span [class.muted]="row[col] === null">{{ row[col] !== null ? row[col] : 'vide' }}</span>
+                      <span [class.muted]="row[col] === null">{{ formatCellValue(row[col]) }}</span>
                     </td>
                   </tr>
                 </tbody>
@@ -342,16 +342,22 @@
         </div>
 
         <!-- Operations tags -->
-        <div class="ops-list" style="margin-bottom:20px">
-          <span class="op-tag" *ngFor="let op of cleanResult.operations_performed">{{ op }}</span>
+        <div class="ops-list" style="margin-bottom:20px; gap:10px; display:flex; flex-wrap:wrap;">
+          <div class="op-card" *ngFor="let op of cleanResult.operations_performed" [title]="operationInfo(op).desc">
+            <span class="op-card-icon">{{ operationInfo(op).icon }}</span>
+            <span class="op-card-body">
+              <span class="op-card-label">{{ operationInfo(op).label }}</span>
+              <span class="op-card-desc">{{ operationInfo(op).desc }}</span>
+            </span>
+          </div>
         </div>
 
         <!-- Toggle View (Moved above) -->
         <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:16px;" *ngIf="previewData">
-          <button class="tab-btn" [class.active]="!showPreview" (click)="showPreview = false" style="padding:6px 12px; font-size:0.75rem;">
+          <button class="tab-btn" [class.active]="!showPreview" (click)="showRepairPreview(false)" style="padding:6px 12px; font-size:0.75rem;">
             📋 Résumé
           </button>
-          <button class="tab-btn" [class.active]="showPreview" (click)="showPreview = true" style="padding:6px 12px; font-size:0.75rem;">
+          <button class="tab-btn" [class.active]="showPreview" (click)="showRepairPreview(true)" style="padding:6px 12px; font-size:0.75rem;">
             🗃️ Aperçu des données nettoyées
           </button>
         </div>
@@ -456,11 +462,11 @@
               <tr *ngFor="let row of previewData.rows; let idx = index">
                 <td *ngFor="let col of previewData.columns">
                   <ng-container *ngIf="getOldCellValue(row, col, idx) as oldVal; else normalCell">
-                    <span style="color: #ef4444; text-decoration: line-through; margin-right: 6px; font-size: 0.75rem;">{{ oldVal }}</span>
-                    <span style="color: #22c55e; font-weight: 600;">{{ row[col] !== null ? row[col] : 'vide' }}</span>
+                    <span style="color: #ef4444; text-decoration: line-through; margin-right: 6px; font-size: 0.75rem;">{{ formatCellValue(oldVal) }}</span>
+                    <span style="color: #22c55e; font-weight: 600;">{{ formatCellValue(row[col]) }}</span>
                   </ng-container>
                   <ng-template #normalCell>
-                    <span [class.muted]="row[col] === null">{{ row[col] !== null ? row[col] : 'vide' }}</span>
+                    <span [class.muted]="row[col] === null">{{ formatCellValue(row[col]) }}</span>
                   </ng-template>
                 </td>
               </tr>

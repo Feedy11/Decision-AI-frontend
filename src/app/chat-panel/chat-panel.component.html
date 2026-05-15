@@ -83,7 +83,10 @@
       >
         {{ ds.original_filename }}
       </button>
-      <div class="picker-empty" *ngIf="datasets.length === 0">
+      <div class="picker-empty" *ngIf="datasetsLoading">
+        Chargement des datasets…
+      </div>
+      <div class="picker-empty" *ngIf="!datasetsLoading && datasets.length === 0">
         Aucun dataset disponible. Uploadez-en un d'abord.
       </div>
     </div>
@@ -152,9 +155,9 @@
         <div class="msg-content" [innerHTML]="msg.content"></div>
 
         <app-highcharts-base
-          *ngIf="msg.chartSpec"
+          *ngIf="msg.chartOptions as chartOptions"
           class="msg-chart-container"
-          [chartOptions]="chartOptionsFromSpec(msg.chartSpec)"
+          [chartOptions]="chartOptions"
           [heightPx]="250"
           [chartVisible]="isOpen"
         />

@@ -3,13 +3,14 @@ import { HttpClient }      from '@angular/common/http';
 import { Observable }      from 'rxjs';
 
 import { AuthService } from './auth.service';
+import { IA_API_BASE } from '../config/api-base';
 import { AskRequest, AskResponse, ChatMessage, Conversation, CreateConversationRequest, CreateConversationResponse, SseEvent } from '../../models/chat.model';
 
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {
 
-  private readonly API = 'http://localhost:8001/api/v1';
+  private readonly API = IA_API_BASE;
 
   constructor(
     private http: HttpClient,

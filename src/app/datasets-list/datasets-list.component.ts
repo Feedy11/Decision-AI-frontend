@@ -6,6 +6,7 @@ import { RouterModule } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService } from '../core/services/auth.service';
 import { Dataset, DatasetListResponse } from '../models/Dataset.model';
+import { IA_API_BASE } from '../core/config/api-base';
 
 @Component({
   selector: 'app-datasets-list',
@@ -16,7 +17,7 @@ import { Dataset, DatasetListResponse } from '../models/Dataset.model';
 export class DatasetsListComponent implements OnInit {
    Math = Math;
 
-  private readonly IA_API = 'http://localhost:8001/api/v1';
+  private readonly IA_API = IA_API_BASE;
 
   //Données
   allDatasets     : Dataset[] = [];

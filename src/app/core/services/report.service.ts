@@ -3,11 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 import { ReportDocument } from '../../models/Report.model';
+import { IA_API_BASE } from '../config/api-base';
 
 @Injectable({ providedIn: 'root' })
 export class ReportService {
 
-  private readonly API = 'http://localhost:8001/api/v1';
+  private readonly API = IA_API_BASE;
 
   constructor(
     private http: HttpClient,

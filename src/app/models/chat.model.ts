@@ -1,3 +1,4 @@
+import type { Options } from 'highcharts';
 
 export interface Conversation {
   id              : number;
@@ -30,6 +31,7 @@ export interface ChatMessage {
   content        : string;
   intent        ?: string | null;
   chunk_ids     ?: string[] | null;
+  chart_spec    ?: ChartSpec | Record<string, unknown> | null;
   latency_ms    ?: number | null;
   created_at     : string;
 }
@@ -78,6 +80,7 @@ export interface UiMessage {
 
   isStreaming?: boolean;
   chartSpec  ?: ChartSpec | null;
+  chartOptions?: Options | null;
   intent    ?: string | null;
   latency_ms?: number | null;
   chunk_ids ?: string[] | null;

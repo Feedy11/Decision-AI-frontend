@@ -7,11 +7,12 @@ import {
   ColumnCategoriesResponse,
   StatisticalAnalyticsResponse
 } from '../../models/Analysis.model';
+import { IA_API_BASE } from '../config/api-base';
 
 @Injectable({ providedIn: 'root' })
 export class AnalysisService {
 
-  private readonly API = 'http://localhost:8001/api/v1';
+  private readonly API = IA_API_BASE;
 
   constructor(private http: HttpClient) {}
 

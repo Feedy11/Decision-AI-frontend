@@ -2,11 +2,12 @@ import { Injectable }                              from '@angular/core';
 import { HttpClient, HttpRequest, HttpHeaders }    from '@angular/common/http';
 import { Observable }                              from 'rxjs';
 import { Dataset, DatasetListResponse }            from '../../models/Dataset.model';
+import { IA_API_BASE } from '../config/api-base';
 
 @Injectable({ providedIn: 'root' })
 export class IaServicesService {
 
-  private readonly API = 'http://localhost:8001/api/v1';
+  private readonly API = IA_API_BASE;
 
   constructor(private http: HttpClient) {}
   getMyDatasets(page = 1, pageSize = 100): Observable<DatasetListResponse> {

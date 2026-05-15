@@ -2,12 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ChartDataResponse, DashboardExecuteResponse, DashboardRecord, RagInsightsResponse } from '../../models/Dashboard.model';
-
+import { IA_API_BASE } from '../config/api-base';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
 
-  private readonly API = 'http://localhost:8001/api/v1';
+  private readonly API = IA_API_BASE;
 
   constructor(private http: HttpClient) {}
 

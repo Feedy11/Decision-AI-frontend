@@ -31,6 +31,15 @@
       {{ isGenerating ? 'Génération Gemini...' : 'Générer le dashboard' }}
     </button>
 
+    <!-- History dropdown (Replaces Sidebar) -->
+    <select class="form-select history-select" *ngIf="savedDashboards.length > 0"
+            [ngModel]="selectedDashboard"
+            (ngModelChange)="selectDashboard($event)">
+      <option *ngFor="let d of savedDashboards" [ngValue]="d">
+        🕒 Historique: #{{ d.id }} — {{ formatDate(d.created_at) }}
+      </option>
+    </select>
+
     <button class="btn-report" [disabled]="!selectedDatasetId" (click)="goToReport()" id="dashboard-generate-report-btn">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -53,59 +62,23 @@
   <!-- Layout principal -->
   <div class="dash-layout" *ngIf="selectedDashboard">
 
-    <!-- Sidebar historique -->
-    <div class="dash-sidebar">
-      <div class="sidebar-title">Versions sauvegardées</div>
-      <div class="dash-history">
-        <div
-          class="history-item"
-          *ngFor="let d of savedDashboards"
-          [class.active]="selectedDashboard.id === d.id"
-          (click)="selectDashboard(d)"
-        >
-          <div class="hi-top">
-            <span class="hi-id">#{{ d.id }}</span>
-            <span class="hi-count">{{ d.dashboard_charts.length }} charts</span>
-          </div>
-          <div class="hi-date">{{ formatDate(d.created_at) }}</div>
-          <div class="hi-kpis">{{ d.executive_summary_kpis.length }} KPIs</div>
-        </div>
-        <div class="history-empty" *ngIf="savedDashboards.length === 0">
-          <p>Aucune version</p>
-        </div>
-      </div>
-    </div>
-
     <!-- Contenu principal -->
     <div class="dash-main">
 
-      <!-- Tabs -->
-      <div class="dash-tabs">
-        <button class="dtab" [class.active]="activeTab==='overview'" (click)="activeTab='overview'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect>
-            <rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect>
-          </svg>
-          Vue d'ensemble
-        </button>
-        <button class="dtab" [class.active]="activeTab==='charts'" (click)="activeTab='charts'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="20" x2="18" y2="10"></line>
-            <line x1="12" y1="20" x2="12" y2="4"></line>
-            <line x1="6" y1="20" x2="6" y2="14"></line>
-          </svg>
-          Graphiques
-          <span class="dtab-count" *ngIf="successfulCharts.length > 0">{{ successfulCharts.length }}</span>
-        </button>
-      </div>
-
-      <!-- ══ Vue d'ensemble ══ -->
-      <div [hidden]="activeTab!=='overview'">
+      <!-- ══ Vue d'ensemble (KPIs) ══ -->
+      <div>
 
         <!-- KPIs calculés (après exécution) -->
         <div class="kpi-row" *ngIf="visibleKpis.length > 0">
           <div class="kpi-tile" *ngFor="let kpi of visibleKpis">
-            <span class="kpi-tile-name">{{ kpi.kpi_name }}</span>
+            <div class="kpi-tile-top">
+              <span class="kpi-tile-name">{{ kpi.kpi_name }}</span>
+              <div class="kpi-icon-wrap">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+              </div>
+            </div>
             <span class="kpi-tile-val">{{ getKpiValue(kpi) }}</span>
             <span class="kpi-tile-col">{{ kpi.target_column }}</span>
           </div>
@@ -174,7 +147,7 @@
       </div>
 
       <!-- ══ Graphiques ══ -->
-      <div [hidden]="activeTab!=='charts'">
+      <div>
 
         <!-- En cours de chargement -->
         <div class="charts-grid" *ngIf="isLoading">
@@ -197,12 +170,15 @@
                 {{ c.chart_type }}
               </span>
             </div>
-            <p class="chart-insight" *ngIf="c.insight">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 4px; color: #F59E0B;">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-              </svg>
-              {{ c.insight }}
-            </p>
+            <div class="insight-box" *ngIf="c.insight">
+              <div class="insight-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                AI Insight
+              </div>
+              <p class="chart-insight-text">{{ c.insight }}</p>
+            </div>
 
             <!-- Erreur data -->
             <div class="hc-chart-error" *ngIf="chartDataMap[c.chart_index] && !chartDataMap[c.chart_index].execution_success">
@@ -214,7 +190,7 @@
               *ngIf="chartDataMap[c.chart_index]?.execution_success && highchartsOptionsForIndex(c.chart_index)"
               [chartOptions]="highchartsOptionsForIndex(c.chart_index)!"
               [heightPx]="340"
-              [chartVisible]="activeTab === 'charts'"
+              [chartVisible]="true"
             />
           </div>
 

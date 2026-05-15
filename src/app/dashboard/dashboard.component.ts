@@ -48,7 +48,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isLoadingCharts     = false;
   isLoadingDashboards = false;
 
-  activeTab: 'overview' | 'charts' = 'overview';
+
   private dashboardLoadSeq = 0;
 
   constructor(
@@ -95,7 +95,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.executeResult = null;
     this.chartDataMap = {};
     this.chartHighchartsOptions = {};
-    this.activeTab = 'overview';
 
     if (!datasetId) {
       this.isLoadingDashboards = false;
@@ -166,7 +165,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.executeResult     = null;
     this.chartDataMap      = {};
     this.chartHighchartsOptions = {};
-    this.activeTab = 'overview';
     // Auto-exécuter au clic sur un dashboard de l'historique
     this.executeAndLoadCharts(d.id);
   }

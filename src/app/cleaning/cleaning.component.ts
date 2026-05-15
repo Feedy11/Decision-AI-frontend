@@ -349,6 +349,19 @@ export class CleaningComponent implements OnInit, AfterViewChecked {
     return m[type] ?? '✏️';
   }
 
+  operationInfo(op: string): { icon: string; label: string; desc: string } {
+    const m: Record<string, { icon: string; label: string; desc: string }> = {
+      text_cleaning       : { icon: '✂️', label: 'Nettoyage texte',      desc: 'Espaces supprimés, casse uniformisée' },
+      data_types          : { icon: '🔢', label: 'Types corrigés',        desc: 'Textes convertis en nombres ou dates' },
+      outliers            : { icon: '📊', label: 'Valeurs aberrantes',    desc: 'Anomalies détectées et traitées' },
+      missing_values      : { icon: '🕳️', label: 'Valeurs manquantes',    desc: 'Cellules vides remplies ou lignes supprimées' },
+      duplicates          : { icon: '🔁', label: 'Doublons supprimés',    desc: 'Lignes identiques retirées du dataset' },
+      date_standardization: { icon: '📅', label: 'Dates standardisées',   desc: 'Format de date uniformisé (YYYY-MM-DD)' },
+      missing_tokens      : { icon: '🔤', label: 'Tokens nuls nettoyés',  desc: 'Valeurs "na", "?", "--" converties en vide' },
+    };
+    return m[op] ?? { icon: '⚙️', label: op, desc: 'Opération de nettoyage' };
+  }
+
   // ── Chart rendering ──────────────────────────────────────────────────
   private renderPieChart(): void {
     const container = document.getElementById('error-pie-chart');
@@ -433,8 +446,17 @@ export class CleaningComponent implements OnInit, AfterViewChecked {
   private renderRepairCharts(): void {
     const c1 = document.getElementById('chart-avant');
     const c2 = document.getElementById('chart-apres');
+    // Guard: DOM elements must exist — if not, do NOT mark as rendered so we retry next tick
     if (!c1 || !c2 || !this.cleanResult) return;
-    this.repairChartsRendered = true;
+    this.repairChartsRendered = true;  // only mark done AFTER confirming DOM is ready
+
+    // Destroy any previous Highcharts instances living inside these containers
+    // so Highcharts doesn't complain about re-using a container.
+    // Use (c as any).renderTo because Highcharts typings don't expose it publicly.
+    Highcharts.charts
+      .filter((c): c is Highcharts.Chart => !!c)
+      .filter(c => (c as any).renderTo === c1 || (c as any).renderTo === c2)
+      .forEach(c => c.destroy());
 
     const r = this.cleanResult;
     const categories = ['Lignes', 'Manquants', 'Doublons', 'Outliers', 'Types'];
@@ -494,6 +516,22 @@ export class CleaningComponent implements OnInit, AfterViewChecked {
 
     Highcharts.chart(c1, { ...sharedOptions, series: [{ type: 'bar', data: avantData } as any] });
     Highcharts.chart(c2, { ...sharedOptions, series: [{ type: 'bar', data: apresData } as any] });
+  }
+
+  // ── Repair preview toggle ────────────────────────────────────────────
+  showRepairPreview(show: boolean): void {
+    this.showPreview = show;
+    if (!show) {
+      // Reset the flag so the charts will be re-rendered
+      this.repairChartsRendered = false;
+      // Use setTimeout(0) to push rendering past the current Angular change-detection
+      // cycle — the *ngIf block containing #chart-avant/#chart-apres needs one full
+      // tick to appear in the DOM before Highcharts can render into it.
+      setTimeout(() => {
+        this.repairChartsRendered = false; // ensure it's still false after the tick
+        this.renderRepairCharts();
+      }, 0);
+    }
   }
 
   // ── Issue filter ──────────────────────────────────────────────────────
@@ -616,25 +654,45 @@ export class CleaningComponent implements OnInit, AfterViewChecked {
 
   getOldCellValue(row: any, col: string, index: number): any {
     if (!this.oldPreviewData || !this.oldPreviewData.rows) return null;
-    
+
+    const isDifferent = (oldVal: any, newVal: any): boolean => {
+      if (oldVal === newVal) return false;
+      // Ignore pure case changes (uppercase ↔ lowercase)
+      if (typeof oldVal === 'string' && typeof newVal === 'string' &&
+          oldVal.toLowerCase() === newVal.toLowerCase()) return false;
+      return true;
+    };
+
     // 1. Try matching by an ID column (most robust if rows were deleted)
     const idKey = Object.keys(row).find(k => k.toLowerCase() === 'id' || k.toLowerCase().includes('id'));
     if (idKey) {
       const rowId = row[idKey];
       const oldRow = this.oldPreviewData.rows.find(r => r[idKey] === rowId);
       if (oldRow) {
-        if (oldRow[col] !== row[col]) {
+        if (isDifferent(oldRow[col], row[col])) {
           return oldRow[col] !== null ? oldRow[col] : 'vide';
         }
         return null;
       }
     }
-    
+
     // 2. Fallback to index matching (works well if no rows were deleted)
     const oldRow = this.oldPreviewData.rows[index];
-    if (oldRow && oldRow[col] !== row[col]) {
+    if (oldRow && isDifferent(oldRow[col], row[col])) {
       return oldRow[col] !== null ? oldRow[col] : 'vide';
     }
     return null;
+  }
+
+  /** Format a value for display: numbers get 2 decimal places if they have decimals */
+  formatCellValue(val: any): string {
+    if (val === null || val === undefined) return 'vide';
+    if (typeof val === 'number' || (typeof val === 'string' && !isNaN(Number(val)) && val.trim() !== '')) {
+      const n = Number(val);
+      if (!Number.isInteger(n)) {
+        return n.toFixed(2);
+      }
+    }
+    return String(val);
   }
 }

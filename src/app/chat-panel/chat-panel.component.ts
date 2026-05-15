@@ -42,6 +42,7 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
   isAdmin       = false;
 
   //Dataset & conversation
+  datasetsLoading  = false;
   datasets         : Dataset[]      = [];
   conversations    : Conversation[] = [];
   activeDatasetId  : number | null  = null;
@@ -57,6 +58,7 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
   //SSE streaming
   private eventSource    : EventSource | null = null;
   private streamingMsgId : string | null      = null;
+  private streamCompleted = false;
 
   // Typewriter queue
   private typewriterQueue : string[]  = [];
@@ -88,12 +90,22 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.isAdmin = this.auth.isSuperuser();
+    this.isAdmin = this.resolveIsAdmin();
     this.checkRoute(this.router.url);
     this.router.events
       .pipe(filter(e => e instanceof NavigationEnd))
       .subscribe((e: any) => this.checkRoute(e.urlAfterRedirects));
     this.loadDatasets();
+    // Re-load once profile is in localStorage (is_superuser may arrive after token)
+    if (!this.auth.getUser()) {
+      this.auth.loadUserMe().subscribe({
+        next: () => {
+          this.isAdmin = this.resolveIsAdmin();
+          this.loadDatasets();
+        },
+        error: () => this.loadDatasets(),
+      });
+    }
   }
 
   ngOnDestroy(): void {
@@ -110,15 +122,53 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
     this.isOpen = !this.isOpen;
     if (this.isOpen) {
       this.unreadCount = 0;
+      this.isAdmin = this.resolveIsAdmin();
+      this.loadDatasets();
       setTimeout(() => this.inputRef?.nativeElement?.focus(), 200);
+    }
+  }
+
+  /** Admin if profile says superuser or JWT carries role=admin (IA-service uses JWT role). */
+  private resolveIsAdmin(): boolean {
+    if (this.auth.isSuperuser()) return true;
+    const token = this.auth.getToken();
+    if (!token) return false;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.role === 'admin';
+    } catch {
+      return false;
     }
   }
 
   //Datasets
   private loadDatasets(): void {
-    this.iaService.getMyDatasets(1, 100).subscribe({
-      next : (res) => { this.datasets = res.datasets; },
-      error: () => {}
+    if (!this.auth.getToken()) {
+      this.datasets = [];
+      this.datasetsLoading = false;
+      return;
+    }
+    this.datasetsLoading = true;
+    const request$ = this.isAdmin
+      ? this.iaService.getAllDatasets(1, 100)
+      : this.iaService.getMyDatasets(1, 100);
+
+    request$.subscribe({
+      next: (res) => {
+        this.datasetsLoading = false;
+        this.datasets = res.datasets ?? [];
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.datasetsLoading = false;
+        this.datasets = [];
+        const detail = err?.error?.detail;
+        const msg = typeof detail === 'string'
+          ? detail
+          : 'Impossible de charger les datasets. Vérifiez que le service IA (port 8001) est démarré et que ng serve utilise le proxy.';
+        this.toastr.error(msg, 'Assistant IA', { timeOut: 5000 });
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -182,18 +232,25 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
 
     this.chatSvc.getMessages(this.activeDatasetId!, conv.id).subscribe({
       next: (msgs) => {
-        this.messages = msgs.map(m => ({
-          id        : m.id,
-          role      : m.role,
-          content   : m.content,
-          timestamp : new Date(m.created_at),
-          intent    : m.intent,
-          latency_ms: m.latency_ms,
-          chunk_ids : m.chunk_ids
-        }));
+        this.messages = msgs.map(m => {
+          const chartSpec = (m.chart_spec as ChartSpec | undefined) ?? null;
+          return {
+            id        : m.id,
+            role      : m.role,
+            content   : m.content,
+            timestamp : new Date(m.created_at),
+            intent    : m.intent,
+            latency_ms: m.latency_ms,
+            chunk_ids : m.chunk_ids,
+            chartSpec,
+            chartOptions: chartSpec ? this.safeBuildChartOptions(chartSpec) : null,
+          };
+        });
         this.scrollToBottom();
       },
-      error: () => {}
+      error: () => {
+        this.toastr.error('Impossible de charger l\'historique.', 'Assistant IA', { timeOut: 3000 });
+      }
     });
   }
 
@@ -223,6 +280,7 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
     this.typewriterActive = false;
     const streamId = `tmp-ai-${Date.now()}`;
     this.streamingMsgId = streamId;
+    this.streamCompleted = false;
     const aiMsg: UiMessage = {
       id: streamId, role: 'assistant',
       content: '', timestamp: new Date(), isStreaming: true
@@ -240,20 +298,24 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
     // Token par token → typewriter streaming
     this.eventSource.addEventListener('token', (e: MessageEvent) => {
       this.ngZone.run(() => {
-        const data  = JSON.parse(e.data);
+        const data  = this.parseEventData(e);
+        if (!data) return;
         const delta = data.delta ?? '';
         if (!delta) return;
-        // Split on word boundaries (keeping whitespace tokens)
-        const words = delta.split(/(?<=\s)|(?=\s)/).filter((w: string) => w.length > 0);
-        this.typewriterQueue.push(...words);
-        this.drainTypewriterQueue(streamId);
+        const msg = this.messages.find(m => m.id === streamId);
+        if (msg) {
+          msg.content += delta;
+          this.scrollToBottom();
+          this.cdr.detectChanges();
+        }
       });
     });
 
     // Intent détecté
     this.eventSource.addEventListener('intent', (e: MessageEvent) => {
       this.ngZone.run(() => {
-        const data = JSON.parse(e.data);
+        const data = this.parseEventData(e);
+        if (!data) return;
         const msg  = this.messages.find(m => m.id === streamId);
         if (msg) msg.intent = data.intent;
         this.cdr.detectChanges();
@@ -263,7 +325,8 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
     // Chunks (Contexte)
     this.eventSource.addEventListener('retrieval', (e: MessageEvent) => {
       this.ngZone.run(() => {
-        const data = JSON.parse(e.data);
+        const data = this.parseEventData(e);
+        if (!data) return;
         const msg  = this.messages.find(m => m.id === streamId);
         if (msg) msg.chunk_ids = data.chunk_ids;
         this.cdr.detectChanges();
@@ -273,11 +336,26 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
     // Chart spec généré
     this.eventSource.addEventListener('chart', (e: MessageEvent) => {
       this.ngZone.run(() => {
-        const data = JSON.parse(e.data);
+        const data = this.parseEventData(e);
+        if (!data) return;
         const msg  = this.messages.find(m => m.id === streamId);
-        if (msg) {
-          msg.chartSpec = data.chart_spec;
+        if (msg && data.chart_spec) {
+          this.attachChartSpec(msg, data.chart_spec as ChartSpec);
+          this.scrollToBottom();
         }
+        this.cdr.detectChanges();
+      });
+    });
+
+    // Message persisté en base (id réel)
+    this.eventSource.addEventListener('message_persisted', (e: MessageEvent) => {
+      this.ngZone.run(() => {
+        const data = this.parseEventData(e);
+        const msg  = this.messages.find(m => m.id === streamId);
+        if (msg && data?.message_id) {
+          msg.id = data.message_id;
+        }
+        this.closeEventSource();
         this.cdr.detectChanges();
       });
     });
@@ -285,41 +363,94 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
     // Fin du stream
     this.eventSource.addEventListener('done', (e: MessageEvent) => {
       this.ngZone.run(() => {
-        const data = JSON.parse(e.data);
+        const data = this.parseEventData(e);
+        if (!data) return;
         const msg  = this.messages.find(m => m.id === streamId);
         if (msg) {
           msg.isStreaming = false;
           msg.latency_ms  = data.latency_ms;
-          msg.id          = data.message_id ?? streamId;
+          if (data.message_id && data.message_id > 0) {
+            msg.id = data.message_id;
+          }
+          if (data.chart_spec && !msg.chartSpec) {
+            this.attachChartSpec(msg, data.chart_spec as ChartSpec);
+          }
         }
+        this.streamCompleted = true;
         this.isTyping = false; this.streamingMsgId = null;
-        this.closeEventSource(); this.scrollToBottom();
+        this.scrollToBottom();
         this.cdr.detectChanges();
       });
     });
 
     // Erreur SSE du backend
-    this.eventSource.addEventListener('error', () => {
+    this.eventSource.addEventListener('error', (e: Event) => {
       this.ngZone.run(() => {
-        this.handleStreamError(streamId);
+        if (this.streamCompleted) {
+          this.closeEventSource();
+          return;
+        }
+        const data = this.parseEventData(e);
+        this.handleStreamError(streamId, data?.error);
       });
     });
 
     // Erreur connexion EventSource
     this.eventSource.onerror = () => {
       this.ngZone.run(() => {
+        if (this.streamCompleted) {
+          this.closeEventSource();
+          return;
+        }
         this.handleStreamError(streamId);
       });
     };
   }
 
-  private handleStreamError(streamId: string): void {
+  private parseEventData(event: Event): any | null {
+    const raw = (event as MessageEvent).data;
+    if (typeof raw !== 'string' || !raw.trim()) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+
+  private getStreamErrorMessage(error?: string): string {
+    const raw = (error || '').trim();
+    const lower = raw.toLowerCase();
+
+    if (lower.includes('resource_exhausted') || lower.includes('quota') || lower.includes('429')) {
+      return 'Le quota Gemini est atteint pour le moment. Reessayez dans quelques minutes ou changez de cle/API plan.';
+    }
+    if (lower.includes('unavailable') || lower.includes('503') || lower.includes('high demand')) {
+      return 'Gemini est temporairement indisponible. Reessayez dans un moment.';
+    }
+    if (lower.includes('gemini_api_key') || lower.includes('api key')) {
+      return 'La cle GEMINI_API_KEY manque ou est invalide cote service IA.';
+    }
+    if (lower.includes('analysis not found') || lower.includes('run post')) {
+      return 'Ce dataset doit etre analyse avant de discuter avec lui.';
+    }
+
+    return raw || 'Une erreur est survenue. Veuillez reessayer.';
+  }
+
+  private handleStreamError(streamId: string, error?: string): void {
     const msg = this.messages.find(m => m.id === streamId);
+    if (msg && !msg.content) {
+      msg.content = this.getStreamErrorMessage(error);
+    }
     if (msg) {
       if (!msg.content) msg.content = '❌ Une erreur est survenue. Veuillez réessayer.';
       msg.isStreaming = false;
     }
+    this.typewriterQueue = [];
+    this.typewriterActive = false;
     this.isTyping = false;
+    this.streamingMsgId = null;
+    this.streamCompleted = true;
     this.closeEventSource();
     this.cdr.detectChanges();
   }
@@ -353,6 +484,11 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
 
   //Suggestion
   sendSuggestion(text: string): void {
+    if (!this.activeDatasetId || !this.activeConvId) {
+      this.toastr.warning('Sélectionnez d\'abord un dataset.', 'Assistant IA', { timeOut: 3000 });
+      this.showDatasetPicker = true;
+      return;
+    }
     this.inputText = text;
     this.sendMessage();
   }
@@ -418,7 +554,17 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
     return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
   }
 
-  chartOptionsFromSpec(spec: ChartSpec): Options {
-    return buildChatChartOptions(spec);
+  private attachChartSpec(msg: UiMessage, spec: ChartSpec): void {
+    msg.chartSpec = spec;
+    msg.chartOptions = this.safeBuildChartOptions(spec);
+  }
+
+  private safeBuildChartOptions(spec: ChartSpec): Options | null {
+    try {
+      return buildChatChartOptions(spec);
+    } catch (err) {
+      console.warn('Invalid chat chart spec:', err, spec);
+      return null;
+    }
   }
 }
