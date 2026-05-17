@@ -6,7 +6,6 @@ import { FormsModule }      from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ToastrService }    from 'ngx-toastr';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 import { ReportService }    from '../core/services/report.service';
 import { IaServicesService } from '../core/services/ia-services.service';
@@ -405,7 +404,7 @@ export class ReportComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ── PDF Export ────────────────────────────────────────────
+  // ── PDF Export — Simple clean document ─────────────────────
   async exportToPdf(): Promise<void> {
     if (!this.isComplete || this.isExporting) return;
 
@@ -413,53 +412,183 @@ export class ReportComponent implements OnInit, OnDestroy {
     const toastId = this.toastr.info('Préparation du PDF...', 'Export en cours', { timeOut: 0 }).toastId;
 
     try {
-      const element = document.querySelector('.report-layout') as HTMLElement;
-      if (!element) throw new Error('Contenu du rapport introuvable.');
-
-      // 1. Add a temporary class to force all sections visible
-      element.classList.add('export-mode');
-
-      // Wait a bit for layout to settle
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: 1200 // Ensure consistent width for capture
-      });
-
-      // 2. Remove the temporary class
-      element.classList.remove('export-mode');
-
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
+      const W = pdf.internal.pageSize.getWidth();
+      const H = pdf.internal.pageSize.getHeight();
+      const ML = 20;
+      const MR = 20;
+      const CW = W - ML - MR;
+      const now = new Date();
+      let pageNum = 0;
 
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      // ── Helpers ─────────────────────────────────────
+      const addFooter = () => {
+        pageNum++;
+        pdf.setTextColor(160, 160, 160);
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(`${pageNum}`, W / 2, H - 12, { align: 'center' });
+      };
 
-      // Handle multi-page PDF if needed
-      let heightLeft = pdfHeight;
-      let position = 0;
-      const pageHeight = pdf.internal.pageSize.getHeight();
+      const checkPage = (y: number, need: number): number => {
+        if (y + need > H - 20) {
+          addFooter();
+          pdf.addPage();
+          return 25;
+        }
+        return y;
+      };
 
-      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-      heightLeft -= pageHeight;
+      const wrap = (t: string): string[] => pdf.splitTextToSize(t, CW);
 
-      while (heightLeft >= 0) {
-        position = heightLeft - pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-        heightLeft -= pageHeight;
+      // ── Document ────────────────────────────────────
+      let y = 30;
+
+      // Title — size 20, bold
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(20);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('RAPPORT D\'ANALYSE IA', ML, y);
+      y += 10;
+
+      // Dataset & date
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(80, 80, 80);
+      pdf.text(`Dataset : ${this.datasetName || '—'}    |    ${now.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}`, ML, y);
+      y += 4;
+      pdf.setDrawColor(0, 0, 0);
+      pdf.setLineWidth(0.4);
+      pdf.line(ML, y, W - MR, y);
+      y += 14;
+
+      // ── 1. Ce qui s'est passé ───────────────────────
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Ce qui s\'est passé', ML, y);
+      y += 9;
+
+      const whText = this.whatHappened?.narrative || this.whatHappenedText || '';
+      if (whText) {
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(0, 0, 0);
+        const lines = wrap(whText);
+        for (const line of lines) {
+          y = checkPage(y, 6);
+          pdf.text(line, ML, y);
+          y += 5.5;
+        }
+      }
+      y += 10;
+
+      // ── 2. Pourquoi ─────────────────────────────────
+      y = checkPage(y, 25);
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Pourquoi', ML, y);
+      y += 9;
+
+      const whyText = this.whyItHappened?.narrative || this.whyItHappenedText || '';
+      if (whyText) {
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(0, 0, 0);
+        const lines = wrap(whyText);
+        for (const line of lines) {
+          y = checkPage(y, 6);
+          pdf.text(line, ML, y);
+          y += 5.5;
+        }
+      }
+      y += 10;
+
+      // ── 3. Recommandations ──────────────────────────
+      y = checkPage(y, 25);
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Recommandations', ML, y);
+      y += 9;
+
+      if (this.whatToDo && this.whatToDo.length > 0) {
+        this.whatToDo.forEach((rec, idx) => {
+          y = checkPage(y, 16);
+          pdf.setTextColor(0, 0, 0);
+          pdf.setFontSize(11);
+          pdf.setFont('helvetica', 'bold');
+          const aLines = wrap(`${idx + 1}. ${rec.action}`);
+          aLines.forEach((line: string) => { pdf.text(line, ML, y); y += 5.5; });
+
+          pdf.setFont('helvetica', 'normal');
+          pdf.setTextColor(60, 60, 60);
+          const oLines = wrap(`Résultat attendu : ${rec.expected_outcome}`);
+          oLines.forEach((line: string) => { y = checkPage(y, 6); pdf.text(line, ML + 5, y); y += 5.5; });
+          y += 4;
+        });
+      }
+      y += 6;
+
+      // ── 4. À éviter ─────────────────────────────────
+      if (this.whatToAvoid && this.whatToAvoid.length > 0) {
+        y = checkPage(y, 25);
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(16);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('À éviter', ML, y);
+        y += 9;
+
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(0, 0, 0);
+        this.whatToAvoid.forEach((item) => {
+          y = checkPage(y, 8);
+          const lines = wrap(`- ${item}`);
+          lines.forEach((line: string) => { pdf.text(line, ML, y); y += 5.5; });
+          y += 2;
+        });
+        y += 6;
       }
 
-      const filename = `Rapport_IA_${this.datasetName.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`;
-      pdf.save(filename);
+      // ── 5. Sources ──────────────────────────────────
+      if (this.allSources.length > 0) {
+        y = checkPage(y, 25);
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(16);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Sources', ML, y);
+        y += 9;
+
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(0, 0, 0);
+        this.allSources.forEach((src) => {
+          y = checkPage(y, 10);
+          pdf.text(`- ${src.title}`, ML, y);
+          y += 5.5;
+          if (src.url) {
+            pdf.setTextColor(100, 100, 100);
+            pdf.setFontSize(9);
+            pdf.text(src.url, ML + 5, y);
+            pdf.setFontSize(11);
+            pdf.setTextColor(0, 0, 0);
+            y += 5;
+          }
+        });
+      }
+
+      // Footer on last page
+      addFooter();
+
+      // Save
+      const safeName = (this.datasetName || 'rapport').replace(/[^a-zA-Z0-9À-ÿ\s_-]/g, '').replace(/\s+/g, '_');
+      pdf.save(`Rapport_IA_${safeName}_${now.toISOString().slice(0, 10)}.pdf`);
 
       this.toastr.remove(toastId);
       this.toastr.success('Le rapport a été téléchargé.', 'Export réussi');
+
     } catch (err) {
       console.error('PDF Export Error:', err);
       this.toastr.remove(toastId);
