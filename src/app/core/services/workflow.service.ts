@@ -174,15 +174,19 @@ export class WorkflowService {
   /** Reset entire workflow (re-upload scenario) */
   resetWorkflow(): void {
     this.steps = this.deepClone(this.defaultSteps);
-    this.currentIndexSubject.next(0);
-    this.publish();
+    this.datasetIdSubject.next(null);
+    this.setActiveStep(0);
     this.router.navigate([this.steps[0].route]);
   }
 
   /* ─── Internal ──────────────────────────────────────── */
 
   private setActiveStep(index: number): void {
-    this.steps.forEach((s, i) => s.active = i === index);
+    this.steps.forEach((s, i) => {
+      s.active = i === index;
+      // Only steps before the current one are "done" (avoids stale localStorage checkmarks)
+      s.completed = i < index;
+    });
     this.currentIndexSubject.next(index);
     this.publish();
   }
@@ -219,7 +223,7 @@ export class WorkflowService {
         savedSteps.forEach((s: any) => {
           const step = this.steps.find(x => x.id === s.id);
           if (step) {
-            step.completed = s.completed;
+            // completed is derived from route index in setActiveStep — do not restore
             step.accessible = s.accessible;
           }
         });

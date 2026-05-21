@@ -43,10 +43,14 @@ function trimTrailingZeros(n: number): string {
 
 /** Tooltips: full grouping with thousands separators (1,380,000). */
 export function formatTooltipNumber(
-  hc: typeof Highcharts,
   value: number,
   decimals = 2
 ): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return '';
+  }
   const d = Number.isInteger(value) && Math.abs(value) >= 1000 ? 0 : decimals;
-  return hc.numberFormat(value, d, '.', ',');
+  const parts = value.toFixed(d).split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return parts.join('.');
 }

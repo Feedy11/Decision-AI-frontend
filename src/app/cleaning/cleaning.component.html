@@ -70,9 +70,9 @@
           </div>
 
           <!-- Dataset selector -->
-          <div class="field" style="margin-bottom:16px">
+          <div class="field" style="margin-bottom:16px" [class.field--dimmed]="isCleanPhaseLoading">
             <label>Dataset à analyser <span class="req">*</span></label>
-            <select class="form-select" [(ngModel)]="selectedDatasetId">
+            <select class="form-select" [(ngModel)]="selectedDatasetId" [disabled]="isCleanPhaseLoading">
               <option [ngValue]="null">-- Sélectionner un dataset --</option>
               <option *ngFor="let d of datasets" [ngValue]="d.id">
                 #{{ d.id }} — {{ d.original_filename }} ({{ d.status }})
@@ -80,16 +80,17 @@
             </select>
           </div>
 
-          <!-- Scan loading spinner -->
-          <div *ngIf="isScanning" class="table-loader" style="padding:32px 0">
-            <svg class="spin" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5">
+          <!-- Loader: processing after upload + scan (workflow auto) -->
+          <div *ngIf="isCleanPhaseLoading" class="clean-phase-loader">
+            <svg class="spin" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5">
               <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
             </svg>
-            Scan en cours...
+            <p class="clean-phase-loader__title">{{ cleanLoaderTitle }}</p>
+            <p class="clean-phase-loader__hint">{{ cleanLoaderHint }}</p>
           </div>
 
           <!-- ── Error sheet ── -->
-          <div *ngIf="scanResult && !isScanning">
+          <div *ngIf="scanResult && !isCleanPhaseLoading">
 
             <!-- Summary badges -->
             <div class="scan-summary">
@@ -124,7 +125,7 @@
             </div>
 
             <!-- Data Preview Table -->
-            <div *ngIf="showPreview && previewData" class="scan-table-wrap" style="max-height: 400px; overflow-y: auto;">
+            <div *ngIf="showPreview && previewData" class="scan-table-wrap preview-table-wrap">
               <table class="scan-table">
                 <thead>
                   <tr>
@@ -267,8 +268,14 @@
             </div>
 
             <!-- 3D Pie Chart -->
-            <div id="error-pie-chart" *ngIf="scanResult"></div>
-            <div *ngIf="!scanResult" class="chart-placeholder">
+            <div id="error-pie-chart" *ngIf="scanResult && !isCleanPhaseLoading"></div>
+            <div *ngIf="isCleanPhaseLoading" class="chart-placeholder">
+              <svg class="spin" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+              </svg>
+              <span>{{ cleanLoaderTitle }}</span>
+            </div>
+            <div *ngIf="!scanResult && !isCleanPhaseLoading" class="chart-placeholder">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5">
                 <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 <path d="M12 3a9 9 0 019 9"></path>

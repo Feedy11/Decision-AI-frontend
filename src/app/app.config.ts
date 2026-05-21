@@ -24,12 +24,13 @@ import { HIGHCHARTS_GLOBAL_OPTIONS } from './shared/highcharts/highcharts-global
 export const appConfig: ApplicationConfig = {
   providers: [
     provideHighcharts({
+      instance: () => import('highcharts/esm/highcharts').then(m => m.default),
       modules: () => [
-        import('highcharts/modules/accessibility'),
-        import('highcharts/modules/heatmap'),
-        import('highcharts/modules/exporting'),
-        import('highcharts/modules/export-data'),
-        import('highcharts/modules/full-screen'),
+        import('highcharts/esm/modules/accessibility'),
+        import('highcharts/esm/modules/heatmap'),
+        import('highcharts/esm/modules/exporting'),
+        import('highcharts/esm/modules/export-data'),
+        import('highcharts/esm/modules/full-screen'),
       ],
       options: HIGHCHARTS_GLOBAL_OPTIONS,
     }),

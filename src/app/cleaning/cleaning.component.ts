@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, AfterViewChecked } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewChecked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { Dataset } from '../models/Dataset.model';
@@ -20,7 +20,7 @@ import * as Highcharts from 'highcharts';
   templateUrl: './cleaning.component.html',
   styleUrl: './cleaning.component.css'
 })
-export class CleaningComponent implements OnInit, AfterViewChecked {
+export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   // ── View phase: 'scan' shows error sheet, 'repair' shows diff result ──
   phase: 'scan' | 'repair' = 'scan';
@@ -40,7 +40,13 @@ export class CleaningComponent implements OnInit, AfterViewChecked {
 
   // Scan (BEFORE cleaning)
   isScanning  = false;
+  /** Workflow: wait for upload processing + scan (full-card loader). */
+  isPreparingDataset = false;
   scanResult  : ScanResult | null = null;
+
+  private pollTimer: ReturnType<typeof setTimeout> | null = null;
+  private static readonly POLL_INTERVAL_MS = 2000;
+  private static readonly POLL_MAX_ATTEMPTS = 45;
 
   // Nettoyage (AFTER cleaning)
   saveAsNew    = false;
@@ -93,6 +99,26 @@ export class CleaningComponent implements OnInit, AfterViewChecked {
     this.loadProfiles();
   }
 
+  ngOnDestroy(): void {
+    this.clearPollTimer();
+  }
+
+  get isCleanPhaseLoading(): boolean {
+    return this.isPreparingDataset || this.isScanning;
+  }
+
+  get cleanLoaderTitle(): string {
+    if (this.isScanning) return 'Analyse des erreurs en cours…';
+    return 'Préparation du dataset après import…';
+  }
+
+  get cleanLoaderHint(): string {
+    if (this.isScanning) {
+      return 'Détection des valeurs manquantes, doublons et aberrations.';
+    }
+    return 'Le fichier est en cours de traitement. Cela peut prendre quelques instants.';
+  }
+
   ngAfterViewChecked(): void {
     if (this.scanResult && !this.isScanning && !this.chartRendered) {
       this.renderPieChart();
@@ -104,22 +130,68 @@ export class CleaningComponent implements OnInit, AfterViewChecked {
 
   // ── Datasets ──────────────────────────────────────────────────────────
   private loadDatasets(): void {
+    const wfId = this.router.url.includes('/workflow/') ? this.wf.getDatasetId() : null;
+
+    if (wfId) {
+      this.selectedDatasetId = wfId;
+      this.isPreparingDataset = true;
+      this.scanResult = null;
+      this.pollDatasetUntilReady(wfId);
+      return;
+    }
+
     this.iaService.getMyDatasets(1, 100).subscribe({
-      next: (res) => {
-        if (this.router.url.includes('/workflow/')) {
-          const wfId = this.wf.getDatasetId();
-          if (wfId) {
-            this.datasets          = res.datasets.filter(d => d.id === wfId);
-            this.selectedDatasetId = wfId;
-            this.loadScan();       // ← auto-scan when entering cleaning step
-          } else {
-            this.datasets = res.datasets;
-          }
-        } else {
-          this.datasets = res.datasets;
+      next: (res) => { this.datasets = res.datasets; },
+      error: () => this.toastr.error('Impossible de charger les datasets.', 'Erreur', { timeOut: 4000 }),
+    });
+  }
+
+  private clearPollTimer(): void {
+    if (this.pollTimer) {
+      clearTimeout(this.pollTimer);
+      this.pollTimer = null;
+    }
+  }
+
+  /** Poll until backend finishes parsing the uploaded file, then auto-scan. */
+  private pollDatasetUntilReady(datasetId: number, attempt = 0): void {
+    this.clearPollTimer();
+    this.iaService.getDatasetById(datasetId).subscribe({
+      next: (ds) => {
+        this.datasets = [ds];
+        const status = String(ds.status ?? '').toLowerCase();
+
+        if (status === 'processed') {
+          this.loadScan();
+          return;
         }
+        if (status === 'failed') {
+          this.isPreparingDataset = false;
+          this.toastr.error(
+            'Le traitement du fichier a échoué. Réessayez un import.',
+            'Erreur',
+            { timeOut: 5000 },
+          );
+          return;
+        }
+        if (attempt >= CleaningComponent.POLL_MAX_ATTEMPTS) {
+          this.isPreparingDataset = false;
+          this.toastr.warning(
+            'Le dataset prend plus de temps que prévu. Vous pouvez lancer le scan manuellement.',
+            'Info',
+            { timeOut: 6000 },
+          );
+          return;
+        }
+        this.pollTimer = setTimeout(
+          () => this.pollDatasetUntilReady(datasetId, attempt + 1),
+          CleaningComponent.POLL_INTERVAL_MS,
+        );
       },
-      error: () => {}
+      error: () => {
+        this.isPreparingDataset = false;
+        this.toastr.error('Impossible de charger le dataset importé.', 'Erreur', { timeOut: 4000 });
+      },
     });
   }
 
@@ -141,6 +213,8 @@ export class CleaningComponent implements OnInit, AfterViewChecked {
     this.cleaningSvc.scan(this.selectedDatasetId).subscribe({
       next: (r) => {
         this.isScanning = false;
+        this.isPreparingDataset = false;
+        this.clearPollTimer();
         this.scanResult = r;
         this.chartRendered = false; // re-render chart
         this.activeIssueFilter = null;
@@ -160,6 +234,8 @@ export class CleaningComponent implements OnInit, AfterViewChecked {
       },
       error: () => {
         this.isScanning = false;
+        this.isPreparingDataset = false;
+        this.clearPollTimer();
         this.toastr.error('Erreur lors du scan.', 'Erreur', { timeOut: 4000, progressBar: true });
       }
     });

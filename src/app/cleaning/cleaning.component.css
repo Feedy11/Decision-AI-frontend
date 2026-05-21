@@ -2,6 +2,19 @@
 @import '../upload/upload.component.css';
 @import '../datasets-list/datasets-list.component.css';
 
+.upload-page,
+.upload-layout,
+.upload-layout > *,
+.upload-card,
+.table-card {
+  min-width: 0;
+}
+
+.upload-page {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 /* ── Tabs ── */
 .tabs-bar {
   display: flex; gap: 4px; margin-bottom: 20px;
@@ -195,6 +208,42 @@ code {
 .spin { animation: spin 0.8s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
+/* Workflow: loader while dataset is processed then scanned */
+.clean-phase-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  margin: 8px 0 16px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%);
+  border: 1px dashed #CBD5E1;
+  min-height: 200px;
+  text-align: center;
+}
+
+.clean-phase-loader__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.clean-phase-loader__hint {
+  margin: 0;
+  max-width: 320px;
+  font-size: 0.8rem;
+  color: #64748B;
+  line-height: 1.45;
+}
+
+.field--dimmed {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
   .quality-grid { grid-template-columns: 1fr; }
@@ -379,12 +428,20 @@ code {
 
 /* Scan / diff table */
 .scan-table-wrap {
-  overflow-x: auto;
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+  overflow: auto;
   border: 1px solid #E2E8F0; border-radius: 12px;
   margin-top: 8px;
 }
 .scan-table {
-  width: 100%; border-collapse: collapse; font-size: 0.83rem;
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse; font-size: 0.83rem;
+}
+.preview-table-wrap {
+  max-height: 400px;
 }
 .scan-table thead tr {
   background: #F8FAFC;
@@ -393,10 +450,16 @@ code {
   padding: 10px 14px; text-align: left; font-size: 0.72rem;
   font-weight: 800; color: #64748B; text-transform: uppercase;
   letter-spacing: 0.05em; border-bottom: 1px solid #E2E8F0;
+  position: sticky; top: 0; z-index: 1;
+  white-space: nowrap;
 }
 .scan-table td {
   padding: 10px 14px; border-bottom: 1px solid #F1F5F9;
   vertical-align: middle; color: #1E293B;
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .scan-table tbody tr:last-child td { border-bottom: none; }
 .scan-table tbody tr:hover { background: #FAFBFF; }

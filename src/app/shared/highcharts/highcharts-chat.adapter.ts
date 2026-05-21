@@ -1,5 +1,5 @@
 import type { Options, PointOptionsObject } from 'highcharts';
-import Highcharts from 'highcharts';
+import type Highcharts from 'highcharts';
 import type { ChartSpec } from '../../models/chat.model';
 import { HC_COLORS, HC_SERIES_COLORS } from './highcharts-design-tokens';
 import { escapeHtml, formatAxisValueShort, formatTooltipNumber } from './highcharts-number-format';
@@ -94,7 +94,7 @@ export function buildChatChartOptions(spec: ChartSpec): Options {
           return (
             `<span style="color:${this.color};font-size:12px">●</span> ` +
             `<span style="color:#CBD5E1">${escapeHtml(String(this.name))}:</span> ` +
-            `<b style="color:#fff">${formatTooltipNumber(Highcharts, y, tooltipDecimals(y))}</b> ` +
+            `<b style="color:#fff">${formatTooltipNumber(y, tooltipDecimals(y))}</b> ` +
             `<span style="color:#94A3B8">(${this.percentage?.toFixed(1)}%)</span>`
           );
         },
@@ -172,7 +172,7 @@ export function buildChatChartOptions(spec: ChartSpec): Options {
           const val = Number(this.value);
           return (
             `<div style="padding:2px 0"><span style="color:#CBD5E1;font-size:11px;font-weight:600">${escapeHtml(String(ly))} × ${escapeHtml(String(lx))}</span></div>` +
-            `<div><span style="color:#CBD5E1">Valeur:</span> <b style="color:#fff">${formatTooltipNumber(Highcharts, val, tooltipDecimals(val))}</b></div>`
+            `<div><span style="color:#CBD5E1">Valeur:</span> <b style="color:#fff">${formatTooltipNumber(val, tooltipDecimals(val))}</b></div>`
           );
         },
       },
@@ -224,8 +224,8 @@ export function buildChatChartOptions(spec: ChartSpec): Options {
           const py = Number(this.y);
           return (
             `<div style="padding:2px 0"><span style="color:${this.color};font-size:12px">●</span> <b style="color:#fff">${escapeHtml(this.series?.name || '')}</b></div>` +
-            `<div><span style="color:#CBD5E1">${escapeHtml(spec.x_col || 'X')}:</span> <b style="color:#fff">${formatTooltipNumber(Highcharts, px, tooltipDecimals(px))}</b></div>` +
-            `<div><span style="color:#CBD5E1">${escapeHtml(spec.y_col || 'Y')}:</span> <b style="color:#fff">${formatTooltipNumber(Highcharts, py, tooltipDecimals(py))}</b></div>`
+            `<div><span style="color:#CBD5E1">${escapeHtml(spec.x_col || 'X')}:</span> <b style="color:#fff">${formatTooltipNumber(px, tooltipDecimals(px))}</b></div>` +
+            `<div><span style="color:#CBD5E1">${escapeHtml(spec.y_col || 'Y')}:</span> <b style="color:#fff">${formatTooltipNumber(py, tooltipDecimals(py))}</b></div>`
           );
         },
       },
@@ -306,7 +306,7 @@ export function buildChatChartOptions(spec: ChartSpec): Options {
         const dotColor = this.color || HC_SERIES_COLORS[0];
         return (
           `<div style="padding:2px 0"><span style="color:#CBD5E1;font-size:11px;font-weight:600">${escapeHtml(String(cat))}</span></div>` +
-          `<div><span style="color:${dotColor};font-size:12px">●</span> <span style="color:#CBD5E1">${escapeHtml(String(name))}:</span> <b style="color:#fff">${formatTooltipNumber(Highcharts, y, tooltipDecimals(y))}</b></div>`
+          `<div><span style="color:${dotColor};font-size:12px">●</span> <span style="color:#CBD5E1">${escapeHtml(String(name))}:</span> <b style="color:#fff">${formatTooltipNumber(y, tooltipDecimals(y))}</b></div>`
         );
       },
     },

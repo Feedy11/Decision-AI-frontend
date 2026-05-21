@@ -26,6 +26,7 @@ export class ReportService {
       includeWebContext?: boolean;
       filters?: Record<string, any>;
       conversationId?: number | null;
+      language?: string;
     } = {}
   ): EventSource {
     const params = new URLSearchParams();
@@ -39,6 +40,7 @@ export class ReportService {
     if (options.conversationId) {
       params.set('conversation_id', String(options.conversationId));
     }
+    params.set('language', options.language || 'fr');
 
     const token = this.auth.getToken();
     if (token) {
@@ -58,6 +60,7 @@ export class ReportService {
       filters?: Record<string, any>;
       include_web_context?: boolean;
       conversation_id?: number | null;
+      language?: string;
     } = {}
   ): Observable<ReportDocument> {
     return this.http.post<ReportDocument>(

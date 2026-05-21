@@ -155,7 +155,8 @@ export class ReportComponent implements OnInit, OnDestroy {
       this.selectedDatasetId,
       {
         includeWebContext: this.includeWebContext,
-        conversationId: this.selectedConvId
+        conversationId: this.selectedConvId,
+        language: 'fr'
       }
     );
 

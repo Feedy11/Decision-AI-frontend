@@ -20,20 +20,26 @@
              (click)="onStepClick(i)">
 
           <div class="step__circle">
-            <!-- Completed checkmark -->
-            <lucide-icon *ngIf="step.completed && !step.active"
+            <!-- Current step: always show its own icon -->
+            <lucide-icon *ngIf="step.active"
+                         [name]="step.icon" [size]="18" [strokeWidth]="2"
+                         class="step__icon">
+            </lucide-icon>
+
+            <!-- Past completed steps -->
+            <lucide-icon *ngIf="!step.active && step.completed"
                          name="check" [size]="18" [strokeWidth]="2.5"
                          class="step__icon step__icon--check">
             </lucide-icon>
 
-            <!-- Lock icon for locked steps -->
-            <lucide-icon *ngIf="!step.accessible && !step.completed"
+            <!-- Locked future steps -->
+            <lucide-icon *ngIf="!step.active && !step.completed && !step.accessible"
                          name="lock" [size]="16" [strokeWidth]="2"
                          class="step__icon step__icon--lock">
             </lucide-icon>
 
-            <!-- Normal icon for current or accessible -->
-            <lucide-icon *ngIf="(step.active || (step.accessible && !step.completed))"
+            <!-- Unlocked but not yet reached -->
+            <lucide-icon *ngIf="!step.active && !step.completed && step.accessible"
                          [name]="step.icon" [size]="18" [strokeWidth]="2"
                          class="step__icon">
             </lucide-icon>
