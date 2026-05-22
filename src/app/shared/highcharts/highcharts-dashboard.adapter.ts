@@ -50,18 +50,14 @@ export function buildDashboardChartOptions(data: ChartDataResponse): Options {
   const d = data.data ?? {};
 
   const baseTitle: Options['title'] = {
-    text: titleText,
-    align: 'left',
-    margin: 16,
+    text: undefined,
   };
 
   /** Build a subtitle from axes info */
   const subtitleParts: string[] = [];
   if (data.x_axis) subtitleParts.push(data.x_axis);
   if (data.y_axis) subtitleParts.push(data.y_axis);
-  const baseSubtitle: Options['subtitle'] = subtitleParts.length > 0
-    ? { text: subtitleParts.join(' × '), align: 'left' }
-    : undefined;
+  const baseSubtitle: Options['subtitle'] = undefined;
 
   const tooltipDecimals = (y: number) => (Number.isFinite(y) && Math.abs(y) >= 1000 ? 0 : 2);
 

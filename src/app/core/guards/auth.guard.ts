@@ -21,7 +21,7 @@ export const authGuard: CanActivateFn = () => {
 
 /**
  * Prevents logged-in users from accessing /login again.
- * Redirects to /dashboard if already authenticated.
+ * Redirects to /workflow/upload if already authenticated.
  */
 export const guestGuard: CanActivateFn = () => {
   const auth   = inject(AuthService);
@@ -31,7 +31,7 @@ export const guestGuard: CanActivateFn = () => {
     return true;
   }
 
-  return router.createUrlTree(['/dashboard']);
+  return router.createUrlTree(['/workflow/upload']);
 };
 
 /**

@@ -26,6 +26,7 @@ export class DataSidebarComponent implements OnInit {
   isAdmin = false;
   isMobile = false;
   isPublicRoute = false;
+  showMobileBackdrop = false;
 
   // User info
   userFullName = '';
@@ -40,6 +41,10 @@ export class DataSidebarComponent implements OnInit {
     public wf: WorkflowService
   ) {
     this.checkMobile();
+    // Start closed on mobile
+    if (this.isMobile) {
+      this.isOpen = false;
+    }
   }
 
   ngOnInit(): void {
@@ -53,6 +58,10 @@ export class DataSidebarComponent implements OnInit {
       .subscribe((e: any) => {
         this.checkRoute(e.urlAfterRedirects);
         this.loadUser();
+        // Auto-close sidebar on navigation for mobile
+        if (this.isMobile && this.isOpen) {
+          this.close();
+        }
       });
 
     // Listen for avatar changes from profile page
@@ -65,7 +74,18 @@ export class DataSidebarComponent implements OnInit {
 
   @HostListener('window:resize')
   onResize(): void {
+    const wasMobile = this.isMobile;
     this.checkMobile();
+    // Close sidebar when switching to mobile view
+    if (this.isMobile && !wasMobile) {
+      this.isOpen = false;
+      this.showMobileBackdrop = false;
+    }
+    // Re-open sidebar when switching to desktop view
+    if (!this.isMobile && wasMobile) {
+      this.isOpen = true;
+      this.showMobileBackdrop = false;
+    }
   }
 
   private checkMobile(): void {
@@ -107,17 +127,23 @@ export class DataSidebarComponent implements OnInit {
 
   togglePanel(): void {
     this.isOpen = !this.isOpen;
+    this.showMobileBackdrop = this.isMobile && this.isOpen;
   }
 
   close(): void {
     this.isOpen = false;
+    this.showMobileBackdrop = false;
+  }
+
+  /** Close sidebar when user clicks on backdrop (mobile only) */
+  onBackdropClick(): void {
+    this.close();
   }
 
   goToDashboard(): void { this.router.navigate(['/dashboard']); }
   goToProfile(): void { this.router.navigate(['/profile']); }
 
   startWorkflow(): void {
-    
     this.router.navigate(['/workflow/upload']);
   }
 

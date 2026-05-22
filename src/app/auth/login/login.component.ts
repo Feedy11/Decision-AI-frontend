@@ -44,8 +44,8 @@ export class LoginComponent {
     this.authService.login(email, password).subscribe({
       next: () => {
         this.isLoading = false;
-        // Navigate to dashboard after successful login
-        this.router.navigate(['/datasets']);
+        // Navigate to workflow start after successful login
+        this.router.navigate(['/workflow/upload']);
       },
       error: (err) => {
         this.isLoading = false;

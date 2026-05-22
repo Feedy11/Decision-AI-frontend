@@ -68,3 +68,33 @@ td {
   margin-bottom: 1rem;
 }
 
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .users-page {
+    padding: 0.75rem;
+    margin: 1rem auto;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 480px) {
+  .users-page {
+    margin: 0.5rem auto;
+  }
+
+  .field.checkbox {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+

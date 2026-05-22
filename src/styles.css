@@ -192,3 +192,59 @@ html, body {
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* ═══════════════════════════════════════════════════
+   GLOBAL RESPONSIVE UTILITIES
+   ═══════════════════════════════════════════════════ */
+
+/* Prevent font-size zoom on iOS */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+/* Better touch targets for mobile */
+@media (max-width: 768px) {
+  /* Ensure interactive elements are at least 44px touch targets */
+  button, a, [role="button"], input[type="checkbox"], input[type="radio"] {
+    min-height: 36px;
+  }
+
+  /* Prevent horizontal overflow globally */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Better scrollbar for mobile */
+  *::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 2px;
+  }
+
+  /* Ensure images never overflow */
+  img, svg, video, canvas {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Tables scroll horizontally on mobile */
+  .table-container,
+  .scan-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Small phone adjustments */
+@media (max-width: 380px) {
+  html {
+    font-size: 14px;
+  }
+}
+

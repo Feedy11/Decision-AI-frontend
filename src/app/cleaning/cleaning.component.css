@@ -734,3 +734,69 @@ code {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Additional responsive for cleaning ── */
+@media (max-width: 768px) {
+  .tabs-bar {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .option-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ops-list {
+    gap: 6px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn-save,
+  .btn-cancel {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pagination-bar {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .pagination-info {
+    text-align: center;
+  }
+
+  .pagination-controls {
+    justify-content: center;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .scan-table td {
+    max-width: 150px;
+  }
+
+  .back-btn {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+}

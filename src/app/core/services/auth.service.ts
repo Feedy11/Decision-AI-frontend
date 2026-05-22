@@ -149,6 +149,8 @@ export class AuthService {
 
   logout(): void {
     this.clearSession();
+    // Clear workflow state so next login starts fresh
+    localStorage.removeItem('decision_ai_workflow');
     this.router.navigate(['/login']);
   }
 }

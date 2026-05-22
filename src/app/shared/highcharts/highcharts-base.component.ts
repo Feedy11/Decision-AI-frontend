@@ -112,8 +112,8 @@ import type Highcharts from 'highcharts';
 
       .hc-toolbar {
         position: absolute;
-        top: 2px;
-        right: 36px;
+        top: 10px;
+        right: 48px;
         z-index: 5;
       }
 

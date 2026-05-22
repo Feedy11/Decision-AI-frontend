@@ -74,7 +74,7 @@
 
       <button class="stepper-btn stepper-btn--primary"
               *ngIf="currentIndex < steps.length - 1"
-              [disabled]="currentIndex >= steps.length - 1"
+              [disabled]="!wf.canGoNext"
               (click)="onNext()">
         Suivant
         <lucide-icon name="chevron-right" [size]="16" [strokeWidth]="2"></lucide-icon>

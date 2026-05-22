@@ -1,3 +1,6 @@
+<!-- ===== Backdrop mobile (ferme la sidebar au clic) ===== -->
+<div class="sidebar-backdrop" *ngIf="showMobileBackdrop" (click)="onBackdropClick()"></div>
+
 <!-- ===== Panel sidebar (width 0 → 260px, comme le chat panel) ===== -->
 <div class="sidebar-panel" [class.open]="isOpen" *ngIf="!isPublicRoute">
 
@@ -29,7 +32,7 @@
 
       <!-- Workflow steps with progressive access -->
       <a routerLink="/workflow/upload" routerLinkActive="active" class="nav-item nav-item--sub"
-        [class.nav-item--locked]="!wf.canAccessRoute('/workflow/upload')" >
+        [class.nav-item--locked]="!wf.canAccessRoute('/workflow/upload')">
         <span class="nav-icon"><lucide-icon name="upload-cloud" [size]="16" [strokeWidth]="2"></lucide-icon></span>
         <span>Upload</span>
         <lucide-icon *ngIf="wf.allSteps[0]?.completed" name="check" [size]="14" [strokeWidth]="2.5"
@@ -37,7 +40,7 @@
       </a>
 
       <a routerLink="/workflow/cleaning" routerLinkActive="active" class="nav-item nav-item--sub"
-        [class.nav-item--locked]="!wf.canAccessRoute('/workflow/cleaning')" >
+        [class.nav-item--locked]="!wf.canAccessRoute('/workflow/cleaning')">
         <span class="nav-icon"><lucide-icon name="sparkles" [size]="16" [strokeWidth]="2"></lucide-icon></span>
         <span>Nettoyage</span>
         <lucide-icon *ngIf="wf.allSteps[1]?.completed" name="check" [size]="14" [strokeWidth]="2.5"
@@ -47,7 +50,7 @@
       </a>
 
       <a routerLink="/workflow/analysis" routerLinkActive="active" class="nav-item nav-item--sub"
-        [class.nav-item--locked]="!wf.canAccessRoute('/workflow/analysis')" >
+        [class.nav-item--locked]="!wf.canAccessRoute('/workflow/analysis')">
         <span class="nav-icon"><lucide-icon name="bar-chart-2" [size]="16" [strokeWidth]="2"></lucide-icon></span>
         <span>Analyse</span>
         <lucide-icon *ngIf="wf.allSteps[2]?.completed" name="check" [size]="14" [strokeWidth]="2.5"
@@ -57,7 +60,7 @@
       </a>
 
       <a routerLink="/workflow/dashboard" routerLinkActive="active" class="nav-item nav-item--sub"
-        [class.nav-item--locked]="!wf.canAccessRoute('/workflow/dashboard')" >
+        [class.nav-item--locked]="!wf.canAccessRoute('/workflow/dashboard')">
         <span class="nav-icon"><lucide-icon name="layout-dashboard" [size]="16" [strokeWidth]="2"></lucide-icon></span>
         <span>Dashboard</span>
         <lucide-icon *ngIf="wf.allSteps[3]?.completed" name="check" [size]="14" [strokeWidth]="2.5"
@@ -71,39 +74,38 @@
     <div class="nav-section">
       <span class="nav-section-label">Menu</span>
 
-      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item"
-       >
+      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item">
         <span class="nav-icon"><lucide-icon name="layout-dashboard" [size]="18" [strokeWidth]="2"></lucide-icon></span>
         <span>Tableau de bord</span>
       </a>
 
-      <a routerLink="/analysis" routerLinkActive="active" class="nav-item" >
+      <a routerLink="/analysis" routerLinkActive="active" class="nav-item">
         <span class="nav-icon"><lucide-icon name="bar-chart-2" [size]="18" [strokeWidth]="2"></lucide-icon></span>
         <span>Analytique</span>
       </a>
 
-      <a routerLink="/kpis" routerLinkActive="active" class="nav-item" >
+      <a routerLink="/kpis" routerLinkActive="active" class="nav-item">
         <span class="nav-icon"><lucide-icon name="activity" [size]="18" [strokeWidth]="2"></lucide-icon></span>
         <span>KPIs</span>
       </a>
 
-      <a routerLink="/report" routerLinkActive="active" class="nav-item" >
+      <a routerLink="/report" routerLinkActive="active" class="nav-item">
         <span class="nav-icon"><lucide-icon name="file-text" [size]="18" [strokeWidth]="2"></lucide-icon></span>
         <span>Rapport IA</span>
       </a>
 
-      <a routerLink="/datasets" routerLinkActive="active" class="nav-item" >
+      <a routerLink="/datasets" routerLinkActive="active" class="nav-item">
         <span class="nav-icon"><lucide-icon name="database" [size]="18" [strokeWidth]="2"></lucide-icon></span>
         <span>Datasets</span>
         <span class="nav-badge" *ngIf="datasetCount > 0">{{ datasetCount }}</span>
       </a>
 
-      <a routerLink="/upload" routerLinkActive="active" class="nav-item" >
+      <a routerLink="/upload" routerLinkActive="active" class="nav-item">
         <span class="nav-icon"><lucide-icon name="share-2" [size]="18" [strokeWidth]="2"></lucide-icon></span>
         <span>Upload</span>
       </a>
 
-      <a routerLink="/cleaning" routerLinkActive="active" class="nav-item" >
+      <a routerLink="/cleaning" routerLinkActive="active" class="nav-item">
         <span class="nav-icon"><lucide-icon name="sparkles" [size]="18" [strokeWidth]="2"></lucide-icon></span>
         <span>Nettoyage</span>
       </a>
@@ -115,12 +117,12 @@
     <div class="nav-section">
       <span class="nav-section-label">Ressources</span>
 
-      <a href="https://docs.example.com" target="_blank" class="nav-item" >
+      <a href="https://docs.example.com" target="_blank" class="nav-item">
         <span class="nav-icon"><lucide-icon name="info" [size]="18" [strokeWidth]="2"></lucide-icon></span>
         <span>Documentation</span>
       </a>
 
-      <a routerLink="/help" routerLinkActive="active" class="nav-item" >
+      <a routerLink="/help" routerLinkActive="active" class="nav-item">
         <span class="nav-icon"><lucide-icon name="alert-circle" [size]="18" [strokeWidth]="2"></lucide-icon></span>
         <span>Aide</span>
       </a>
@@ -130,12 +132,12 @@
     <div class="nav-section" *ngIf="isAdmin">
       <span class="nav-section-label">Administration</span>
 
-      <a routerLink="/admin/users" routerLinkActive="active" class="nav-item admin-item" >
+      <a routerLink="/admin/users" routerLinkActive="active" class="nav-item admin-item">
         <span class="nav-icon"><lucide-icon name="users" [size]="18" [strokeWidth]="2"></lucide-icon></span>
         <span>Utilisateurs</span>
       </a>
 
-      <a routerLink="/admin/settings" routerLinkActive="active" class="nav-item admin-item" >
+      <a routerLink="/admin/settings" routerLinkActive="active" class="nav-item admin-item">
         <span class="nav-icon"><lucide-icon name="settings" [size]="18" [strokeWidth]="2"></lucide-icon></span>
         <span>Paramètres</span>
       </a>
@@ -145,7 +147,7 @@
 
   <!-- Footer : User info + logout -->
   <div class="sidebar-footer">
-    <a class="user-card" (click)="goToProfile(); close()">
+    <a class="user-card" (click)="goToProfile()">
       <div class="user-avatar" *ngIf="!avatarUrl">{{ userInitials }}</div>
       <img *ngIf="avatarUrl" [src]="avatarUrl" alt="Avatar" class="user-avatar-img" />
       <div class="user-info">

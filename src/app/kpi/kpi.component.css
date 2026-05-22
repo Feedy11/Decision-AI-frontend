@@ -160,4 +160,29 @@
 /* Responsive */
 @media (max-width: 768px) {
   .kpi-grid { grid-template-columns: 1fr 1fr; }
+
+  .kpi-big-card {
+    padding: 14px;
+  }
+
+  .kbi-value {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+
+  .kbi-value {
+    font-size: 1.2rem;
+  }
+
+  .kbi-desc {
+    font-size: 0.72rem;
+  }
+
+  .no-dashboard,
+  .empty-state-full {
+    padding: 40px 16px;
+  }
 }

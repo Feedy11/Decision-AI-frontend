@@ -542,4 +542,51 @@
   .upload-page { padding: 16px 14px 40px; }
   .side-panel { grid-template-columns: 1fr; }
   .page-header { flex-direction: column; gap: 10px; }
+
+  .upload-card {
+    padding: 16px;
+  }
+
+  .card-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+  }
+
+  .drop-zone {
+    padding: 28px 16px;
+  }
+
+  .drop-icon-wrap {
+    width: 56px;
+    height: 56px;
+  }
+
+  .drop-title {
+    font-size: 0.88rem;
+  }
+
+  .card-actions {
+    flex-direction: column;
+  }
+
+  .btn-upload,
+  .btn-new {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .format-chips {
+    justify-content: center;
+  }
+
+  .info-card {
+    padding: 14px 16px;
+  }
+
+  .steps li {
+    font-size: 0.78rem;
+  }
 }

@@ -676,3 +676,108 @@
   .section-card { border: 1px solid #eee; box-shadow: none; }
   .section-card::before { width: 8px; }
 }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .report-page {
+    padding: 16px 14px;
+  }
+
+  .report-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .report-title {
+    font-size: 1.2rem;
+  }
+
+  .gen-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px;
+  }
+
+  .gen-fields {
+    flex-direction: column;
+  }
+
+  .form-select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .conv-select {
+    min-width: 0;
+  }
+
+  .btn-gen {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pipeline-steps {
+    flex-wrap: wrap;
+  }
+
+  .report-meta {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .meta-left {
+    flex-wrap: wrap;
+  }
+
+  .meta-right {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .section-tabs {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .section-card {
+    padding: 16px;
+  }
+
+  .recs-grid {
+    grid-template-columns: 1fr;
+    padding-left: 0;
+  }
+
+  .section-narrative,
+  .avoid-section,
+  .sources-group {
+    padding-left: 0;
+  }
+
+  .report-empty {
+    padding: 40px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .section-number {
+    font-size: 1.2rem;
+  }
+
+  .pipeline-card {
+    padding: 12px;
+  }
+
+  .stab {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+}

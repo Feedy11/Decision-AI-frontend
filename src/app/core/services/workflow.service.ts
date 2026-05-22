@@ -110,7 +110,8 @@ export class WorkflowService {
 
   get canGoNext(): boolean {
     if (this.isLastStep) return false;
-    return this.steps[this.currentIndex + 1].accessible;
+    // The current step must be completed before moving forward
+    return this.steps[this.currentIndex].completed && this.steps[this.currentIndex + 1].accessible;
   }
 
   get canGoPrev(): boolean {
@@ -151,10 +152,9 @@ export class WorkflowService {
     this.publish();
   }
 
-  /** Navigate forward */
+  /** Navigate forward (only if current step is completed) */
   next(): void {
     if (!this.canGoNext) return;
-    this.completeCurrentStep();
     this.router.navigate([this.steps[this.currentIndex + 1].route]);
   }
 
@@ -184,8 +184,12 @@ export class WorkflowService {
   private setActiveStep(index: number): void {
     this.steps.forEach((s, i) => {
       s.active = i === index;
-      // Only steps before the current one are "done" (avoids stale localStorage checkmarks)
-      s.completed = i < index;
+      // Steps before the current one are considered done only if they were accessible
+      if (i < index) {
+        s.completed = s.accessible;
+      }
+      // Don't override completed status for current or future steps
+      // (let the component's completeCurrentStep() call handle it)
     });
     this.currentIndexSubject.next(index);
     this.publish();
@@ -223,8 +227,8 @@ export class WorkflowService {
         savedSteps.forEach((s: any) => {
           const step = this.steps.find(x => x.id === s.id);
           if (step) {
-            // completed is derived from route index in setActiveStep — do not restore
             step.accessible = s.accessible;
+            step.completed = s.completed;
           }
         });
       }

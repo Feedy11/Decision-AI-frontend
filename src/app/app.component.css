@@ -48,3 +48,16 @@
 .app-content::-webkit-scrollbar-thumb:hover {
   background: #94A3B8;
 }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .app-content {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+}
+
+@media (max-width: 480px) {
+  .app-content {
+    overflow-x: hidden;
+  }
+}

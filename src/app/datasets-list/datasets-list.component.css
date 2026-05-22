@@ -392,3 +392,76 @@
 
 .spin { animation: spin 0.8s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .table-toolbar {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+    padding: 12px 14px;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .toolbar-right {
+    justify-content: space-between;
+  }
+
+  .tabs-bar {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 10px 12px;
+  }
+
+  .file-name-cell {
+    max-width: 140px;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    padding: 12px 14px;
+  }
+
+  .btn-upload-new {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .modal {
+    max-width: calc(100vw - 32px);
+    margin: 0 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .data-table th:nth-child(3),
+  .data-table td:nth-child(3),
+  .data-table th:nth-child(4),
+  .data-table td:nth-child(4) {
+    display: none;
+  }
+
+  .file-cell {
+    gap: 8px;
+  }
+
+  .file-icon-sm {
+    width: 28px;
+    height: 28px;
+  }
+
+  .tab-btn {
+    padding: 6px 10px;
+    font-size: 0.78rem;
+  }
+}

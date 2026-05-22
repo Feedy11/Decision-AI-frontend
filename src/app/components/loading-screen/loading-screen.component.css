@@ -183,3 +183,10 @@
     transform: rotate(360deg);
   }
 }
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .loader {
+    transform: scale(0.7);
+  }
+}
