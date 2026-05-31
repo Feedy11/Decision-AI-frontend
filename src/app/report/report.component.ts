@@ -1,5 +1,5 @@
 import {
-  Component, OnInit, OnDestroy, NgZone, ChangeDetectorRef
+  Component, OnInit, OnDestroy, NgZone, ChangeDetectorRef, ViewChild
 } from '@angular/core';
 import { CommonModule }     from '@angular/common';
 import { FormsModule }      from '@angular/forms';
@@ -21,11 +21,27 @@ import {
   WhatHappened,
   WhyItHappened
 } from '../models/Report.model';
+import { ReportQaPanelComponent } from './report-qa-panel/report-qa-panel.component';
+
+type InteractiveReportSection = 'what_happened' | 'why' | 'what_to_do' | 'sources';
+
+interface InteractiveSegment {
+  text: string;
+  interactive: boolean;
+  section: InteractiveReportSection;
+  context?: string;
+}
+
+interface SelectedReportSentence {
+  text: string;
+  section: InteractiveReportSection;
+  context?: string;
+}
 
 @Component({
   selector   : 'app-report',
   standalone : true,
-  imports    : [CommonModule, FormsModule],
+  imports    : [CommonModule, FormsModule, ReportQaPanelComponent],
   templateUrl: './report.component.html',
   styleUrl   : './report.component.css'
 })
@@ -66,6 +82,18 @@ export class ReportComponent implements OnInit, OnDestroy {
   hasError      = false;
   errorMessage  = '';
   activeSection : 'what_happened' | 'why' | 'what_to_do' | 'sources' = 'what_happened';
+
+  // ── Report Q&A panel ──────────────────────────────────────
+  qaPanelOpen       = false;
+  qaConversationId  : number | null = null;
+  suggestionChips   : string[] = [];
+
+  @ViewChild(ReportQaPanelComponent) qaPanel?: ReportQaPanelComponent;
+
+  selectedSentence: SelectedReportSentence | null = null;
+  sentenceInstruction = '';
+  sentenceNote = '';
+  sentenceNotes: Array<SelectedReportSentence & { note: string; createdAt: Date }> = [];
 
   // ── Typewriter ────────────────────────────────────────────
   private typewriterQueues: Record<string, string[]> = {};
@@ -227,6 +255,8 @@ export class ReportComponent implements OnInit, OnDestroy {
         // Complete all pipeline steps
         this.pipelineSteps.forEach(s => s.status = 'done');
 
+        this.suggestionChips = this.buildSuggestionChips();
+
         this.closeEventSource();
         this.toastr.success(
           `Rapport généré en ${(this.latencyMs / 1000).toFixed(1)}s`,
@@ -338,6 +368,13 @@ export class ReportComponent implements OnInit, OnDestroy {
     this.hasError        = false;
     this.errorMessage    = '';
     this.activeSection   = 'what_happened';
+    this.qaPanelOpen     = false;
+    this.qaConversationId = null;
+    this.suggestionChips = [];
+    this.selectedSentence = null;
+    this.sentenceInstruction = '';
+    this.sentenceNote = '';
+    this.sentenceNotes = [];
 
     this.whatHappenedText   = '';
     this.whyItHappenedText  = '';
@@ -403,6 +440,170 @@ export class ReportComponent implements OnInit, OnDestroy {
     if (this.selectedDatasetId) {
       this.router.navigate(['/dashboard'], { queryParams: { datasetId: this.selectedDatasetId } });
     }
+  }
+
+  openQaPanel(prefill?: string): void {
+    if (!this.qaConversationId) {
+      this.ensureQaConversation(() => this.openQaPanel(prefill));
+      return;
+    }
+    this.qaPanelOpen = true;
+    this.cdr.detectChanges();
+    if (prefill) {
+      setTimeout(() => this.qaPanel?.ask(prefill), 100);
+    }
+  }
+
+  askAboutRecommendation(rec: ActionableRecommendation, index: number): void {
+    const title = rec.action.length > 80 ? `${rec.action.slice(0, 80)}…` : rec.action;
+    this.openQaPanel(`Explique en détail la recommandation #${index + 1} : ${title}`);
+  }
+
+  getInteractiveSegments(
+    text: string | null | undefined,
+    section: InteractiveReportSection,
+    context?: string
+  ): InteractiveSegment[] {
+    if (!text) return [];
+
+    const parts = text.match(/[^.!?;:]+[.!?;:]?|\s+/g) || [text];
+    return parts
+      .map(part => {
+        const interactive = /\S/.test(part) && /[A-Za-zÀ-ÿ0-9]/.test(part);
+        return { text: part, interactive, section, context };
+      })
+      .filter(part => part.text.length > 0);
+  }
+
+  openSentenceModal(segment: InteractiveSegment): void {
+    if (!segment.interactive || this.isGenerating) return;
+
+    this.selectedSentence = {
+      text: segment.text.trim(),
+      section: segment.section,
+      context: segment.context
+    };
+    this.sentenceInstruction = '';
+    this.sentenceNote = '';
+  }
+
+  closeSentenceModal(): void {
+    this.selectedSentence = null;
+    this.sentenceInstruction = '';
+    this.sentenceNote = '';
+  }
+
+  askAboutSelectedSentence(action: 'explain' | 'chart' | 'challenge' | 'question' | 'custom'): void {
+    if (!this.selectedSentence) return;
+
+    const instruction = this.buildSentenceInstruction(action);
+    this.closeSentenceModal();
+    this.openQaPanel(instruction);
+  }
+
+  approveSelectedSentence(): void {
+    if (!this.selectedSentence) return;
+    this.toastr.success('Phrase approuvée.', 'Rapport', { timeOut: 2500 });
+    this.closeSentenceModal();
+  }
+
+  addSentenceNote(): void {
+    if (!this.selectedSentence || !this.sentenceNote.trim()) return;
+
+    this.sentenceNotes.push({
+      ...this.selectedSentence,
+      note: this.sentenceNote.trim(),
+      createdAt: new Date()
+    });
+    this.toastr.success('Note ajoutée à cette phrase.', 'Rapport', { timeOut: 2500 });
+    this.sentenceNote = '';
+  }
+
+  get sectionModalLabel(): string {
+    if (!this.selectedSentence) return '';
+    const labels: Record<InteractiveReportSection, string> = {
+      what_happened: "Ce qui s'est passé",
+      why: 'Pourquoi',
+      what_to_do: 'Quoi faire',
+      sources: 'Sources'
+    };
+    return labels[this.selectedSentence.section];
+  }
+
+  private buildSentenceInstruction(action: 'explain' | 'chart' | 'challenge' | 'question' | 'custom'): string {
+    const sentence = this.selectedSentence?.text || '';
+    const context = this.selectedSentence?.context ? `\nContexte local : ${this.selectedSentence.context}` : '';
+    const base = `Dans le rapport, analyse uniquement cette phrase : "${sentence}"${context}`;
+
+    switch (action) {
+      case 'chart':
+        return `${base}\nMontre-moi le graphique ou les chiffres derrière cette affirmation si les données le permettent.`;
+      case 'challenge':
+        return `${base}\nChallenge cette affirmation : quelles hypothèses, limites ou contre-exemples faut-il vérifier ?`;
+      case 'question':
+        return `${base}\nExplique pourquoi cela se produit et relie la réponse au dataset original.`;
+      case 'custom':
+        return `${base}\nInstruction utilisateur : ${this.sentenceInstruction.trim() || 'Explique cette phrase en détail.'}`;
+      case 'explain':
+      default:
+        return `${base}\nExplique cette phrase en français, simplement, avec les preuves disponibles dans le rapport et le dataset.`;
+    }
+  }
+
+  private ensureQaConversation(onReady?: () => void): void {
+    if (!this.selectedDatasetId) return;
+
+    if (this.selectedConvId) {
+      this.qaConversationId = this.selectedConvId;
+      onReady?.();
+      return;
+    }
+
+    if (this.qaConversationId) {
+      onReady?.();
+      return;
+    }
+
+    const shortId = this.reportId ? this.reportId.slice(0, 8) : 'rapport';
+    this.chatSvc.createConversation(this.selectedDatasetId, {
+      title: `Q&A Rapport ${shortId}`
+    }).subscribe({
+      next: (res) => {
+        this.qaConversationId = res.conversation_id;
+        onReady?.();
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.toastr.warning('Impossible de créer la session Q&A.', 'Rapport', { timeOut: 4000 });
+      }
+    });
+  }
+
+  private buildSuggestionChips(): string[] {
+    const chips: string[] = [];
+
+    const narrative = this.whatHappened?.narrative || this.whatHappenedText || '';
+    if (narrative) {
+      chips.push('Détaillez les points clés du résumé');
+    }
+
+    if (this.whatToDo.length >= 2) {
+      chips.push('Expliquez la recommandation #2');
+    } else if (this.whatToDo.length >= 1) {
+      chips.push('Expliquez la recommandation #1');
+    }
+
+    if (this.webSources.length > 0 && this.internalSources.length > 0) {
+      chips.push('Comparez les sources web et les données internes');
+    } else if (this.allSources.length > 0) {
+      chips.push('Quelles sources ont été utilisées ?');
+    }
+
+    if (this.whyItHappened?.narrative || this.whyItHappenedText) {
+      chips.push('Pourquoi ces causes ont-elles été identifiées ?');
+    }
+
+    return chips.slice(0, 5);
   }
 
   // ── PDF Export — Simple clean document ─────────────────────

@@ -18,7 +18,7 @@ import { TokenResponse, NewPassword } from '../../models/login.model';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
 
-  private readonly API       = 'http://localhost:8000/api/v1';
+  private readonly API       = '/auth/api/v1';
   private readonly TOKEN_KEY = 'access_token';
   private readonly USER_KEY  = 'current_user';
 

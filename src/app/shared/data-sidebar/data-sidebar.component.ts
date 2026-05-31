@@ -144,7 +144,7 @@ export class DataSidebarComponent implements OnInit {
   goToProfile(): void { this.router.navigate(['/profile']); }
 
   startWorkflow(): void {
-    this.router.navigate(['/workflow/upload']);
+    this.wf.resetWorkflow();
   }
 
   logout(): void {

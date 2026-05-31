@@ -102,6 +102,25 @@
     </div>
   </div>
 
+  <!-- ═══ Approfondir le rapport (post-generation CTA) ═══ -->
+  <div class="deepen-cta" *ngIf="isComplete && !qaPanelOpen">
+    <div class="deepen-cta-body">
+      <h3>Approfondir ce rapport</h3>
+      <p>Posez des questions sur les recommandations, les chiffres ou les sources — sans relancer la génération.</p>
+      <div class="deepen-chips" *ngIf="suggestionChips.length > 0">
+        <button
+          type="button"
+          class="deepen-chip"
+          *ngFor="let chip of suggestionChips"
+          (click)="openQaPanel(chip)"
+        >{{ chip }}</button>
+      </div>
+    </div>
+    <button type="button" class="btn-deepen" (click)="openQaPanel()" id="report-open-qa-btn">
+      Poser une question
+    </button>
+  </div>
+
   <!-- ═══ Error state ═══ -->
   <div class="report-error" *ngIf="hasError">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -119,7 +138,13 @@
   </div>
 
   <!-- ═══ Report content ═══ -->
-  <div class="report-layout" *ngIf="(isGenerating && (whatHappenedText || whyItHappenedText)) || isComplete">
+  <div
+    class="report-split"
+    *ngIf="(isGenerating && (whatHappenedText || whyItHappenedText)) || isComplete"
+    [class.with-qa]="isComplete && qaPanelOpen"
+  >
+    <div class="report-main-column">
+  <div class="report-layout">
 
     <!-- Report meta header -->
     <div class="report-meta" *ngIf="datasetName">
@@ -201,7 +226,15 @@
           <span class="section-badge wh-badge">Analyse</span>
         </div>
         <div class="section-narrative">
-          <p *ngIf="whatHappenedText" class="narrative-text">{{ whatHappenedText }}<span class="cursor-blink" *ngIf="isGenerating && !whatHappened">|</span></p>
+          <p *ngIf="whatHappenedText" class="narrative-text">
+            <ng-container *ngFor="let seg of getInteractiveSegments(whatHappenedText, 'what_happened')">
+              <span
+                [class.report-sentence]="seg.interactive"
+                (click)="openSentenceModal(seg)"
+              >{{ seg.text }}</span>
+            </ng-container>
+            <span class="cursor-blink" *ngIf="isGenerating && !whatHappened">|</span>
+          </p>
           <div class="narrative-skeleton" *ngIf="!whatHappenedText && isGenerating">
             <div class="skel-line long"></div>
             <div class="skel-line medium"></div>
@@ -220,7 +253,15 @@
           <span class="section-badge why-badge">Causes</span>
         </div>
         <div class="section-narrative">
-          <p *ngIf="whyItHappenedText" class="narrative-text">{{ whyItHappenedText }}<span class="cursor-blink" *ngIf="isGenerating && !whyItHappened">|</span></p>
+          <p *ngIf="whyItHappenedText" class="narrative-text">
+            <ng-container *ngFor="let seg of getInteractiveSegments(whyItHappenedText, 'why')">
+              <span
+                [class.report-sentence]="seg.interactive"
+                (click)="openSentenceModal(seg)"
+              >{{ seg.text }}</span>
+            </ng-container>
+            <span class="cursor-blink" *ngIf="isGenerating && !whyItHappened">|</span>
+          </p>
           <div class="narrative-skeleton" *ngIf="!whyItHappenedText && isGenerating">
             <div class="skel-line long"></div>
             <div class="skel-line medium"></div>
@@ -241,24 +282,52 @@
 
         <!-- Streaming text -->
         <div class="section-narrative" *ngIf="whatToDoText && whatToDo.length === 0">
-          <p class="narrative-text">{{ whatToDoText }}<span class="cursor-blink" *ngIf="isGenerating">|</span></p>
+          <p class="narrative-text">
+            <ng-container *ngFor="let seg of getInteractiveSegments(whatToDoText, 'what_to_do')">
+              <span
+                [class.report-sentence]="seg.interactive"
+                (click)="openSentenceModal(seg)"
+              >{{ seg.text }}</span>
+            </ng-container>
+            <span class="cursor-blink" *ngIf="isGenerating">|</span>
+          </p>
         </div>
 
         <!-- Structured recommendations -->
         <div class="recs-grid" *ngIf="whatToDo.length > 0">
-          <div class="rec-card" *ngFor="let rec of whatToDo" [ngClass]="getPriorityClass(rec.priority)">
+          <div class="rec-card" *ngFor="let rec of whatToDo; let i = index" [ngClass]="getPriorityClass(rec.priority)">
             <div class="rec-header">
               <span class="rec-priority">{{ getPriorityLabel(rec.priority) }}</span>
               <span class="rec-priority-num">#{{ rec.priority }}</span>
             </div>
-            <p class="rec-action">{{ rec.action }}</p>
+            <p class="rec-action">
+              <ng-container *ngFor="let seg of getInteractiveSegments(rec.action, 'what_to_do', 'Recommandation #' + (i + 1))">
+                <span
+                  [class.report-sentence]="seg.interactive"
+                  (click)="openSentenceModal(seg)"
+                >{{ seg.text }}</span>
+              </ng-container>
+            </p>
             <div class="rec-outcome">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
                 <polyline points="17 6 23 6 23 12"></polyline>
               </svg>
-              <span>{{ rec.expected_outcome }}</span>
+              <span>
+                <ng-container *ngFor="let seg of getInteractiveSegments(rec.expected_outcome, 'what_to_do', 'Résultat attendu de la recommandation #' + (i + 1))">
+                  <span
+                    [class.report-sentence]="seg.interactive"
+                    (click)="openSentenceModal(seg)"
+                  >{{ seg.text }}</span>
+                </ng-container>
+              </span>
             </div>
+            <button
+              type="button"
+              class="rec-ask-link"
+              *ngIf="isComplete"
+              (click)="askAboutRecommendation(rec, i)"
+            >Demander des détails</button>
           </div>
         </div>
 
@@ -273,7 +342,14 @@
             <span>À éviter</span>
           </div>
           <ul class="avoid-list">
-            <li *ngFor="let item of whatToAvoid">{{ item }}</li>
+            <li *ngFor="let item of whatToAvoid">
+              <ng-container *ngFor="let seg of getInteractiveSegments(item, 'what_to_do', 'À éviter')">
+                <span
+                  [class.report-sentence]="seg.interactive"
+                  (click)="openSentenceModal(seg)"
+                >{{ seg.text }}</span>
+              </ng-container>
+            </li>
           </ul>
         </div>
 
@@ -342,6 +418,80 @@
           <p *ngIf="isGenerating">Les sources apparaîtront une fois la section « Pourquoi » générée…</p>
           <p *ngIf="!isGenerating">Aucune source disponible pour ce rapport.</p>
         </div>
+      </div>
+    </div>
+    </div><!-- /report-layout -->
+    </div><!-- /report-main-column -->
+
+    <aside class="report-qa-column" *ngIf="isComplete && qaPanelOpen && qaConversationId">
+      <app-report-qa-panel
+        [datasetId]="selectedDatasetId!"
+        [reportId]="reportId!"
+        [conversationId]="qaConversationId"
+        [datasetName]="datasetName"
+        [activeSection]="activeSection"
+        [chips]="suggestionChips"
+      ></app-report-qa-panel>
+    </aside>
+  </div><!-- /report-split -->
+
+  <div class="sentence-modal-backdrop" *ngIf="selectedSentence" (click)="closeSentenceModal()">
+    <div class="sentence-modal" (click)="$event.stopPropagation()">
+      <div class="sentence-modal-header">
+        <div>
+          <span class="sentence-modal-kicker">{{ sectionModalLabel }}</span>
+          <h3>Explorer cette phrase</h3>
+        </div>
+        <button type="button" class="sentence-modal-close" (click)="closeSentenceModal()" aria-label="Fermer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <blockquote class="sentence-quote">"{{ selectedSentence.text }}"</blockquote>
+
+      <div class="sentence-ai-preview">
+        <div class="sentence-ai-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            <path d="M8 9h8"></path>
+            <path d="M8 13h5"></path>
+          </svg>
+        </div>
+        <div>
+          <strong>Analyse IA ciblée</strong>
+          <p>L'assistant utilisera cette phrase, le contexte du rapport et le dataset original pour expliquer, vérifier ou visualiser l'affirmation.</p>
+        </div>
+      </div>
+
+      <div class="sentence-actions">
+        <button type="button" (click)="askAboutSelectedSentence('explain')">Expliquer</button>
+        <button type="button" (click)="askAboutSelectedSentence('chart')">Afficher le graphique</button>
+        <button type="button" (click)="askAboutSelectedSentence('challenge')">Remettre en question</button>
+        <button type="button" (click)="askAboutSelectedSentence('question')">Poser une question</button>
+      </div>
+
+      <div class="sentence-quick-options">
+        <button type="button" (click)="askAboutSelectedSentence('chart')">Afficher le graphique derrière cette affirmation</button>
+        <button type="button" (click)="askAboutSelectedSentence('question')">Expliquer pourquoi cela se produit</button>
+      </div>
+
+      <label class="sentence-input-label">
+        Instruction personnalisée
+        <textarea
+          [(ngModel)]="sentenceInstruction"
+          rows="3"
+          placeholder="Ex. Compare cette phrase avec les sources internes et montre les chiffres clés."
+        ></textarea>
+      </label>
+
+      <div class="sentence-modal-footer">
+        <button type="button" class="btn-modal-secondary" (click)="closeSentenceModal()">Annuler</button>
+        <button type="button" class="btn-modal-primary" (click)="askAboutSelectedSentence('custom')">
+          Envoyer à Questions sur le rapport
+        </button>
       </div>
     </div>
   </div>

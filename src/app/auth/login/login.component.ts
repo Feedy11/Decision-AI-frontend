@@ -2,8 +2,8 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder,FormGroup,Validators,} from '@angular/forms';
-import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { WorkflowService } from '../../core/services/workflow.service';
 
 @Component({
   selector: 'app-login',
@@ -21,7 +21,7 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private wf: WorkflowService
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -44,8 +44,8 @@ export class LoginComponent {
     this.authService.login(email, password).subscribe({
       next: () => {
         this.isLoading = false;
-        // Navigate to workflow start after successful login
-        this.router.navigate(['/workflow/upload']);
+        // Start every login with a fresh workflow for the new import.
+        this.wf.resetWorkflow();
       },
       error: (err) => {
         this.isLoading = false;

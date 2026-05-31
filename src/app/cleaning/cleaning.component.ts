@@ -731,28 +731,64 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
   getOldCellValue(row: any, col: string, index: number): any {
     if (!this.oldPreviewData || !this.oldPreviewData.rows) return null;
 
+    const normalizeValue = (val: any): string => {
+      if (val === null || val === undefined) return '';
+      return String(val).trim().toLowerCase();
+    };
+
     const isDifferent = (oldVal: any, newVal: any): boolean => {
       if (oldVal === newVal) return false;
+      if (oldVal === null || oldVal === undefined || newVal === null || newVal === undefined) {
+        return oldVal !== newVal;
+      }
+
+      const oldText = String(oldVal).trim();
+      const newText = String(newVal).trim();
+
+      // Ignore type-only changes such as "0.19" -> 0.19.
+      if (oldText !== '' && newText !== '' && !isNaN(Number(oldText)) && !isNaN(Number(newText))) {
+        return Math.abs(Number(oldText) - Number(newText)) > 1e-9;
+      }
+
       // Ignore pure case changes (uppercase ↔ lowercase)
-      if (typeof oldVal === 'string' && typeof newVal === 'string' &&
-          oldVal.toLowerCase() === newVal.toLowerCase()) return false;
+      if (oldText.toLowerCase() === newText.toLowerCase()) return false;
       return true;
     };
 
-    // 1. Try matching by an ID column (most robust if rows were deleted)
-    const idKey = Object.keys(row).find(k => k.toLowerCase() === 'id' || k.toLowerCase().includes('id'));
-    if (idKey) {
-      const rowId = row[idKey];
-      const oldRow = this.oldPreviewData.rows.find(r => r[idKey] === rowId);
-      if (oldRow) {
-        if (isDifferent(oldRow[col], row[col])) {
-          return oldRow[col] !== null ? oldRow[col] : 'vide';
-        }
-        return null;
+    const findOldRowByKey = (): any | null => {
+      const oldColumns = new Set(this.oldPreviewData?.columns ?? []);
+      const candidates = Object.keys(row).filter(k => oldColumns.has(k));
+      const stableKeys = candidates.filter(k => {
+        const lower = k.toLowerCase();
+        return lower === 'id' || lower.endsWith('_id') || lower === 'date' || lower.includes('date');
+      });
+
+      for (const key of stableKeys) {
+        const rowValue = normalizeValue(row[key]);
+        if (!rowValue) continue;
+
+        const oldRow = this.oldPreviewData?.rows.find(r => normalizeValue(r[key]) === rowValue);
+        if (oldRow) return oldRow;
       }
+
+      return null;
+    };
+
+    // 1. Try matching by a stable key (ID/date/etc.). This avoids marking
+    // row-deletion shifts as cell edits in the cleaned preview.
+    const keyedOldRow = findOldRowByKey();
+    if (keyedOldRow) {
+      if (isDifferent(keyedOldRow[col], row[col])) {
+        return keyedOldRow[col] !== null ? keyedOldRow[col] : 'vide';
+      }
+      return null;
     }
 
-    // 2. Fallback to index matching (works well if no rows were deleted)
+    // 2. Fallback to index matching only when row counts did not change.
+    if (this.cleanResult && this.cleanResult.rows_before !== this.cleanResult.rows_after) {
+      return null;
+    }
+
     const oldRow = this.oldPreviewData.rows[index];
     if (oldRow && isDifferent(oldRow[col], row[col])) {
       return oldRow[col] !== null ? oldRow[col] : 'vide';

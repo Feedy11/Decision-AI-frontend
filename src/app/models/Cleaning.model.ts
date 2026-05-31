@@ -1,7 +1,7 @@
 //Enums
 export type MissingValueStrategy = 'drop' | 'fill' | 'interpolate';
 export type FillStrategy         = 'mean' | 'median' | 'mode' | 'constant';
-export type OutlierMethod        = 'iqr' | 'zscore' | 'isolation_forest';
+export type OutlierMethod        = 'auto' | 'iqr' | 'mad' | 'log_iqr' | 'zscore' | 'isolation_forest' | 'lof';
 export type OutlierAction        = 'flag' | 'remove' | 'cap';
 
 //CleaningProfile
@@ -77,18 +77,18 @@ export interface ValidationResult {
 export const DEFAULT_PROFILE: CleaningProfileCreate = {
   name                  : '',
   description           : '',
-  handle_missing        : 'drop',
-  missing_fill_strategy : 'mean',
+  handle_missing        : 'fill',
+  missing_fill_strategy : 'median',
   missing_fill_value    : null,
   remove_duplicates     : true,
   duplicate_subset      : null,
   fix_data_types        : true,
   detect_outliers       : true,
-  outlier_method        : 'iqr',
+  outlier_method        : 'auto',
   outlier_threshold     : 1.5,
-  outlier_action        : 'flag',
+  outlier_action        : 'cap',
   strip_whitespace      : true,
-  standardize_text      : false,
+  standardize_text      : true,
   standardize_dates     : true,
   date_format           : null,
   normalize_numeric     : false,

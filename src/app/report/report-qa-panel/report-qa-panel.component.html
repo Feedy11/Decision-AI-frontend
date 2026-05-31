@@ -1,0 +1,97 @@
+<div class="qa-panel">
+  <div class="qa-header">
+    <h3 class="qa-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+      </svg>
+      Questions sur le rapport
+    </h3>
+  </div>
+
+  <div class="qa-context-banner">
+    <span class="ctx-label">Contexte :</span>
+    <span class="ctx-value">{{ datasetName || 'Dataset' }}</span>
+    <span class="ctx-sep">·</span>
+    <span class="ctx-value">Rapport {{ shortReportId }}</span>
+    <span class="ctx-sep">·</span>
+    <span class="ctx-value">Section {{ sectionLabel }}</span>
+  </div>
+
+  <div class="qa-chips" *ngIf="chips.length > 0 && messages.length === 0">
+    <button
+      type="button"
+      class="qa-chip"
+      *ngFor="let chip of chips"
+      (click)="onChipClick(chip)"
+      [disabled]="isTyping"
+    >{{ chip }}</button>
+  </div>
+
+  <div class="qa-messages" *ngIf="messages.length > 0">
+    <div
+      class="qa-msg"
+      *ngFor="let msg of messages"
+      [class.user]="msg.role === 'user'"
+      [class.assistant]="msg.role === 'assistant'"
+    >
+      <div class="qa-msg-avatar" *ngIf="msg.role === 'assistant'">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          <path d="M8 9h8"></path>
+          <path d="M8 13h5"></path>
+        </svg>
+      </div>
+      <div class="qa-msg-bubble">
+        <div class="qa-msg-meta" *ngIf="msg.role === 'assistant'">
+          <span>Assistant rapport</span>
+          <span>{{ sectionLabel }}</span>
+        </div>
+        <p class="qa-msg-text" *ngIf="msg.content; else typingState">
+          {{ msg.content }}<span class="cursor-blink" *ngIf="msg.isStreaming">|</span>
+        </p>
+        <ng-template #typingState>
+          <div class="qa-typing" *ngIf="msg.isStreaming">
+            <span></span><span></span><span></span>
+          </div>
+        </ng-template>
+        <app-highcharts-base
+          *ngIf="msg.chartOptions as chartOptions"
+          class="qa-msg-chart"
+          [chartOptions]="chartOptions"
+          [chartVisible]="true"
+        ></app-highcharts-base>
+        <span class="qa-msg-time">{{ formatTime(msg.timestamp) }}</span>
+      </div>
+    </div>
+    <div #messagesEnd></div>
+  </div>
+
+  <div class="qa-empty" *ngIf="messages.length === 0">
+    <div class="qa-empty-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        <path d="M8 9h8"></path>
+        <path d="M8 13h5"></path>
+      </svg>
+    </div>
+    <p>Posez une question sur ce rapport ou choisissez une suggestion ci-dessus.</p>
+  </div>
+
+  <form class="qa-input-row" (ngSubmit)="onSubmit()">
+    <input
+      type="text"
+      class="qa-input"
+      [(ngModel)]="inputText"
+      name="qaInput"
+      placeholder="Ex. Pourquoi la reco #2 ?"
+      [disabled]="isTyping"
+      autocomplete="off"
+    />
+    <button type="submit" class="qa-send" [disabled]="!inputText.trim() || isTyping">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="22" y1="2" x2="11" y2="13"></line>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+      </svg>
+    </button>
+  </form>
+</div>

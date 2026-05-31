@@ -669,6 +669,11 @@
               <div class="field mt12">
                 <label>Méthode de détection</label>
                 <div class="option-cards">
+                  <div class="option-card" [class.selected]="newProfile.outlier_method==='auto'" (click)="newProfile.outlier_method='auto'">
+                    <span class="option-icon">Auto</span>
+                    <span class="option-label">Auto</span>
+                    <span class="option-desc">Choisit la meilleure méthode selon la colonne</span>
+                  </div>
                   <div class="option-card" [class.selected]="newProfile.outlier_method==='iqr'" (click)="newProfile.outlier_method='iqr'">
                     <span class="option-icon">📦</span>
                     <span class="option-label">IQR</span>

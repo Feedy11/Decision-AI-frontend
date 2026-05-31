@@ -67,4 +67,31 @@ export class ReportService {
       `${this.API}/datasets/${datasetId}/reports`, body
     );
   }
+
+  /**
+   * SSE streaming for contextual follow-up Q&A on a generated report.
+   * Reuses chat SSE events: token, chart, done, error, message_persisted.
+   */
+  streamReportFollowUp(
+    datasetId: number,
+    reportId: string,
+    conversationId: number,
+    message: string,
+    activeSection?: string
+  ): EventSource {
+    const params = new URLSearchParams();
+    params.set('conversation_id', String(conversationId));
+    params.set('message', message);
+    if (activeSection) {
+      params.set('active_section', activeSection);
+    }
+
+    const token = this.auth.getToken();
+    if (token) {
+      params.set('access_token', token);
+    }
+
+    const url = `${this.API}/datasets/${datasetId}/reports/${reportId}/followup/stream?${params.toString()}`;
+    return new EventSource(url);
+  }
 }

@@ -184,12 +184,8 @@ export class WorkflowService {
   private setActiveStep(index: number): void {
     this.steps.forEach((s, i) => {
       s.active = i === index;
-      // Steps before the current one are considered done only if they were accessible
-      if (i < index) {
-        s.completed = s.accessible;
-      }
-      // Don't override completed status for current or future steps
-      // (let the component's completeCurrentStep() call handle it)
+      // Completion is controlled only by completeCurrentStep().
+      // Navigation alone should not turn workflow steps green.
     });
     this.currentIndexSubject.next(index);
     this.publish();
