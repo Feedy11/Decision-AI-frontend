@@ -1,4 +1,4 @@
-<!-- ===== Navbar : logo + enseigne seulement ===== -->
+<!-- ===== Navbar : logo + profile ===== -->
 <nav class="navbar" *ngIf="!isPublicRoute">
   <div class="navbar-brand">
     <div class="brand-logo" (click)="goToDashboard()" style="cursor:pointer">
@@ -14,6 +14,37 @@
         </defs>
       </svg>
       <span class="brand-name">Decision <span class="brand-ai">AI</span></span>
+    </div>
+  </div>
+
+  <!-- Spacer -->
+  <div class="navbar-spacer"></div>
+
+  <!-- Profile section (right side) -->
+  <div class="navbar-profile" id="navbar-profile">
+    <div class="profile-trigger" (click)="toggleProfileDropdown()">
+      <div class="navbar-avatar" *ngIf="!avatarUrl">{{ userInitials }}</div>
+      <img *ngIf="avatarUrl" [src]="avatarUrl" alt="Avatar" class="navbar-avatar-img" />
+      <span class="navbar-user-name">{{ userFullName }}</span>
+      <lucide-icon name="chevron-down" [size]="14" [strokeWidth]="2" class="dropdown-chevron" [class.open]="profileDropdownOpen"></lucide-icon>
+    </div>
+
+    <!-- Dropdown -->
+    <div class="profile-dropdown" *ngIf="profileDropdownOpen">
+      <div class="dropdown-header">
+        <div class="dropdown-user-name">{{ userFullName }}</div>
+        <div class="dropdown-user-role">{{ isAdmin ? 'Administrateur' : 'Utilisateur' }}</div>
+      </div>
+      <div class="dropdown-divider"></div>
+      <a class="dropdown-item" (click)="goToProfile(); closeDropdown()">
+        <lucide-icon name="user" [size]="16" [strokeWidth]="2"></lucide-icon>
+        <span>Mon profil</span>
+      </a>
+      <div class="dropdown-divider"></div>
+      <a class="dropdown-item dropdown-item--danger" (click)="logout()">
+        <lucide-icon name="log-out" [size]="16" [strokeWidth]="2"></lucide-icon>
+        <span>Déconnexion</span>
+      </a>
     </div>
   </div>
 </nav>

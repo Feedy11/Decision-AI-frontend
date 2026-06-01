@@ -26,7 +26,7 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
   phase: 'scan' | 'repair' = 'scan';
 
   // Tabs (Qualité / Profils / Historique unchanged)
-  activeTab: 'clean' | 'quality' | 'profiles' | 'history' = 'clean';
+  activeTab: 'clean' | 'profiles' | 'history' = 'clean';
 
   // Datasets
   datasets         : Dataset[] = [];
@@ -282,7 +282,7 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   // ── Tab / phase helpers ───────────────────────────────────────────────
-  setTab(tab: 'clean' | 'quality' | 'profiles' | 'history'): void {
+  setTab(tab: 'clean' | 'profiles' | 'history'): void {
     this.activeTab = tab;
     if (tab === 'profiles') this.loadProfiles();
   }
@@ -436,6 +436,38 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
       missing_tokens      : { icon: '🔤', label: 'Tokens nuls nettoyés',  desc: 'Valeurs "na", "?", "--" converties en vide' },
     };
     return m[op] ?? { icon: '⚙️', label: op, desc: 'Opération de nettoyage' };
+  }
+
+  /** Check if a cleaning operation actually had an impact (used for badge green state) */
+  isOperationPerformed(operation: string): boolean {
+    if (!this.cleanResult) return false;
+    const r = this.cleanResult;
+    const changes = r.cleaning_report?.['changes'] ?? {};
+
+    switch (operation) {
+      case 'missing_values':
+        return (r.missing_values_handled ?? 0) > 0;
+      case 'duplicates':
+        return (r.duplicates_removed ?? 0) > 0;
+      case 'outliers':
+        return (r.outliers_detected ?? 0) > 0;
+      case 'data_types':
+        return (r.data_types_fixed ?? 0) > 0;
+      case 'text_cleaning': {
+        const tc = changes['text_cleaning'];
+        if (tc && (tc['cells_modified'] > 0 || tc['columns_cleaned']?.length > 0)) return true;
+        // Fallback: check rows_before vs rows_after isn't enough — check report for strip/normalize
+        const strips = this.diffRows.filter(d => d.change_type === 'text_stripped' || d.change_type === 'text_normalized');
+        return strips.length > 0;
+      }
+      case 'date_standardization': {
+        const ds = changes['date_standardization'];
+        if (ds && (ds['columns_standardized']?.length > 0 || ds['dates_converted'] > 0)) return true;
+        return false;
+      }
+      default:
+        return false;
+    }
   }
 
   // ── Chart rendering ──────────────────────────────────────────────────

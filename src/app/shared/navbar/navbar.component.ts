@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
@@ -11,7 +11,7 @@ const PUBLIC_ROUTES = ['/login', '/pass', '/reset-password'];
 @Component({
   selector   : 'app-navbar',
   standalone : true,
-  imports    : [ CommonModule,LucideAngularModule],
+  imports    : [ CommonModule, LucideAngularModule],
   templateUrl: './navbar.component.html',
   styleUrl   : './navbar.component.css'
 })
@@ -21,6 +21,8 @@ export class NavbarComponent implements OnInit {
   userInitials  = '';
   isAdmin       = false;
   isPublicRoute = false;
+  avatarUrl: string | null = null;
+  profileDropdownOpen = false;
 
   constructor(
     private router: Router,
@@ -38,6 +40,22 @@ export class NavbarComponent implements OnInit {
         this.checkRoute(e.urlAfterRedirects);
         this.loadUser();
       });
+
+    // Listen for avatar changes from profile page
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'user_avatar') {
+        this.avatarUrl = e.newValue;
+      }
+    });
+  }
+
+  /** Close dropdown when clicking outside */
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const profileEl = document.getElementById('navbar-profile');
+    if (profileEl && !profileEl.contains(event.target as Node)) {
+      this.profileDropdownOpen = false;
+    }
   }
 
   private checkRoute(url: string): void {
@@ -56,6 +74,16 @@ export class NavbarComponent implements OnInit {
         .substring(0, 2);
       this.isAdmin = user.is_superuser;
     }
+    // Load avatar from localStorage
+    this.avatarUrl = localStorage.getItem('user_avatar') || null;
+  }
+
+  toggleProfileDropdown(): void {
+    this.profileDropdownOpen = !this.profileDropdownOpen;
+  }
+
+  closeDropdown(): void {
+    this.profileDropdownOpen = false;
   }
 
   goToDashboard(): void { this.router.navigate(['/dashboard']); }

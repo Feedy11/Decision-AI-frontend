@@ -800,3 +800,129 @@ code {
     padding: 6px 10px;
   }
 }
+
+/* ══════════════════════════════════════════════════════════
+   CLEANING BADGES — 6 fixed badges, green when active
+══════════════════════════════════════════════════════════ */
+
+.cleaning-badges-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.cleaning-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.cleaning-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(22, 163, 74, 0.04));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.cleaning-badge--active {
+  background: rgba(34, 197, 94, 0.06);
+  border-color: rgba(34, 197, 94, 0.35);
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.12);
+}
+
+.cleaning-badge--active::before {
+  opacity: 1;
+}
+
+.cleaning-badge--active::after {
+  content: '✓';
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #22C55E;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: badgeCheck 0.3s ease;
+}
+
+@keyframes badgeCheck {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.cleaning-badge-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #F1F5F9;
+  transition: background 0.3s ease;
+}
+
+.cleaning-badge--active .cleaning-badge-icon {
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.cleaning-badge-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cleaning-badge-label {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #1E293B;
+  transition: color 0.3s ease;
+}
+
+.cleaning-badge--active .cleaning-badge-label {
+  color: #16A34A;
+}
+
+.cleaning-badge-desc {
+  font-size: 0.7rem;
+  color: #64748B;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 900px) {
+  .cleaning-badges-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .cleaning-badges-grid {
+    grid-template-columns: 1fr;
+  }
+}
