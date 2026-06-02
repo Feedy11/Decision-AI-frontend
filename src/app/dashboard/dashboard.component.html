@@ -3,8 +3,8 @@
   <!-- Header -->
   <div class="dash-header">
     <div>
-      <h1 class="dash-title">Dashboard IA</h1>
-      <p class="dash-sub">Générez des KPIs et visualisations depuis vos données via Gemini</p>
+      <h1 class="dash-title">{{ 'dashboard.title' | transloco }}</h1>
+      <p class="dash-sub">{{ 'dashboard.subtitle' | transloco }}</p>
     </div>
     <span class="ai-badge">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -17,7 +17,7 @@
   <!-- Barre de génération -->
   <div class="gen-bar">
     <select class="form-select" [(ngModel)]="selectedDatasetId" (ngModelChange)="onDatasetChange($event)">
-      <option [ngValue]="null">-- Sélectionner un dataset --</option>
+      <option [ngValue]="null">{{ 'dashboard.selectDataset' | transloco }}</option>
       <option *ngFor="let d of datasets" [ngValue]="d.id">#{{ d.id }} — {{ d.original_filename }}</option>
     </select>
 
@@ -28,7 +28,7 @@
       <svg *ngIf="isGenerating" class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
       </svg>
-      {{ isGenerating ? 'Génération Gemini...' : 'Générer le dashboard' }}
+      {{ isGenerating ? ('dashboard.generating' | transloco) : ('dashboard.generateBtn' | transloco) }}
     </button>
 
     <!-- History dropdown (Replaces Sidebar) -->
@@ -36,7 +36,7 @@
             [ngModel]="selectedDashboard"
             (ngModelChange)="selectDashboard($event)">
       <option *ngFor="let d of savedDashboards" [ngValue]="d">
-        🕒 Historique: #{{ d.id }} — {{ formatDate(d.created_at) }}
+        🕒 {{ 'common.history' | transloco }}: #{{ d.id }} — {{ formatDate(d.created_at) }}
       </option>
     </select>
 
@@ -47,7 +47,7 @@
         <line x1="16" y1="13" x2="8" y2="13"></line>
         <line x1="16" y1="17" x2="8" y2="17"></line>
       </svg>
-      Générer le rapport
+      {{ 'dashboard.generateReport' | transloco }}
     </button>
 
     <!-- Loader global discret -->
@@ -55,7 +55,7 @@
       <svg class="spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
       </svg>
-      {{ isExecuting ? 'Calcul des KPIs...' : 'Chargement des graphiques...' }}
+      {{ isExecuting ? ('dashboard.calculatingKpis' | transloco) : ('dashboard.loadingCharts' | transloco) }}
     </div>
   </div>
 
@@ -175,7 +175,7 @@
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                 </svg>
-                AI Insight
+                {{ 'common.aiInsight' | transloco }}
               </div>
               <p class="chart-insight-text">{{ c.insight }}</p>
             </div>
@@ -203,7 +203,7 @@
             <line x1="12" y1="20" x2="12" y2="4"></line>
             <line x1="6" y1="20" x2="6" y2="14"></line>
           </svg>
-          <p>Les graphiques se chargent automatiquement...</p>
+          <p>{{ 'dashboard.chartsLoading' | transloco }}</p>
         </div>
       </div>
 
@@ -215,10 +215,10 @@
     <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
       <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
     </svg>
-    <h3>{{ isLoadingDashboards ? 'Chargement des dashboards...' : 'Aucun dashboard sélectionné' }}</h3>
-    <p *ngIf="!selectedDatasetId">Choisissez un dataset pour afficher son dernier dashboard.</p>
-    <p *ngIf="selectedDatasetId && isLoadingDashboards">Recherche du dernier dashboard sauvegardé pour ce dataset.</p>
-    <p *ngIf="selectedDatasetId && !isLoadingDashboards">Aucun dashboard sauvegardé pour ce dataset. Vous pouvez en générer un nouveau.</p>
+    <h3>{{ isLoadingDashboards ? ('dashboard.loadingDashboards' | transloco) : ('dashboard.noDashboardSelected' | transloco) }}</h3>
+    <p *ngIf="!selectedDatasetId">{{ 'dashboard.chooseDataset' | transloco }}</p>
+    <p *ngIf="selectedDatasetId && isLoadingDashboards">{{ 'dashboard.searchingSaved' | transloco }}</p>
+    <p *ngIf="selectedDatasetId && !isLoadingDashboards">{{ 'dashboard.noSavedDashboard' | transloco }}</p>
   </div>
 
 </div>

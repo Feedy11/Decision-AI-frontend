@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 import { filter } from 'rxjs/operators';
 import { LucideAngularModule } from 'lucide-angular';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 // Routes publiques affiche seulement le logo
 const PUBLIC_ROUTES = ['/login', '/pass', '/reset-password'];
@@ -11,7 +12,7 @@ const PUBLIC_ROUTES = ['/login', '/pass', '/reset-password'];
 @Component({
   selector   : 'app-navbar',
   standalone : true,
-  imports    : [ CommonModule, LucideAngularModule],
+  imports    : [ CommonModule, LucideAngularModule, TranslocoPipe],
   templateUrl: './navbar.component.html',
   styleUrl   : './navbar.component.css'
 })

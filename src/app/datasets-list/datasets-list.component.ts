@@ -7,10 +7,11 @@ import { ToastrService } from 'ngx-toastr';
 import { AuthService } from '../core/services/auth.service';
 import { Dataset, DatasetListResponse } from '../models/Dataset.model';
 import { IA_API_BASE } from '../core/config/api-base';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-datasets-list',
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, TranslocoPipe],
   templateUrl: './datasets-list.component.html',
   styleUrl: './datasets-list.component.css'
 })
@@ -46,7 +47,7 @@ export class DatasetsListComponent implements OnInit {
     private http    : HttpClient,
     private toastr  : ToastrService,
     private auth    : AuthService,
-
+    private translocoService: TranslocoService
   ) {}
 
   ngOnInit(): void {
@@ -85,8 +86,8 @@ export class DatasetsListComponent implements OnInit {
       error: () => {
         this.isLoading = false;
         this.toastr.error(
-          'Impossible de charger les datasets.',
-          'Erreur',
+          this.translocoService.translate('datasets.loadError'),
+          this.translocoService.translate('common.error'),
           { timeOut: 4000, progressBar: true }
         );
       }
@@ -140,9 +141,12 @@ export class DatasetsListComponent implements OnInit {
         next: () => {
           this.isDeleting      = false;
           this.showDeleteModal  = false;
+          const msg = this.translocoService.getActiveLang() === 'fr'
+            ? `${this.datasetToDelete?.original_filename} supprimé.`
+            : `${this.datasetToDelete?.original_filename} deleted.`;
           this.toastr.success(
-            `${this.datasetToDelete?.original_filename} supprimé.`,
-            'Suppression réussie ',
+            msg,
+            this.translocoService.translate('datasets.deleteSuccess'),
             { timeOut: 3000, progressBar: true }
           );
           this.datasetToDelete = null;
@@ -152,8 +156,8 @@ export class DatasetsListComponent implements OnInit {
           this.isDeleting     = false;
           this.showDeleteModal = false;
           this.toastr.error(
-            'Impossible de supprimer ce dataset.',
-            'Erreur',
+            this.translocoService.translate('datasets.deleteError'),
+            this.translocoService.translate('common.error'),
             { timeOut: 4000, progressBar: true }
           );
         }

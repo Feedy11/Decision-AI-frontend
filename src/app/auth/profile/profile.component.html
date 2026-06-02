@@ -3,8 +3,8 @@
   <!-- Header -->
   <div class="page-header">
     <div>
-      <h1>Mon profil</h1>
-      <p>Gérez vos informations personnelles et vos préférences</p>
+      <h1>{{ 'profile.title' | transloco }}</h1>
+      <p>{{ 'profile.subtitle' | transloco }}</p>
     </div>
   </div>
 
@@ -26,7 +26,7 @@
           </button>
         </div>
         <h3>{{ user.firstName }} {{ user.lastName }}</h3>
-        <span class="role-badge">{{ user.role }}</span>
+        <span class="role-badge">{{ user.role === 'admin' ? ('navbar.admin' | transloco) : ('navbar.user' | transloco) }}</span>
         <p class="user-email">{{ user.email }}</p>
         <div class="avatar-actions">
           <button class="btn-outline-sm" (click)="triggerPhotoUpload()">
@@ -35,14 +35,14 @@
               <polyline points="17 8 12 3 7 8"></polyline>
               <line x1="12" y1="3" x2="12" y2="15"></line>
             </svg>
-            Changer photo
+            {{ 'profile.changePhoto' | transloco }}
           </button>
           <button class="btn-outline-sm btn-outline-danger" *ngIf="avatarUrl" (click)="removePhoto()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
             </svg>
-            Supprimer
+            {{ 'profile.delete' | transloco }}
           </button>
         </div>
       </div>
@@ -58,7 +58,7 @@
           </div>
           <div>
             <div class="stat-value">{{ stats.analyses }}</div>
-            <div class="stat-label">Analyses</div>
+            <div class="stat-label">{{ 'profile.stats.analyses' | transloco }}</div>
           </div>
         </div>
         <div class="stat-row">
@@ -72,7 +72,7 @@
           </div>
           <div>
             <div class="stat-value">{{ stats.dashboards }}</div>
-            <div class="stat-label">Tableaux de bord</div>
+            <div class="stat-label">{{ 'profile.stats.dashboards' | transloco }}</div>
           </div>
         </div>
         <div class="stat-row">
@@ -83,7 +83,7 @@
           </div>
           <div>
             <div class="stat-value">{{ stats.kpis }}</div>
-            <div class="stat-label">KPIs suivis</div>
+            <div class="stat-label">{{ 'profile.stats.kpis' | transloco }}</div>
           </div>
         </div>
       </div>
@@ -103,8 +103,8 @@
             </svg>
           </div>
           <div>
-            <h3>Informations personnelles</h3>
-            <p>Mettez à jour vos informations personnelles</p>
+            <h3>{{ 'profile.personal.title' | transloco }}</h3>
+            <p>{{ 'profile.personal.subtitle' | transloco }}</p>
           </div>
         </div>
 
@@ -127,18 +127,18 @@
         <form class="form" (ngSubmit)="savePersonal()">
           <div class="form-row">
             <div class="field">
-              <label>Prénom</label>
+              <label>{{ 'profile.personal.firstName' | transloco }}</label>
               <input type="text" class="form-input" [(ngModel)]="user.firstName" name="firstName"
-                placeholder="Prénom" />
+                [placeholder]="'profile.personal.firstName' | transloco" />
             </div>
             <div class="field">
-              <label>Nom</label>
-              <input type="text" class="form-input" [(ngModel)]="user.lastName" name="lastName" placeholder="Nom" />
+              <label>{{ 'profile.personal.lastName' | transloco }}</label>
+              <input type="text" class="form-input" [(ngModel)]="user.lastName" name="lastName" [placeholder]="'profile.personal.lastName' | transloco" />
             </div>
           </div>
 
           <div class="field">
-            <label>Adresse email</label>
+            <label>{{ 'profile.email' | transloco }}</label>
             <div class="input-wrap">
               <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2">
@@ -150,25 +150,25 @@
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
-                Vérifié
+                {{ 'profile.verified' | transloco }}
               </span>
             </div>
           </div>
 
           <div class="field">
-            <label>Titre d'emploi</label>
+            <label>{{ 'profile.personal.jobTitle' | transloco }}</label>
             <input type="text" class="form-input" [(ngModel)]="user.jobTitle" name="jobTitle"
               placeholder="Ex : Data Analyst" />
           </div>
 
           <div class="field">
-            <label>Organisation</label>
+            <label>{{ 'profile.personal.organization' | transloco }}</label>
             <input type="text" class="form-input" [(ngModel)]="user.organization" name="organization"
               placeholder="Ex : Atlanta Compa" />
           </div>
 
           <div class="form-actions">
-            <button type="button" class="btn-cancel" (click)="ngOnInit()">Annuler</button>
+            <button type="button" class="btn-cancel" (click)="ngOnInit()">{{ 'profile.cancel' | transloco }}</button>
             <button type="submit" class="btn-save" [disabled]="isSavingPersonal">
               <svg *ngIf="!isSavingPersonal" width="15" height="15" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2.5">
@@ -179,7 +179,7 @@
                 <path
                   d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
               </svg>
-              {{ isSavingPersonal ? 'Enregistrement...' : 'Sauvegarder les modifications' }}
+              {{ (isSavingPersonal ? 'profile.saving' : 'profile.save') | transloco }}
             </button>
           </div>
         </form>
@@ -195,8 +195,8 @@
             </svg>
           </div>
           <div>
-            <h3>Sécurité</h3>
-            <p>Gérez votre mot de passe et votre accès</p>
+            <h3>{{ 'profile.security.title' | transloco }}</h3>
+            <p>{{ 'profile.security.subtitle' | transloco }}</p>
           </div>
         </div>
 
@@ -220,7 +220,7 @@
 
           <!-- Mot de passe actuel -->
           <div class="field">
-            <label>Mot de passe actuel</label>
+            <label>{{ 'profile.security.currentPassword' | transloco }}</label>
             <div class="input-wrap">
               <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2">
@@ -246,7 +246,7 @@
 
           <!-- Nouveau mot de passe -->
           <div class="field">
-            <label>Nouveau mot de passe</label>
+            <label>{{ 'profile.security.newPassword' | transloco }}</label>
             <div class="input-wrap">
               <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2">
@@ -272,7 +272,7 @@
 
           <!-- Confirmer -->
           <div class="field">
-            <label>Confirmer le nouveau mot de passe</label>
+            <label>{{ 'profile.security.confirmPassword' | transloco }}</label>
             <div class="input-wrap">
               <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2">
@@ -308,7 +308,7 @@
                 <path
                   d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
               </svg>
-              {{ isSavingPassword ? 'Modification...' : 'Modifier mot de passe' }}
+              {{ (isSavingPassword ? 'profile.security.updatingButton' : 'profile.security.updateButton') | transloco }}
             </button>
           </div>
         </form>
@@ -326,8 +326,8 @@
             </svg>
           </div>
           <div>
-            <h3>Préférences</h3>
-            <p>Personnalisez votre expérience sur la plateforme</p>
+            <h3>{{ 'profile.preferences.title' | transloco }}</h3>
+            <p>{{ 'profile.preferences.subtitle' | transloco }}</p>
           </div>
         </div>
 
@@ -344,21 +344,20 @@
           <!-- Language -->
           <div class="pref-row">
             <div>
-              <span class="pref-name">Langue</span>
-              <span class="pref-hint">Choisissez la langue de l'interface</span>
+              <span class="pref-name">{{ 'profile.preferences.language' | transloco }}</span>
+              <span class="pref-hint">{{ 'profile.preferences.languageHint' | transloco }}</span>
             </div>
             <select class="form-select" [(ngModel)]="preferences.language" name="lang">
               <option value="fr">Français</option>
               <option value="en">English</option>
-              <option value="ar">العربية</option>
             </select>
           </div>
 
           <!-- Timezone -->
           <div class="pref-row">
             <div>
-              <span class="pref-name">Fuseau horaire</span>
-              <span class="pref-hint">Utilisé pour les rapports et les notifications</span>
+              <span class="pref-name">{{ 'profile.preferences.timezone' | transloco }}</span>
+              <span class="pref-hint">{{ 'profile.preferences.timezoneHint' | transloco }}</span>
             </div>
             <select class="form-select" [(ngModel)]="preferences.timezone" name="tz">
               <option value="Africa/Tunis">Tunis (GMT+1)</option>
@@ -372,8 +371,8 @@
           <!-- Email notifications -->
           <div class="pref-row">
             <div>
-              <span class="pref-name">Notifications par email</span>
-              <span class="pref-hint">Recevoir des alertes lorsque vos analyses sont prêtes</span>
+              <span class="pref-name">{{ 'profile.preferences.notifications' | transloco }}</span>
+              <span class="pref-hint">{{ 'profile.preferences.notificationsHint' | transloco }}</span>
             </div>
             <label class="toggle">
               <input type="checkbox" [(ngModel)]="preferences.emailNotif" name="emailNotif" />
@@ -384,8 +383,8 @@
           <!-- Two-Factor -->
           <div class="pref-row">
             <div>
-              <span class="pref-name">Authentification à deux facteurs</span>
-              <span class="pref-hint">Ajoutez une couche de sécurité supplémentaire</span>
+              <span class="pref-name">{{ 'profile.preferences.twoFactor' | transloco }}</span>
+              <span class="pref-hint">{{ 'profile.preferences.twoFactorHint' | transloco }}</span>
             </div>
             <label class="toggle">
               <input type="checkbox" [(ngModel)]="preferences.twoFactor" name="twoFactor" />
@@ -399,7 +398,7 @@
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
-            Enregistrer les préférences
+            {{ 'profile.preferences.saveButton' | transloco }}
           </button>
         </div>
       </div>
@@ -415,12 +414,12 @@
             </svg>
           </div>
           <div>
-            <h3 style="color: #EF4444;">Zone dangereuse</h3>
-            <p>La suppression de votre compte est définitive et irréversible.</p>
+            <h3 style="color: #EF4444;">{{ 'profile.danger.title' | transloco }}</h3>
+            <p>{{ 'profile.danger.subtitle' | transloco }}</p>
           </div>
           <div style="margin-left: auto;">
             <button type="button" class="btn-save" style="background: #EF4444;" (click)="confirmDeleteAccount()">
-              Supprimer mon compte
+              {{ 'profile.danger.deleteButton' | transloco }}
             </button>
           </div>
         </div>

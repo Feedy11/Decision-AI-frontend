@@ -6,7 +6,7 @@
 
   <!-- Header sidebar : bouton fermer -->
   <div class="sidebar-header">
-    <span class="sidebar-title">Menu</span>
+    <span class="sidebar-title">{{ 'sidebar.menu' | transloco }}</span>
     <button class="close-btn" (click)="close()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -20,13 +20,13 @@
 
     <!-- ═══ Workflow Section ═══ -->
     <div class="nav-section">
-      <span class="nav-section-label">Workflow</span>
+      <span class="nav-section-label">{{ 'sidebar.workflow' | transloco }}</span>
 
       <a class="nav-item workflow-item" (click)="startWorkflow()">
         <span class="nav-icon workflow-icon">
           <lucide-icon name="sparkles" [size]="18" [strokeWidth]="2"></lucide-icon>
         </span>
-        <span>Démarrer le Workflow</span>
+        <span>{{ 'sidebar.startWorkflow' | transloco }}</span>
         <span class="nav-arrow">→</span>
       </a>
 
@@ -34,7 +34,7 @@
       <a routerLink="/workflow/upload" routerLinkActive="active" class="nav-item nav-item--sub"
         [class.nav-item--locked]="!wf.canAccessRoute('/workflow/upload')">
         <span class="nav-icon"><lucide-icon name="upload-cloud" [size]="16" [strokeWidth]="2"></lucide-icon></span>
-        <span>Upload</span>
+        <span>{{ 'sidebar.upload' | transloco }}</span>
         <lucide-icon *ngIf="wf.allSteps[0]?.completed" name="check" [size]="14" [strokeWidth]="2.5"
           class="step-done-icon"></lucide-icon>
       </a>
@@ -42,7 +42,7 @@
       <a routerLink="/workflow/cleaning" routerLinkActive="active" class="nav-item nav-item--sub"
         [class.nav-item--locked]="!wf.canAccessRoute('/workflow/cleaning')">
         <span class="nav-icon"><lucide-icon name="sparkles" [size]="16" [strokeWidth]="2"></lucide-icon></span>
-        <span>Nettoyage</span>
+        <span>{{ 'sidebar.cleaning' | transloco }}</span>
         <lucide-icon *ngIf="wf.allSteps[1]?.completed" name="check" [size]="14" [strokeWidth]="2.5"
           class="step-done-icon"></lucide-icon>
         <lucide-icon *ngIf="!wf.allSteps[1]?.accessible" name="lock" [size]="12" [strokeWidth]="2"
@@ -52,7 +52,7 @@
       <a routerLink="/workflow/analysis" routerLinkActive="active" class="nav-item nav-item--sub"
         [class.nav-item--locked]="!wf.canAccessRoute('/workflow/analysis')">
         <span class="nav-icon"><lucide-icon name="bar-chart-2" [size]="16" [strokeWidth]="2"></lucide-icon></span>
-        <span>Analyse</span>
+        <span>{{ 'sidebar.analysis' | transloco }}</span>
         <lucide-icon *ngIf="wf.allSteps[2]?.completed" name="check" [size]="14" [strokeWidth]="2.5"
           class="step-done-icon"></lucide-icon>
         <lucide-icon *ngIf="!wf.allSteps[2]?.accessible" name="lock" [size]="12" [strokeWidth]="2"
@@ -62,7 +62,7 @@
       <a routerLink="/workflow/dashboard" routerLinkActive="active" class="nav-item nav-item--sub"
         [class.nav-item--locked]="!wf.canAccessRoute('/workflow/dashboard')">
         <span class="nav-icon"><lucide-icon name="layout-dashboard" [size]="16" [strokeWidth]="2"></lucide-icon></span>
-        <span>Dashboard</span>
+        <span>{{ 'sidebar.dashboard' | transloco }}</span>
         <lucide-icon *ngIf="wf.allSteps[3]?.completed" name="check" [size]="14" [strokeWidth]="2.5"
           class="step-done-icon"></lucide-icon>
         <lucide-icon *ngIf="!wf.allSteps[3]?.accessible" name="lock" [size]="12" [strokeWidth]="2"
@@ -72,47 +72,47 @@
 
     <!-- Main Section -->
     <div class="nav-section">
-      <span class="nav-section-label">Menu</span>
+      <span class="nav-section-label">{{ 'sidebar.menu' | transloco }}</span>
 
       <a routerLink="/datasets" routerLinkActive="active" class="nav-item">
         <span class="nav-icon"><lucide-icon name="database" [size]="18" [strokeWidth]="2"></lucide-icon></span>
-        <span>Datasets</span>
+        <span>{{ 'sidebar.datasets' | transloco }}</span>
         <span class="nav-badge" *ngIf="datasetCount > 0">{{ datasetCount }}</span>
       </a>
 
       <a routerLink="/cleaning" routerLinkActive="active" class="nav-item">
         <span class="nav-icon"><lucide-icon name="sparkles" [size]="18" [strokeWidth]="2"></lucide-icon></span>
-        <span>Nettoyage</span>
+        <span>{{ 'sidebar.cleaning' | transloco }}</span>
       </a>
 
       <a routerLink="/analysis" routerLinkActive="active" class="nav-item">
         <span class="nav-icon"><lucide-icon name="bar-chart-2" [size]="18" [strokeWidth]="2"></lucide-icon></span>
-        <span>Analytique</span>
+        <span>{{ 'sidebar.analytics' | transloco }}</span>
       </a>
 
       <a routerLink="/kpis" routerLinkActive="active" class="nav-item">
         <span class="nav-icon"><lucide-icon name="activity" [size]="18" [strokeWidth]="2"></lucide-icon></span>
-        <span>KPIs</span>
+        <span>{{ 'sidebar.kpis' | transloco }}</span>
       </a>
 
       <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item">
         <span class="nav-icon"><lucide-icon name="layout-dashboard" [size]="18" [strokeWidth]="2"></lucide-icon></span>
-        <span>Tableau de bord</span>
+        <span>{{ 'sidebar.dashboard' | transloco }}</span>
       </a>
 
       <a routerLink="/report" routerLinkActive="active" class="nav-item">
         <span class="nav-icon"><lucide-icon name="file-text" [size]="18" [strokeWidth]="2"></lucide-icon></span>
-        <span>Rapport</span>
+        <span>{{ 'sidebar.report' | transloco }}</span>
       </a>
     </div>
 
     <!-- Admin Section -->
     <div class="nav-section" *ngIf="isAdmin">
-      <span class="nav-section-label">Administration</span>
+      <span class="nav-section-label">{{ 'sidebar.administration' | transloco }}</span>
 
       <a routerLink="/admin/users" routerLinkActive="active" class="nav-item admin-item">
         <span class="nav-icon"><lucide-icon name="users" [size]="18" [strokeWidth]="2"></lucide-icon></span>
-        <span>Utilisateurs</span>
+        <span>{{ 'sidebar.users' | transloco }}</span>
       </a>
     </div>
 
@@ -122,7 +122,7 @@
 
 <!-- ===== Bouton toggle latéral (toujours visible, collé au bord droit du panel) ===== -->
 <button class="sidebar-toggle-btn" *ngIf="!isPublicRoute" [class.panel-open]="isOpen" (click)="togglePanel()"
-  title="{{ isOpen ? 'Fermer le menu' : 'Ouvrir le menu' }}">
+  [title]="isOpen ? ('sidebar.closeMenu' | transloco) : ('sidebar.openMenu' | transloco)">
   <div class="toggle-icon">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
       stroke-linecap="round">
@@ -130,6 +130,6 @@
       <line x1="3" y1="12" x2="21" y2="12"></line>
       <line x1="3" y1="18" x2="21" y2="18"></line>
     </svg>
-    <span class="toggle-text">Menu</span>
+    <span class="toggle-text">{{ 'sidebar.menu' | transloco }}</span>
   </div>
 </button>

@@ -5,6 +5,7 @@ import { CommonModule }     from '@angular/common';
 import { FormsModule }      from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ToastrService }    from 'ngx-toastr';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import jsPDF from 'jspdf';
 
 import { ReportService }    from '../core/services/report.service';
@@ -41,7 +42,7 @@ interface SelectedReportSentence {
 @Component({
   selector   : 'app-report',
   standalone : true,
-  imports    : [CommonModule, FormsModule, ReportQaPanelComponent],
+  imports    : [CommonModule, FormsModule, ReportQaPanelComponent, TranslocoPipe],
   templateUrl: './report.component.html',
   styleUrl   : './report.component.css'
 })
@@ -111,7 +112,8 @@ export class ReportComponent implements OnInit, OnDestroy {
     private ngZone    : NgZone,
     private cdr       : ChangeDetectorRef,
     private router    : Router,
-    private route     : ActivatedRoute
+    private route     : ActivatedRoute,
+    private translocoService: TranslocoService
   ) {}
 
   ngOnInit(): void {
@@ -138,12 +140,12 @@ export class ReportComponent implements OnInit, OnDestroy {
   // ── Pipeline steps init ───────────────────────────────────
   private initPipelineSteps(): void {
     this.pipelineSteps = [
-      { key: 'loading_context', label: 'Chargement du contexte',     icon: '📂', status: 'pending' },
-      { key: 'rag_retrieval',   label: 'Recherche vectorielle RAG',  icon: '🔍', status: 'pending' },
-      { key: 'web_search',      label: 'Recherche web Serper',       icon: '🌐', status: 'pending' },
-      { key: 'merging_context', label: 'Fusion des contextes',       icon: '🔗', status: 'pending' },
-      { key: 'generating',      label: 'Génération Gemini',          icon: '✨', status: 'pending' },
-      { key: 'finalizing',      label: 'Finalisation du rapport',    icon: '📄', status: 'pending' },
+      { key: 'loading_context', label: 'report.pipeline.loading_context',     icon: '📂', status: 'pending' },
+      { key: 'rag_retrieval',   label: 'report.pipeline.rag_retrieval',  icon: '🔍', status: 'pending' },
+      { key: 'web_search',      label: 'report.pipeline.web_search',       icon: '🌐', status: 'pending' },
+      { key: 'merging_context', label: 'report.pipeline.merging_context',       icon: '🔗', status: 'pending' },
+      { key: 'generating',      label: 'report.pipeline.generating',          icon: '✨', status: 'pending' },
+      { key: 'finalizing',      label: 'report.pipeline.finalizing',    icon: '📄', status: 'pending' },
     ];
   }
 
@@ -169,7 +171,11 @@ export class ReportComponent implements OnInit, OnDestroy {
   // ── Generate Report (SSE streaming) ───────────────────────
   generateReport(): void {
     if (!this.selectedDatasetId) {
-      this.toastr.warning('Sélectionnez un dataset.', 'Info', { timeOut: 3000 });
+      this.toastr.warning(
+        this.translocoService.translate('report.toastr.selectDataset'),
+        this.translocoService.translate('report.toastr.infoTitle'),
+        { timeOut: 3000 }
+      );
       return;
     }
 
@@ -184,7 +190,7 @@ export class ReportComponent implements OnInit, OnDestroy {
       {
         includeWebContext: this.includeWebContext,
         conversationId: this.selectedConvId,
-        language: 'fr'
+        language: this.translocoService.getActiveLang()
       }
     );
 
@@ -259,8 +265,8 @@ export class ReportComponent implements OnInit, OnDestroy {
 
         this.closeEventSource();
         this.toastr.success(
-          `Rapport généré en ${(this.latencyMs / 1000).toFixed(1)}s`,
-          'Rapport prêt ',
+          this.translocoService.translate('report.toastr.generateSuccess', { seconds: (this.latencyMs / 1000).toFixed(1) }),
+          this.translocoService.translate('report.toastr.reportReady'),
           { timeOut: 5000, progressBar: true }
         );
         this.cdr.detectChanges();
@@ -272,10 +278,10 @@ export class ReportComponent implements OnInit, OnDestroy {
       this.ngZone.run(() => {
         const data = JSON.parse(e.data);
         this.hasError     = true;
-        this.errorMessage = data.error || 'Une erreur est survenue.';
+        this.errorMessage = data.error || this.translocoService.translate('report.toastr.errorMessage');
         this.isGenerating = false;
         this.closeEventSource();
-        this.toastr.error(this.errorMessage, 'Erreur rapport', { timeOut: 6000, progressBar: true });
+        this.toastr.error(this.errorMessage, this.translocoService.translate('report.toastr.reportError'), { timeOut: 6000, progressBar: true });
         this.cdr.detectChanges();
       });
     });
@@ -285,7 +291,7 @@ export class ReportComponent implements OnInit, OnDestroy {
       this.ngZone.run(() => {
         if (this.isGenerating && !this.isComplete) {
           this.hasError     = true;
-          this.errorMessage = 'Connexion au serveur perdue.';
+          this.errorMessage = this.translocoService.translate('report.toastr.connectionLost');
           this.isGenerating = false;
           this.closeEventSource();
           this.cdr.detectChanges();
@@ -399,12 +405,16 @@ export class ReportComponent implements OnInit, OnDestroy {
   }
 
   getConvTitle(conv: Conversation): string {
-    return conv.title || `Conv. #${conv.id}`;
+    return conv.title || this.translocoService.translate('report.convTitle', { id: conv.id });
   }
 
   getPriorityLabel(p: number): string {
-    const map: Record<number, string> = { 1: 'Critique', 2: 'Important', 3: 'Recommandé' };
-    return map[p] || `Priorité ${p}`;
+    const map: Record<number, string> = {
+      1: this.translocoService.translate('report.priority.critical'),
+      2: this.translocoService.translate('report.priority.important'),
+      3: this.translocoService.translate('report.priority.recommended')
+    };
+    return map[p] || this.translocoService.translate('report.priority.other', { priority: p });
   }
 
   getPriorityClass(p: number): string {
@@ -456,7 +466,19 @@ export class ReportComponent implements OnInit, OnDestroy {
 
   askAboutRecommendation(rec: ActionableRecommendation, index: number): void {
     const title = rec.action.length > 80 ? `${rec.action.slice(0, 80)}…` : rec.action;
-    this.openQaPanel(`Explique en détail la recommandation #${index + 1} : ${title}`);
+    this.openQaPanel(this.translocoService.translate('report.qa.recommendationPrefill', { num: index + 1, title }));
+  }
+
+  getRecommendationContext(index: number): string {
+    return this.translocoService.translate('report.qa.recommendationContext', { num: index + 1 });
+  }
+
+  getExpectedOutcomeContext(index: number): string {
+    return this.translocoService.translate('report.qa.expectedOutcomeContext', { num: index + 1 });
+  }
+
+  getToAvoidContext(): string {
+    return this.translocoService.translate('report.qa.toAvoidContext');
   }
 
   getInteractiveSegments(
@@ -503,7 +525,11 @@ export class ReportComponent implements OnInit, OnDestroy {
 
   approveSelectedSentence(): void {
     if (!this.selectedSentence) return;
-    this.toastr.success('Phrase approuvée.', 'Rapport', { timeOut: 2500 });
+    this.toastr.success(
+      this.translocoService.translate('report.qa.approvalMsg'),
+      this.translocoService.translate('report.title'),
+      { timeOut: 2500 }
+    );
     this.closeSentenceModal();
   }
 
@@ -515,38 +541,38 @@ export class ReportComponent implements OnInit, OnDestroy {
       note: this.sentenceNote.trim(),
       createdAt: new Date()
     });
-    this.toastr.success('Note ajoutée à cette phrase.', 'Rapport', { timeOut: 2500 });
+    this.toastr.success(
+      this.translocoService.translate('report.qa.noteAdded'),
+      this.translocoService.translate('report.title'),
+      { timeOut: 2500 }
+    );
     this.sentenceNote = '';
   }
 
   get sectionModalLabel(): string {
     if (!this.selectedSentence) return '';
-    const labels: Record<InteractiveReportSection, string> = {
-      what_happened: "Ce qui s'est passé",
-      why: 'Pourquoi',
-      what_to_do: 'Quoi faire',
-      sources: 'Sources'
-    };
-    return labels[this.selectedSentence.section];
+    return this.translocoService.translate(`report.sections.${this.selectedSentence.section}`) || '';
   }
 
   private buildSentenceInstruction(action: 'explain' | 'chart' | 'challenge' | 'question' | 'custom'): string {
     const sentence = this.selectedSentence?.text || '';
-    const context = this.selectedSentence?.context ? `\nContexte local : ${this.selectedSentence.context}` : '';
-    const base = `Dans le rapport, analyse uniquement cette phrase : "${sentence}"${context}`;
+    const contextLabel = this.translocoService.translate('report.qa.localContext');
+    const context = this.selectedSentence?.context ? `\n${contextLabel} : ${this.selectedSentence.context}` : '';
+    const base = this.translocoService.translate('report.qa.promptBase', { sentence, context });
 
     switch (action) {
       case 'chart':
-        return `${base}\nMontre-moi le graphique ou les chiffres derrière cette affirmation si les données le permettent.`;
+        return `${base}\n` + this.translocoService.translate('report.qa.promptChart');
       case 'challenge':
-        return `${base}\nChallenge cette affirmation : quelles hypothèses, limites ou contre-exemples faut-il vérifier ?`;
+        return `${base}\n` + this.translocoService.translate('report.qa.promptChallenge');
       case 'question':
-        return `${base}\nExplique pourquoi cela se produit et relie la réponse au dataset original.`;
+        return `${base}\n` + this.translocoService.translate('report.qa.promptQuestion');
       case 'custom':
-        return `${base}\nInstruction utilisateur : ${this.sentenceInstruction.trim() || 'Explique cette phrase en détail.'}`;
+        const defaultInstr = this.translocoService.translate('report.qa.promptExplain');
+        return `${base}\n` + (this.translocoService.translate('report.qa.promptCustom') + (this.sentenceInstruction.trim() || defaultInstr));
       case 'explain':
       default:
-        return `${base}\nExplique cette phrase en français, simplement, avec les preuves disponibles dans le rapport et le dataset.`;
+        return `${base}\n` + this.translocoService.translate('report.qa.promptExplain');
     }
   }
 
@@ -564,9 +590,9 @@ export class ReportComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const shortId = this.reportId ? this.reportId.slice(0, 8) : 'rapport';
+    const shortId = this.reportId ? this.reportId.slice(0, 8) : this.translocoService.translate('report.pdf.filenamePrefix');
     this.chatSvc.createConversation(this.selectedDatasetId, {
-      title: `Q&A Rapport ${shortId}`
+      title: this.translocoService.translate('report.qa.conversationTitle', { shortId })
     }).subscribe({
       next: (res) => {
         this.qaConversationId = res.conversation_id;
@@ -574,7 +600,11 @@ export class ReportComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: () => {
-        this.toastr.warning('Impossible de créer la session Q&A.', 'Rapport', { timeOut: 4000 });
+        this.toastr.warning(
+          this.translocoService.translate('report.qa.sessionError'),
+          this.translocoService.translate('report.title'),
+          { timeOut: 4000 }
+        );
       }
     });
   }
@@ -584,23 +614,23 @@ export class ReportComponent implements OnInit, OnDestroy {
 
     const narrative = this.whatHappened?.narrative || this.whatHappenedText || '';
     if (narrative) {
-      chips.push('Détaillez les points clés du résumé');
+      chips.push(this.translocoService.translate('report.suggestions.summaryDetails'));
     }
 
     if (this.whatToDo.length >= 2) {
-      chips.push('Expliquez la recommandation #2');
+      chips.push(this.translocoService.translate('report.suggestions.explainRec', { num: 2 }));
     } else if (this.whatToDo.length >= 1) {
-      chips.push('Expliquez la recommandation #1');
+      chips.push(this.translocoService.translate('report.suggestions.explainRec', { num: 1 }));
     }
 
     if (this.webSources.length > 0 && this.internalSources.length > 0) {
-      chips.push('Comparez les sources web et les données internes');
+      chips.push(this.translocoService.translate('report.suggestions.compareSources'));
     } else if (this.allSources.length > 0) {
-      chips.push('Quelles sources ont été utilisées ?');
+      chips.push(this.translocoService.translate('report.suggestions.whatSources'));
     }
 
     if (this.whyItHappened?.narrative || this.whyItHappenedText) {
-      chips.push('Pourquoi ces causes ont-elles été identifiées ?');
+      chips.push(this.translocoService.translate('report.suggestions.whyCauses'));
     }
 
     return chips.slice(0, 5);
@@ -611,7 +641,11 @@ export class ReportComponent implements OnInit, OnDestroy {
     if (!this.isComplete || this.isExporting) return;
 
     this.isExporting = true;
-    const toastId = this.toastr.info('Préparation du PDF...', 'Export en cours', { timeOut: 0 }).toastId;
+    const toastId = this.toastr.info(
+      this.translocoService.translate('report.pdf.prepMsg'),
+      this.translocoService.translate('report.pdf.exportingTitle'),
+      { timeOut: 0 }
+    ).toastId;
 
     try {
       const pdf = new jsPDF('p', 'mm', 'a4');
@@ -650,14 +684,16 @@ export class ReportComponent implements OnInit, OnDestroy {
       pdf.setTextColor(0, 0, 0);
       pdf.setFontSize(20);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('RAPPORT D\'ANALYSE IA', ML, y);
+      pdf.text(this.translocoService.translate('report.pdf.title'), ML, y);
       y += 10;
 
       // Dataset & date
       pdf.setFontSize(11);
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(80, 80, 80);
-      pdf.text(`Dataset : ${this.datasetName || '—'}    |    ${now.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}`, ML, y);
+      const dateLocale = this.translocoService.getActiveLang() === 'fr' ? 'fr-FR' : 'en-US';
+      const dsLabel = this.translocoService.translate('report.pdf.datasetLabel', { dataset: this.datasetName || '—' });
+      pdf.text(`${dsLabel}    |    ${now.toLocaleDateString(dateLocale, { day: '2-digit', month: 'long', year: 'numeric' })}`, ML, y);
       y += 4;
       pdf.setDrawColor(0, 0, 0);
       pdf.setLineWidth(0.4);
@@ -668,7 +704,7 @@ export class ReportComponent implements OnInit, OnDestroy {
       pdf.setTextColor(0, 0, 0);
       pdf.setFontSize(16);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('Ce qui s\'est passé', ML, y);
+      pdf.text(this.translocoService.translate('report.sections.what_happened'), ML, y);
       y += 9;
 
       const whText = this.whatHappened?.narrative || this.whatHappenedText || '';
@@ -690,7 +726,7 @@ export class ReportComponent implements OnInit, OnDestroy {
       pdf.setTextColor(0, 0, 0);
       pdf.setFontSize(16);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('Pourquoi', ML, y);
+      pdf.text(this.translocoService.translate('report.sections.why'), ML, y);
       y += 9;
 
       const whyText = this.whyItHappened?.narrative || this.whyItHappenedText || '';
@@ -712,7 +748,7 @@ export class ReportComponent implements OnInit, OnDestroy {
       pdf.setTextColor(0, 0, 0);
       pdf.setFontSize(16);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('Recommandations', ML, y);
+      pdf.text(this.translocoService.translate('report.sections.what_to_do'), ML, y);
       y += 9;
 
       if (this.whatToDo && this.whatToDo.length > 0) {
@@ -726,7 +762,7 @@ export class ReportComponent implements OnInit, OnDestroy {
 
           pdf.setFont('helvetica', 'normal');
           pdf.setTextColor(60, 60, 60);
-          const oLines = wrap(`Résultat attendu : ${rec.expected_outcome}`);
+          const oLines = wrap(this.translocoService.translate('report.pdf.expectedOutcome', { outcome: rec.expected_outcome }));
           oLines.forEach((line: string) => { y = checkPage(y, 6); pdf.text(line, ML + 5, y); y += 5.5; });
           y += 4;
         });
@@ -739,7 +775,7 @@ export class ReportComponent implements OnInit, OnDestroy {
         pdf.setTextColor(0, 0, 0);
         pdf.setFontSize(16);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('À éviter', ML, y);
+        pdf.text(this.translocoService.translate('report.pdf.toAvoid'), ML, y);
         y += 9;
 
         pdf.setFontSize(11);
@@ -760,7 +796,7 @@ export class ReportComponent implements OnInit, OnDestroy {
         pdf.setTextColor(0, 0, 0);
         pdf.setFontSize(16);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('Sources', ML, y);
+        pdf.text(this.translocoService.translate('report.sections.sources'), ML, y);
         y += 9;
 
         pdf.setFontSize(11);
@@ -786,15 +822,22 @@ export class ReportComponent implements OnInit, OnDestroy {
 
       // Save
       const safeName = (this.datasetName || 'rapport').replace(/[^a-zA-Z0-9À-ÿ\s_-]/g, '').replace(/\s+/g, '_');
-      pdf.save(`Rapport_IA_${safeName}_${now.toISOString().slice(0, 10)}.pdf`);
+      const prefix = this.translocoService.translate('report.pdf.filenamePrefix');
+      pdf.save(`${prefix}_${safeName}_${now.toISOString().slice(0, 10)}.pdf`);
 
       this.toastr.remove(toastId);
-      this.toastr.success('Le rapport a été téléchargé.', 'Export réussi');
+      this.toastr.success(
+        this.translocoService.translate('report.pdf.downloadedMsg'),
+        this.translocoService.translate('report.pdf.exportSuccess')
+      );
 
     } catch (err) {
       console.error('PDF Export Error:', err);
       this.toastr.remove(toastId);
-      this.toastr.error('Impossible de générer le PDF.', 'Erreur Export');
+      this.toastr.error(
+        this.translocoService.translate('report.pdf.errorMsg'),
+        this.translocoService.translate('report.pdf.errorTitle')
+      );
     } finally {
       this.isExporting = false;
     }

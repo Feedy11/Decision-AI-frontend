@@ -4,11 +4,12 @@ import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastrService } from 'ngx-toastr';          // ← ajout
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-admin-user-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, TranslocoPipe],
   templateUrl: './admin-user-form.component.html',
   styleUrls: ['./admin-user-form.component.css']
 })
@@ -28,7 +29,8 @@ export class AdminUserFormComponent implements OnInit {
     private authService: AuthService,
     private route      : ActivatedRoute,
     private router     : Router,
-    private toastr     : ToastrService
+    private toastr     : ToastrService,
+    private translocoService: TranslocoService
   ) {
     this.userForm = this.fb.group({
       email   : ['', [Validators.required, Validators.email]],
@@ -69,10 +71,10 @@ export class AdminUserFormComponent implements OnInit {
       },
       error: () => {
         this.isLoading = false;
-        this.errorMsg  = "Impossible de charger les données de l'utilisateur.";
+        this.errorMsg  = this.translocoService.translate('admin.userForm.toastr.loadErrorMessage');
         this.toastr.error(
-          "Impossible de charger les données.",
-          'Erreur',
+          this.translocoService.translate('admin.userForm.toastr.loadError'),
+          this.translocoService.translate('common.error'),
           { timeOut: 4000, progressBar: true }
         );
       }
@@ -103,20 +105,20 @@ export class AdminUserFormComponent implements OnInit {
       this.authService.updateUserById(this.userId, updateData).subscribe({
         next: () => {
           this.isSaving   = false;
-          this.successMsg = "Utilisateur mis à jour avec succès.";
+          this.successMsg = this.translocoService.translate('admin.userForm.toastr.updateSuccessMessage');
           this.toastr.success(
-            `${formVal.fullName} a été mis à jour.`,
-            'Modification réussie ',
+            this.translocoService.translate('admin.userForm.toastr.updatedUser', { name: formVal.fullName }),
+            this.translocoService.translate('admin.userForm.toastr.updateSuccessTitle'),
             { timeOut: 3000, progressBar: true }
           );
           setTimeout(() => this.router.navigate(['/admin/users']), 1500);
         },
         error: (err) => {
           this.isSaving  = false;
-          this.errorMsg  = err?.error?.detail || "Erreur lors de la mise à jour.";
+          this.errorMsg  = err?.error?.detail || this.translocoService.translate('admin.userForm.toastr.updateErrorMessage');
           this.toastr.error(
             this.errorMsg,
-            'Erreur de modification ',
+            this.translocoService.translate('admin.userForm.toastr.updateErrorTitle'),
             { timeOut: 5000, progressBar: true }
           );
         }
@@ -136,20 +138,20 @@ export class AdminUserFormComponent implements OnInit {
       this.authService.createUser(createData).subscribe({
         next: () => {
           this.isSaving   = false;
-          this.successMsg = "Utilisateur créé avec succès.";
+          this.successMsg = this.translocoService.translate('admin.userForm.toastr.createSuccessMessage');
           this.toastr.success(
-            `${formVal.fullName} a été créé avec succès.`,
-            'Compte créé ',
+            this.translocoService.translate('admin.userForm.toastr.createdUser', { name: formVal.fullName }),
+            this.translocoService.translate('admin.userForm.toastr.createSuccessTitle'),
             { timeOut: 3000, progressBar: true }
           );
           setTimeout(() => this.router.navigate(['/admin/users']), 1500);
         },
         error: (err) => {
           this.isSaving  = false;
-          this.errorMsg  = err?.error?.detail || "Erreur lors de la création.";
+          this.errorMsg  = err?.error?.detail || this.translocoService.translate('admin.userForm.toastr.createErrorMessage');
           this.toastr.error(
             this.errorMsg,
-            'Erreur de création ',
+            this.translocoService.translate('admin.userForm.toastr.createErrorTitle'),
             { timeOut: 5000, progressBar: true }
           );
         }

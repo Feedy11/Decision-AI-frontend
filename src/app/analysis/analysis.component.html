@@ -6,13 +6,13 @@
 
       <div class="header-divider"></div>
       <div>
-        <h1>Analyse des données</h1>
-        <p>Détectez les relations, KPIs et patterns dans vos datasets</p>
+        <h1>{{ 'analysis.title' | transloco }}</h1>
+        <p>{{ 'analysis.subtitle' | transloco }}</p>
       </div>
     </div>
     <span class="ai-badge">
       <lucide-icon name="activity" [size]="13" [strokeWidth]="2" />
-      IA activée
+      {{ 'upload.aiBadge' | transloco }}
     </span>
   </div>
 
@@ -20,16 +20,16 @@
   <div class="tabs-bar">
     <button class="tab-btn" [class.active]="activeTab==='analyze'" (click)="setTab('analyze')">
       <lucide-icon name="search" [size]="14" [strokeWidth]="2" />
-      Analyser
+      {{ 'analysis.tabs.analyze' | transloco }}
     </button>
  
     <button class="tab-btn" [class.active]="activeTab==='relationships'" (click)="setTab('relationships')">
       <lucide-icon name="share-2" [size]="14" [strokeWidth]="2" />
-      Relations
+      {{ 'analysis.tabs.relationships' | transloco }}
     </button>
     <button class="tab-btn" [class.active]="activeTab==='statistical'" (click)="setTab('statistical')">
       <lucide-icon name="bar-chart-2" [size]="14" [strokeWidth]="2" />
-      Statistiques
+      {{ 'analysis.tabs.statistical' | transloco }}
     </button>
   </div>
 
@@ -43,8 +43,8 @@
             <lucide-icon name="search" [size]="18" [strokeWidth]="2" />
           </div>
           <div>
-            <h2>Analyser un dataset</h2>
-            <p>Détection automatique des relations et KPIs</p>
+            <h2>{{ 'analysis.analyzeDataset' | transloco }}</h2>
+            <p>{{ 'analysis.autoDetectHint' | transloco }}</p>
           </div>
         </div>
 
@@ -52,7 +52,7 @@
         <div class="field" style="margin-bottom:16px">
           <label>Dataset <span class="req">*</span></label>
           <select class="form-select" [(ngModel)]="selectedDatasetId">
-            <option [ngValue]="null">-- Sélectionner un dataset --</option>
+            <option [ngValue]="null">{{ 'analysis.selectDataset' | transloco }}</option>
             <option *ngFor="let d of datasets" [ngValue]="d.id">#{{ d.id }} — {{ d.original_filename }}</option>
           </select>
         </div>
@@ -60,8 +60,8 @@
         <!-- Options -->
         <div class="pref-row" style="margin-bottom:20px">
           <div>
-            <span class="pref-name">Forcer la ré-analyse</span>
-            <span class="pref-hint">Recalcule même si une analyse récente existe</span>
+            <span class="pref-name">{{ 'analysis.forceReanalyze' | transloco }}</span>
+            <span class="pref-hint">{{ 'analysis.forceReanalyzeHint' | transloco }}</span>
           </div>
           <label class="toggle">
             <input type="checkbox" [(ngModel)]="forceReanalyze"/>
@@ -75,7 +75,7 @@
           <!-- Score confiance -->
           <div class="confidence-bar-wrap">
             <div class="confidence-header">
-              <span class="conf-label">Score de confiance</span>
+              <span class="conf-label">{{ 'analysis.confidenceScore' | transloco }}</span>
               <span class="conf-val">{{ formatConfidence(analysisResult.confidence_score) }}</span>
             </div>
             <div class="quality-bar">
@@ -92,39 +92,39 @@
           <div class="stats-grid" style="margin-top:16px">
             <div class="stat-chip blue">
               <span class="stat-chip-val">{{ analysisResult.total_relationships }}</span>
-              <span class="stat-chip-label">Relations</span>
+              <span class="stat-chip-label">{{ 'analysis.relations' | transloco }}</span>
             </div>
             <div class="stat-chip green">
               <span class="stat-chip-val">{{ analysisResult.column_categories.metrics.length }}</span>
-              <span class="stat-chip-label">Métriques</span>
+              <span class="stat-chip-label">{{ 'analysis.metrics' | transloco }}</span>
             </div>
             <div class="stat-chip purple">
               <span class="stat-chip-val">{{ analysisResult.column_categories.dimensions.length }}</span>
-              <span class="stat-chip-label">Dimensions</span>
+              <span class="stat-chip-label">{{ 'analysis.dimensions' | transloco }}</span>
             </div>
             <div class="stat-chip orange">
               <span class="stat-chip-val">{{ analysisResult.column_categories.temporal.length }}</span>
-              <span class="stat-chip-label">Temporels</span>
+              <span class="stat-chip-label">{{ 'analysis.temporal' | transloco }}</span>
             </div>
             <div class="stat-chip">
               <span class="stat-chip-val">{{ analysisResult.column_categories.identifiers.length }}</span>
-              <span class="stat-chip-label">Identifiants</span>
+              <span class="stat-chip-label">{{ 'analysis.identifiers' | transloco }}</span>
             </div>
             <div class="stat-chip">
               <span class="stat-chip-val">{{ analysisResult.column_categories.geographic.length }}</span>
-              <span class="stat-chip-label">Géographiques</span>
+              <span class="stat-chip-label">{{ 'analysis.geographic' | transloco }}</span>
             </div>
           </div>
 
           <!-- Métrique principale -->
           <div class="primary-metric" *ngIf="analysisResult.primary_metric">
             <lucide-icon name="star" [size]="14" [strokeWidth]="2" />
-            Métrique principale : <strong>{{ analysisResult.primary_metric }}</strong>
+            {{ 'analysis.primaryMetricLabel' | transloco }} : <strong>{{ analysisResult.primary_metric }}</strong>
           </div>
 
           <!-- Colonnes dashboard -->
           <div class="dashboard-cols" *ngIf="analysisResult.dashboard_columns.length > 0">
-            <span class="dc-label">Colonnes recommandées pour le dashboard :</span>
+            <span class="dc-label">{{ 'analysis.recommendedColumnsLabel' | transloco }}</span>
             <div class="chips-row">
               <span class="col-chip" *ngFor="let c of analysisResult.dashboard_columns">{{ c }}</span>
             </div>
@@ -133,25 +133,25 @@
           <!-- Catégories colonnes -->
           <div class="categories-grid">
             <div class="cat-block" *ngIf="analysisResult.column_categories.metrics.length">
-              <span class="cat-title blue-dot">Métriques</span>
+              <span class="cat-title blue-dot">{{ 'analysis.metrics' | transloco }}</span>
               <div class="chips-row">
                 <span class="col-chip blue" *ngFor="let c of analysisResult.column_categories.metrics">{{ c }}</span>
               </div>
             </div>
             <div class="cat-block" *ngIf="analysisResult.column_categories.dimensions.length">
-              <span class="cat-title purple-dot">Dimensions</span>
+              <span class="cat-title purple-dot">{{ 'analysis.dimensions' | transloco }}</span>
               <div class="chips-row">
                 <span class="col-chip purple" *ngFor="let c of analysisResult.column_categories.dimensions">{{ c }}</span>
               </div>
             </div>
             <div class="cat-block" *ngIf="analysisResult.column_categories.temporal.length">
-              <span class="cat-title orange-dot">Temporels</span>
+              <span class="cat-title orange-dot">{{ 'analysis.temporal' | transloco }}</span>
               <div class="chips-row">
                 <span class="col-chip orange" *ngFor="let c of analysisResult.column_categories.temporal">{{ c }}</span>
               </div>
             </div>
             <div class="cat-block" *ngIf="analysisResult.column_categories.geographic.length">
-              <span class="cat-title green-dot">Géographiques</span>
+              <span class="cat-title green-dot">{{ 'analysis.geographic' | transloco }}</span>
               <div class="chips-row">
                 <span class="col-chip green" *ngFor="let c of analysisResult.column_categories.geographic">{{ c }}</span>
               </div>
@@ -161,13 +161,13 @@
           <!-- Relations détectées -->
           <div class="rel-section" *ngIf="analysisResult.relationships.length > 0">
             <div class="rel-header">
-              <span>Relations détectées</span>
+              <span>{{ 'analysis.relationsDetected' | transloco }}</span>
               <div class="rel-filters">
                 <select class="form-select-sm" [(ngModel)]="filterType">
-                  <option value="all">Tous les types</option>
-                  <option value="predictive">Prédictif</option>
-                  <option value="correlation">Corrélation</option>
-                  <option value="hierarchy">Hiérarchie</option>
+                  <option value="all">{{ 'analysis.allTypes' | transloco }}</option>
+                  <option value="predictive">{{ 'analysis.predictive' | transloco }}</option>
+                  <option value="correlation">{{ 'analysis.correlation' | transloco }}</option>
+                  <option value="hierarchy">{{ 'analysis.hierarchy' | transloco }}</option>
                 </select>
               </div>
             </div>
@@ -183,7 +183,7 @@
                 </div>
                 <div class="rel-bottom">
                   <div class="strength-wrap">
-                    <span class="strength-label">Force</span>
+                    <span class="strength-label">{{ 'analysis.strength' | transloco }}</span>
                     <div class="strength-bar">
                       <div class="strength-fill"
                            [class]="getStrengthClass(r.strength)"
@@ -205,7 +205,7 @@
           </div>
 
           <div class="rel-meta-footer">
-            <span class="muted-cell">Analyse du {{ formatDate(analysisResult.created_at) }}</span>
+            <span class="muted-cell">{{ 'analysis.analysisOf' | transloco }} {{ formatDate(analysisResult.created_at) }}</span>
           </div>
         </div>
 
@@ -219,7 +219,7 @@
               [size]="15"
               [strokeWidth]="2.5"
               [class.spin]="isAnalyzing" />
-            {{ isAnalyzing ? 'Analyse en cours...' : 'Lancer l\'analyse' }}
+            {{ isAnalyzing ? ('analysis.analyzing' | transloco) : ('analysis.launchAnalysis' | transloco) }}
           </button>
 
           <!-- Charger existante -->
@@ -229,7 +229,7 @@
               [size]="14"
               [strokeWidth]="2"
               [class.spin]="isLoadingAnalysis" />
-            Charger existante
+            {{ 'analysis.loadExisting' | transloco }}
           </button>
 
           <!-- Supprimer -->
@@ -239,7 +239,7 @@
               [size]="13"
               [strokeWidth]="2"
               [class.spin]="isDeletingAnalysis" />
-            {{ isDeletingAnalysis ? '...' : 'Supprimer' }}
+            {{ isDeletingAnalysis ? '...' : ('common.delete' | transloco) }}
           </button>
         </div>
       </div>
@@ -249,14 +249,14 @@
         <div class="info-card">
           <div class="info-card-header">
             <lucide-icon name="info" [size]="15" [strokeWidth]="2" />
-            Ce que l'IA détecte
+            {{ 'analysis.iaDetectsTitle' | transloco }}
           </div>
           <ul class="steps">
-            <li><span class="step-n">🎯</span><span><strong>Prédictif</strong> — colonne X prédit Y (CustomPPS)</span></li>
-            <li><span class="step-n">📈</span><span><strong>Corrélation</strong> — relation linéaire (Pearson)</span></li>
-            <li><span class="step-n">🗂️</span><span><strong>Hiérarchie</strong> — relation parent/enfant</span></li>
-            <li><span class="step-n">⭐</span><span><strong>Métrique principale</strong> — KPI prioritaire</span></li>
-            <li><span class="step-n">📊</span><span><strong>Chart suggéré</strong> — visualisation optimale</span></li>
+            <li><span class="step-n">🎯</span><span><strong>{{ 'analysis.predictive' | transloco }}</strong> — {{ 'analysis.iaDetects.predictive' | transloco }}</span></li>
+            <li><span class="step-n">📈</span><span><strong>{{ 'analysis.correlation' | transloco }}</strong> — {{ 'analysis.iaDetects.correlation' | transloco }}</span></li>
+            <li><span class="step-n">🗂️</span><span><strong>{{ 'analysis.hierarchy' | transloco }}</strong> — {{ 'analysis.iaDetects.hierarchy' | transloco }}</span></li>
+            <li><span class="step-n">⭐</span><span><strong>{{ 'analysis.primaryMetric' | transloco }}</strong> — {{ 'analysis.iaDetects.primaryMetric' | transloco }}</span></li>
+            <li><span class="step-n">📊</span><span><strong>{{ 'analysis.suggestedChart' | transloco }}</strong> — {{ 'analysis.iaDetects.suggestedChart' | transloco }}</span></li>
           </ul>
         </div>
       </div>
@@ -269,7 +269,7 @@
     <div class="upload-card table-card">
       <div class="table-toolbar">
         <select class="form-select" [(ngModel)]="selectedDatasetId" style="width:280px">
-          <option [ngValue]="null">-- Choisir un dataset --</option>
+          <option [ngValue]="null">-- {{ 'cleaning.selectDataset' | transloco }} --</option>
           <option *ngFor="let d of datasets" [ngValue]="d.id">#{{ d.id }} — {{ d.original_filename }}</option>
         </select>
         <button class="btn-save" style="margin-left:10px"
@@ -280,13 +280,13 @@
             [size]="14"
             [strokeWidth]="2"
             [class.spin]="isLoadingRel" />
-          Charger les relations
+          {{ 'analysis.loadRelationships' | transloco }}
         </button>
       </div>
 
       <div *ngIf="simpleRel" style="padding: 16px 20px">
         <div class="dashboard-cols" style="margin-bottom:20px">
-          <span class="dc-label">Colonnes recommandées :</span>
+          <span class="dc-label">{{ 'analysis.recommendedColumns' | transloco }}</span>
           <div class="chips-row">
             <span class="col-chip blue" *ngFor="let c of simpleRel.dashboard_columns">{{ c }}</span>
           </div>
@@ -295,12 +295,12 @@
         <div class="table-container">
           <table class="data-table">
             <thead>
-              <tr><th>#</th><th>Colonne A</th><th>→</th><th>Colonne B</th></tr>
+              <tr><th>#</th><th>{{ 'analysis.columnA' | transloco }}</th><th>→</th><th>{{ 'analysis.columnB' | transloco }}</th></tr>
             </thead>
             <tbody>
               <tr *ngIf="simpleRel.relationships.length === 0">
                 <td colspan="4" class="empty-cell">
-                  <div class="empty-state"><p>Aucune relation trouvée.</p></div>
+                  <div class="empty-state"><p>{{ 'analysis.noRelations' | transloco }}</p></div>
                 </td>
               </tr>
               <tr *ngFor="let pair of simpleRel.relationships; let i=index">
@@ -326,13 +326,13 @@
             <lucide-icon name="bar-chart-2" [size]="18" [strokeWidth]="2" />
           </div>
           <div>
-            <h2>Analyse statistique</h2>
-            <p>Spearman, Kruskal-Wallis, Chi² sur un ou plusieurs datasets</p>
+            <h2>{{ 'analysis.statisticalAnalysis' | transloco }}</h2>
+            <p>{{ 'analysis.statisticalDesc' | transloco }}</p>
           </div>
         </div>
 
         <div class="field" style="margin-bottom:16px">
-          <label>Sélectionner les datasets (multi-sélection)</label>
+          <label>{{ 'analysis.selectDatasetsMulti' | transloco }}</label>
           <div class="dataset-checkboxes">
             <label class="ds-checkbox" *ngFor="let d of datasets" [class.ds-selected]="isSelected(d.id)">
               <input type="checkbox" [checked]="isSelected(d.id)" (change)="toggleDatasetSelection(d.id)"/>
@@ -350,7 +350,7 @@
               [size]="15"
               [strokeWidth]="2.5"
               [class.spin]="isLoadingStat" />
-            {{ isLoadingStat ? 'Analyse...' : 'Lancer l\'analyse statistique' }}
+            {{ isLoadingStat ? ('common.loading' | transloco) : ('analysis.launchStatistical' | transloco) }}
           </button>
         </div>
 
@@ -375,7 +375,7 @@
               </div>
             </div>
             <div class="empty-state" *ngIf="block.relationships.length === 0" style="padding:16px">
-              <p>{{ block.message || 'Aucune relation significative.' }}</p>
+              <p>{{ block.message || ('analysis.noMeaningfulRelations' | transloco) }}</p>
             </div>
           </div>
 
@@ -383,7 +383,7 @@
           <div class="stat-block merged-block" *ngIf="statisticalResult.merged?.analysis">
             <div class="stat-block-header">
               <lucide-icon name="git-merge" [size]="14" [strokeWidth]="2" />
-              <strong>Analyse fusionnée</strong>
+              <strong>{{ 'analysis.mergedAnalysis' | transloco }}</strong>
               <span class="type-chip" style="margin-left:auto">
                 {{ statisticalResult.merged!.analysis!.total_meaningful }} relation(s)
               </span>
@@ -407,18 +407,5 @@
         <div class="info-card">
           <div class="info-card-header">
             <lucide-icon name="info" [size]="15" [strokeWidth]="2" />
-            Méthodes utilisées
-          </div>
-          <ul class="steps">
-            <li><span class="step-n">📐</span><span><strong>Spearman</strong> — corrélations numériques</span></li>
-            <li><span class="step-n">📊</span><span><strong>Kruskal-Wallis + η²</strong> — catég. → numérique</span></li>
-            <li><span class="step-n">🔲</span><span><strong>Chi² + Cramér's V</strong> — catég. ↔ catég.</span></li>
-            <li><span class="step-n">🔗</span><span><strong>Fusion</strong> — merge multi-datasets</span></li>
-          </ul>
-        </div>
-      </div>
-
-    </div>
-  </div>
 
 </div>

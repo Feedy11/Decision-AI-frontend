@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-reset-password-confirm',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, TranslocoPipe],
   templateUrl: './reset-password-confirm.component.html',
   styleUrls: ['./reset-password-confirm.component.css']
 })
@@ -28,7 +29,8 @@ export class ResetPasswordConfirmComponent implements OnInit {
     private fb: FormBuilder,
     private authService: AuthService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private translocoService: TranslocoService
   ) {
     this.resetForm = this.fb.group({
       password: ['', [Validators.required, Validators.minLength(8)]],
@@ -39,7 +41,7 @@ export class ResetPasswordConfirmComponent implements OnInit {
   ngOnInit(): void {
     this.token = this.route.snapshot.paramMap.get('token') || '';
     if (!this.token) {
-      this.errorMsg = 'Jeton de réinitialisation invalide ou manquant.';
+      this.errorMsg = this.translocoService.translate('resetPasswordConfirm.invalidToken');
     }
 
     this.resetForm.get('password')?.valueChanges.subscribe(val => {
@@ -75,16 +77,16 @@ export class ResetPasswordConfirmComponent implements OnInit {
 
     switch (strength) {
       case 1:
-        this.passwordStrengthLabel = 'Faible';
+        this.passwordStrengthLabel = this.translocoService.translate('resetPasswordConfirm.strength.weak');
         this.passwordStrengthColor = '#EF4444';
         break;
       case 2:
-        this.passwordStrengthLabel = 'Moyen';
+        this.passwordStrengthLabel = this.translocoService.translate('resetPasswordConfirm.strength.medium');
         this.passwordStrengthColor = '#F59E0B';
         break;
       case 3:
       case 4:
-        this.passwordStrengthLabel = 'Fort';
+        this.passwordStrengthLabel = this.translocoService.translate('resetPasswordConfirm.strength.strong');
         this.passwordStrengthColor = '#10B981';
         break;
       default:
@@ -113,7 +115,7 @@ export class ResetPasswordConfirmComponent implements OnInit {
     this.authService.resetPassword(this.token, password).subscribe({
       next: () => {
         this.isLoading = false;
-        this.successMsg = 'Votre mot de passe a été réinitialisé avec succès.';
+        this.successMsg = this.translocoService.translate('resetPasswordConfirm.successMsg');
         setTimeout(() => {
           this.router.navigate(['/login']);
         }, 3000);
@@ -121,9 +123,9 @@ export class ResetPasswordConfirmComponent implements OnInit {
       error: (err) => {
         this.isLoading = false;
         if (err.status === 0) {
-          this.errorMsg = 'Impossible de joindre le serveur. Vérifiez que le backend est démarré.';
+          this.errorMsg = this.translocoService.translate('resetPasswordConfirm.connectionError');
         } else {
-          this.errorMsg = err?.error?.detail || 'Le lien de réinitialisation est invalide ou a expiré.';
+          this.errorMsg = err?.error?.detail || this.translocoService.translate('resetPasswordConfirm.expiredToken');
         }
       }
     });

@@ -3,6 +3,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 import { ReportService } from '../../core/services/report.service';
 import { ChartSpec, UiMessage } from '../../models/chat.model';
@@ -13,7 +14,7 @@ import type { Options } from 'highcharts';
 @Component({
   selector: 'app-report-qa-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, HighchartsBaseComponent],
+  imports: [CommonModule, FormsModule, HighchartsBaseComponent, TranslocoPipe],
   templateUrl: './report-qa-panel.component.html',
   styleUrl: './report-qa-panel.component.css'
 })
@@ -39,7 +40,8 @@ export class ReportQaPanelComponent implements OnDestroy {
   constructor(
     private reportSvc: ReportService,
     private ngZone: NgZone,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private translocoService: TranslocoService
   ) {}
 
   ngOnDestroy(): void {
@@ -47,13 +49,7 @@ export class ReportQaPanelComponent implements OnDestroy {
   }
 
   get sectionLabel(): string {
-    const map: Record<string, string> = {
-      what_happened: "Ce qui s'est passé",
-      why: 'Pourquoi',
-      what_to_do: 'Quoi faire',
-      sources: 'Sources'
-    };
-    return map[this.activeSection] || this.activeSection;
+    return this.translocoService.translate(`report.sections.${this.activeSection}`) || this.activeSection;
   }
 
   get shortReportId(): string {
@@ -182,7 +178,7 @@ export class ReportQaPanelComponent implements OnDestroy {
         }
         const msg = this.messages.find(m => m.id === streamId);
         if (msg && !msg.content) {
-          msg.content = 'Une erreur est survenue. Réessayez.';
+          msg.content = this.translocoService.translate('report-qa-panel.errorMsg');
         }
         if (msg) msg.isStreaming = false;
         this.isTyping = false;
@@ -224,6 +220,7 @@ export class ReportQaPanelComponent implements OnDestroy {
   }
 
   formatTime(date: Date): string {
-    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const locale = this.translocoService.getActiveLang() === 'fr' ? 'fr-FR' : 'en-US';
+    return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
   }
 }

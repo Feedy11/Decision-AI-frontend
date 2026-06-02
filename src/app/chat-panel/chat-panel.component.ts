@@ -8,6 +8,7 @@ import { Router, NavigationEnd } from '@angular/router';
 import { filter }        from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
 import type { Options } from 'highcharts';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 import { Dataset } from '../models/Dataset.model';
 import { ChartSpec, Conversation, UiMessage } from '../models/chat.model';
@@ -22,7 +23,7 @@ const PUBLIC_ROUTES = ['/login', '/pass', '/reset-password'];
 @Component({
   selector  : 'app-chat-panel',
   standalone: true,
-  imports   : [CommonModule, FormsModule, HighchartsBaseComponent],
+  imports   : [CommonModule, FormsModule, HighchartsBaseComponent, TranslocoPipe],
   templateUrl: './chat-panel.component.html',
   styleUrls : ['./chat-panel.component.css']
 })
@@ -66,18 +67,18 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
   private readonly TYPEWRITER_DELAY_MS = 18; // ms per word
 
   //Suggestions
-  readonly suggestions = [
-    'Analyse mes données de ventes',
-    'Quels sont les KPIs principaux ?',
-    'Détecte des anomalies dans mes données',
-    'Résume ce dataset en quelques points',
-  ];
+  readonly suggestionKeys = [
+    'chat.suggestion1',
+    'chat.suggestion2',
+    'chat.suggestion3',
+    'chat.suggestion4',
+  ] as const;
 
-  readonly quickActions = [
-    'Explique davantage',
-    'Génère un graphique',
-    'Plus de détails',
-  ];
+  readonly quickActionKeys = [
+    'chat.quick1',
+    'chat.quick2',
+    'chat.quick3',
+  ] as const;
 
   constructor(
     private chatSvc  : ChatService,
@@ -86,7 +87,8 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
     private router   : Router,
     private toastr   : ToastrService,
     private ngZone   : NgZone,
-    private cdr      : ChangeDetectorRef
+    private cdr      : ChangeDetectorRef,
+    private translocoService: TranslocoService
   ) {}
 
   ngOnInit(): void {
@@ -165,8 +167,8 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
         const detail = err?.error?.detail;
         const msg = typeof detail === 'string'
           ? detail
-          : 'Impossible de charger les datasets. Vérifiez que le service IA (port 8001) est démarré et que ng serve utilise le proxy.';
-        this.toastr.error(msg, 'Assistant IA', { timeOut: 5000 });
+          : this.translocoService.translate('chat.loadDatasetsError');
+        this.toastr.error(msg, this.translocoService.translate('chat.aiAssistant'), { timeOut: 5000 });
         this.cdr.detectChanges();
       },
     });
@@ -199,14 +201,21 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
           this.createNewConversation();
         }
       },
-      error: () => this.toastr.error('Erreur chargement conversations.', 'Erreur', { timeOut: 3000 })
+      error: () => this.toastr.error(
+        this.translocoService.translate('chat.conversationError'),
+        this.translocoService.translate('common.error'),
+        { timeOut: 3000 }
+      )
     });
   }
 
   //Créer conversation
   createNewConversation(): void {
     if (!this.activeDatasetId) return;
-    const title = `Conversation ${new Date().toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}`;
+    const locale = this.translocoService.getActiveLang() === 'fr' ? 'fr-FR' : 'en-US';
+    const title = this.translocoService.translate('chat.newConversationTitle', {
+      date: new Date().toLocaleString(locale, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+    });
 
     this.chatSvc.createConversation(this.activeDatasetId, { title }).subscribe({
       next: (res) => {
@@ -220,7 +229,11 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
           created_at: res.created_at
         }, ...this.conversations];
       },
-      error: () => this.toastr.error('Impossible de créer une conversation.', 'Erreur', { timeOut: 3000 })
+      error: () => this.toastr.error(
+        this.translocoService.translate('chat.createError'),
+        this.translocoService.translate('common.error'),
+        { timeOut: 3000 }
+      )
     });
   }
 
@@ -249,7 +262,11 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
         this.scrollToBottom();
       },
       error: () => {
-        this.toastr.error('Impossible de charger l\'historique.', 'Assistant IA', { timeOut: 3000 });
+        this.toastr.error(
+          this.translocoService.translate('chat.historyError'),
+          this.translocoService.translate('chat.aiAssistant'),
+          { timeOut: 3000 }
+        );
       }
     });
   }
@@ -261,7 +278,11 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
 
     // Vérifier dataset sélectionné
     if (!this.activeDatasetId || !this.activeConvId) {
-      this.toastr.warning('Sélectionnez d\'abord un dataset.', 'Info', { timeOut: 3000 });
+      this.toastr.warning(
+        this.translocoService.translate('chat.selectDatasetFirst'),
+        this.translocoService.translate('report.toastr.infoTitle'),
+        { timeOut: 3000 }
+      );
       this.showDatasetPicker = true;
       return;
     }
@@ -485,12 +506,20 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
   //Suggestion
   sendSuggestion(text: string): void {
     if (!this.activeDatasetId || !this.activeConvId) {
-      this.toastr.warning('Sélectionnez d\'abord un dataset.', 'Assistant IA', { timeOut: 3000 });
+      this.toastr.warning(
+        this.translocoService.translate('chat.selectDatasetFirst'),
+        this.translocoService.translate('chat.aiAssistant'),
+        { timeOut: 3000 }
+      );
       this.showDatasetPicker = true;
       return;
     }
     this.inputText = text;
     this.sendMessage();
+  }
+
+  sendSuggestionKey(key: typeof this.suggestionKeys[number] | typeof this.quickActionKeys[number]): void {
+    this.sendSuggestion(this.translocoService.translate(key));
   }
 
   //Keyboard
@@ -517,8 +546,16 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
   rebuildIndex(): void {
     if (!this.activeDatasetId) return;
     this.chatSvc.rebuildIndex(this.activeDatasetId).subscribe({
-      next : () => this.toastr.success('Index Chroma reconstruit en arrière-plan.', 'Index ✅', { timeOut: 4000 }),
-      error: () => this.toastr.error('Erreur lors du rebuild.', 'Erreur', { timeOut: 4000 })
+      next : () => this.toastr.success(
+        this.translocoService.translate('chat.indexRebuilt'),
+        this.translocoService.translate('chat.indexTitle'),
+        { timeOut: 4000 }
+      ),
+      error: () => this.toastr.error(
+        this.translocoService.translate('chat.rebuildError'),
+        this.translocoService.translate('common.error'),
+        { timeOut: 4000 }
+      )
     });
   }
 
@@ -532,7 +569,8 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
 
   // ── Helper
   formatTime(date: Date): string {
-    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const locale = this.translocoService.getActiveLang() === 'fr' ? 'fr-FR' : 'en-US';
+    return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
   }
 
   getIntentLabel(intent?: string | null): string {
@@ -547,11 +585,12 @@ export class ChatPanelComponent implements OnInit, OnDestroy {
   }
 
   getConvTitle(conv: Conversation): string {
-    return conv.title || `Conv. #${conv.id}`;
+    return conv.title || this.translocoService.translate('chat.convTitle', { id: conv.id });
   }
 
   formatConvDate(iso: string): string {
-    return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    const locale = this.translocoService.getActiveLang() === 'fr' ? 'fr-FR' : 'en-US';
+    return new Date(iso).toLocaleDateString(locale, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
   }
 
   private attachChartSpec(msg: UiMessage, spec: ChartSpec): void {

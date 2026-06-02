@@ -18,11 +18,12 @@ import { Dataset } from '../models/Dataset.model';
 import { catchError, forkJoin, of } from 'rxjs';
 import { HighchartsBaseComponent } from '../shared/highcharts/highcharts-base.component';
 import { buildDashboardChartOptions } from '../shared/highcharts/highcharts-dashboard.adapter';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 @Component({
   selector   : 'app-dashboard',
   standalone : true,
-  imports    : [CommonModule, FormsModule, RouterModule, HighchartsBaseComponent],
+  imports    : [CommonModule, FormsModule, RouterModule, HighchartsBaseComponent, TranslocoPipe],
   templateUrl: './dashboard.component.html',
   styleUrls  : ['./dashboard.component.css']
 })
@@ -56,7 +57,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private iaService: IaServicesService,
     private toastr   : ToastrService,
     private wf       : WorkflowService,
-    private router   : Router
+    private router   : Router,
+    private translocoService: TranslocoService
   ) {}
 
   ngOnInit(): void {
@@ -118,8 +120,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.chartHighchartsOptions = {};
         this.savedDashboards   = [d, ...this.savedDashboards];
         this.toastr.success(
-          `${d.executive_summary_kpis.length} KPIs et ${d.dashboard_charts.length} graphiques générés.`,
-          'Dashboard créé', { timeOut: 4000, progressBar: true }
+          this.translocoService.translate('dashboard.generateSuccessMsg', {
+            kpisCount: d.executive_summary_kpis.length,
+            chartsCount: d.dashboard_charts.length
+          }),
+          this.translocoService.translate('dashboard.dashboardCreated'),
+          { timeOut: 4000, progressBar: true }
         );
         // Track dashboard count for profile stats
         const count = parseInt(localStorage.getItem('dashboard_count') || '0', 10);
@@ -130,9 +136,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.isGenerating = false;
         const msg = err.status === 503
-          ? 'GEMINI_API_KEY non configurée dans le backend.'
-          : err.error?.detail || 'Erreur de génération.';
-        this.toastr.error(msg, 'Erreur ', { timeOut: 6000, progressBar: true });
+          ? this.translocoService.translate('dashboard.geminiNotConfigured')
+          : err.error?.detail || this.translocoService.translate('dashboard.generationError');
+        this.toastr.error(
+          msg,
+          this.translocoService.translate('common.error'),
+          { timeOut: 6000, progressBar: true }
+        );
       }
     });
   }
@@ -209,7 +219,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.isExecuting = false;
-        this.toastr.error('Erreur lors de l\'exécution.', 'Erreur', { timeOut: 4000, progressBar: true });
+        this.toastr.error(
+          this.translocoService.translate('dashboard.executionError'),
+          this.translocoService.translate('common.error'),
+          { timeOut: 4000, progressBar: true }
+        );
       }
     });
   }
@@ -226,10 +240,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // ── Helpers ──────────────────────────────────────────────
   getKpiValue(kpi: KpiExecutionResult): string {
-    if (!kpi.execution_success) return 'Erreur';
+    if (!kpi.execution_success) return this.translocoService.translate('common.error');
     if (kpi.formatted_value)    return kpi.formatted_value;
-    if (kpi.value !== null && kpi.value !== undefined)
-      return Number(kpi.value).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
+    if (kpi.value !== null && kpi.value !== undefined) {
+      const activeLang = this.translocoService.getActiveLang();
+      const locale = activeLang === 'en' ? 'en-US' : 'fr-FR';
+      return Number(kpi.value).toLocaleString(locale, { maximumFractionDigits: 2 });
+    }
     return '—';
   }
 
@@ -245,7 +262,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   formatDate(iso: string): string {
-    return new Date(iso).toLocaleDateString('fr-FR', {
+    const activeLang = this.translocoService.getActiveLang();
+    const locale = activeLang === 'en' ? 'en-US' : 'fr-FR';
+    return new Date(iso).toLocaleDateString(locale, {
       day: '2-digit', month: 'short', year: 'numeric',
       hour: '2-digit', minute: '2-digit'
     });

@@ -33,17 +33,17 @@
     <div class="profile-dropdown" *ngIf="profileDropdownOpen">
       <div class="dropdown-header">
         <div class="dropdown-user-name">{{ userFullName }}</div>
-        <div class="dropdown-user-role">{{ isAdmin ? 'Administrateur' : 'Utilisateur' }}</div>
+        <div class="dropdown-user-role">{{ isAdmin ? ('navbar.admin' | transloco) : ('navbar.user' | transloco) }}</div>
       </div>
       <div class="dropdown-divider"></div>
       <a class="dropdown-item" (click)="goToProfile(); closeDropdown()">
         <lucide-icon name="user" [size]="16" [strokeWidth]="2"></lucide-icon>
-        <span>Mon profil</span>
+        <span>{{ 'navbar.myProfile' | transloco }}</span>
       </a>
       <div class="dropdown-divider"></div>
       <a class="dropdown-item dropdown-item--danger" (click)="logout()">
         <lucide-icon name="log-out" [size]="16" [strokeWidth]="2"></lucide-icon>
-        <span>Déconnexion</span>
+        <span>{{ 'navbar.logout' | transloco }}</span>
       </a>
     </div>
   </div>

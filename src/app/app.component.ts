@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ChatPanelComponent } from './chat-panel/chat-panel.component';
 import { DataSidebarComponent } from './shared/data-sidebar/data-sidebar.component';
 import { NavbarComponent } from './shared/navbar/navbar.component';
 import { WorkflowStepperComponent } from './shared/workflow-stepper/workflow-stepper.component';
+import { TranslocoService } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-root',
@@ -17,6 +18,20 @@ import { WorkflowStepperComponent } from './shared/workflow-stepper/workflow-ste
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'frontend';
+
+  constructor(private translocoService: TranslocoService) {}
+
+  ngOnInit(): void {
+    const savedPrefs = localStorage.getItem('preferences');
+    if (savedPrefs) {
+      try {
+        const prefs = JSON.parse(savedPrefs);
+        if (prefs && prefs.language) {
+          this.translocoService.setActiveLang(prefs.language);
+        }
+      } catch { /* ignore */ }
+    }
+  }
 }

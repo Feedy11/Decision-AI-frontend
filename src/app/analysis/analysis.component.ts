@@ -9,10 +9,11 @@ import { IaServicesService } from '../core/services/ia-services.service';
 import { WorkflowService } from '../core/services/workflow.service';
 import { ToastrService } from 'ngx-toastr';
 import { LucideAngularModule } from 'lucide-angular';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-analysis',
-  imports: [CommonModule, FormsModule, RouterModule,LucideAngularModule],
+  imports: [CommonModule, FormsModule, RouterModule, LucideAngularModule, TranslocoPipe],
   templateUrl: './analysis.component.html',
   styleUrl: './analysis.component.css'
 })
@@ -48,7 +49,8 @@ export class AnalysisComponent implements OnInit {
     private iaService  : IaServicesService,
     private toastr     : ToastrService,
     private wf         : WorkflowService,
-    private router     : Router
+    private router     : Router,
+    public translocoService: TranslocoService
   ) {}
 
   ngOnInit(): void {
@@ -88,20 +90,25 @@ export class AnalysisComponent implements OnInit {
     this.analysisResult = null;
 
     this.analysisSvc.analyzeDataset(this.selectedDatasetId, this.forceReanalyze).subscribe({
-      next: (r) => {
-        this.isAnalyzing    = false;
-        this.analysisResult = r;
-        this.toastr.success(
-          `${r.total_relationships} relations détectées. Confiance : ${Math.round(r.confidence_score * 100)}%`,
-          'Analyse terminée ', { timeOut: 5000, progressBar: true }
-        );
-        // Unlock next workflow step
-        this.wf.completeCurrentStep();
-      },
-      error: (err) => {
-        this.isAnalyzing = false;
-        this.toastr.error(err.error?.detail || 'Erreur lors de l\'analyse.', 'Erreur ', { timeOut: 5000, progressBar: true });
-      }
+        next: (r) => {
+          this.isAnalyzing    = false;
+          this.analysisResult = r;
+          this.toastr.success(
+            this.translocoService.translate('analysis.toastr.successMsg', { count: r.total_relationships, confidence: Math.round(r.confidence_score * 100) + '%' }),
+            this.translocoService.translate('analysis.toastr.successTitle'),
+            { timeOut: 5000, progressBar: true }
+          );
+          // Unlock next workflow step
+          this.wf.completeCurrentStep();
+        },
+        error: (err) => {
+          this.isAnalyzing = false;
+          this.toastr.error(
+            err.error?.detail || this.translocoService.translate('analysis.toastr.errorMsg'),
+            this.translocoService.translate('common.error'),
+            { timeOut: 5000, progressBar: true }
+          );
+        }
     });
   }
 
@@ -112,11 +119,13 @@ export class AnalysisComponent implements OnInit {
 
     this.analysisSvc.getAnalysis(this.selectedDatasetId).subscribe({
       next : (r) => { this.isLoadingAnalysis = false; this.analysisResult = r; },
-      error: (err) => {
-        this.isLoadingAnalysis = false;
-        const msg = err.status === 404 ? 'Aucune analyse trouvée. Lancez d\'abord une analyse.' : 'Erreur de chargement.';
-        this.toastr.warning(msg, 'Info', { timeOut: 4000, progressBar: true });
-      }
+        error: (err) => {
+          this.isLoadingAnalysis = false;
+          const msg = err.status === 404
+            ? this.translocoService.translate('analysis.toastr.noAnalysis')
+            : this.translocoService.translate('analysis.toastr.loadError');
+          this.toastr.warning(msg, 'Info', { timeOut: 4000, progressBar: true });
+        }
     });
   }
   deleteAnalysis(): void {
@@ -124,15 +133,23 @@ export class AnalysisComponent implements OnInit {
     this.isDeletingAnalysis = true;
 
     this.analysisSvc.deleteAnalysis(this.selectedDatasetId).subscribe({
-      next: () => {
-        this.isDeletingAnalysis = false;
-        this.analysisResult     = null;
-        this.toastr.success('Analyse supprimée.', 'Supprimé', { timeOut: 3000, progressBar: true });
-      },
-      error: () => {
-        this.isDeletingAnalysis = false;
-        this.toastr.error('Impossible de supprimer.', 'Erreur', { timeOut: 3000, progressBar: true });
-      }
+        next: () => {
+          this.isDeletingAnalysis = false;
+          this.analysisResult     = null;
+          this.toastr.success(
+            this.translocoService.translate('analysis.toastr.deleteSuccess'),
+            this.translocoService.getActiveLang() === 'fr' ? 'Supprimé' : 'Deleted',
+            { timeOut: 3000, progressBar: true }
+          );
+        },
+        error: () => {
+          this.isDeletingAnalysis = false;
+          this.toastr.error(
+            this.translocoService.translate('analysis.toastr.deleteError'),
+            this.translocoService.translate('common.error'),
+            { timeOut: 3000, progressBar: true }
+          );
+        }
     });
   }
 
@@ -144,11 +161,13 @@ export class AnalysisComponent implements OnInit {
 
     this.analysisSvc.getRelationships(this.selectedDatasetId).subscribe({
       next : (r) => { this.isLoadingRel = false; this.simpleRel = r; },
-      error: (err) => {
-        this.isLoadingRel = false;
-        const msg = err.status === 404 ? 'Lancez d\'abord une analyse.' : 'Erreur de chargement.';
-        this.toastr.warning(msg, 'Info', { timeOut: 4000, progressBar: true });
-      }
+        error: (err) => {
+          this.isLoadingRel = false;
+          const msg = err.status === 404
+            ? this.translocoService.translate('analysis.toastr.noAnalysis')
+            : this.translocoService.translate('analysis.toastr.loadError');
+          this.toastr.warning(msg, 'Info', { timeOut: 4000, progressBar: true });
+        }
     });
   }
 
@@ -159,16 +178,24 @@ export class AnalysisComponent implements OnInit {
     this.statisticalResult = null;
 
     this.analysisSvc.getStatisticalRelationships(this.selectedDatasetIds).subscribe({
-      next: (r) => {
-        this.isLoadingStat     = false;
-        this.statisticalResult = r;
-        const total = r.per_dataset.reduce((s, d) => s + d.total_meaningful, 0);
-        this.toastr.success(`${total} relations significatives détectées.`, 'Analyse statistique ', { timeOut: 5000, progressBar: true });
-      },
-      error: () => {
-        this.isLoadingStat = false;
-        this.toastr.error('Erreur lors de l\'analyse statistique.', 'Erreur ', { timeOut: 5000, progressBar: true });
-      }
+        next: (r) => {
+          this.isLoadingStat     = false;
+          this.statisticalResult = r;
+          const total = r.per_dataset.reduce((s, d) => s + d.total_meaningful, 0);
+          this.toastr.success(
+            this.translocoService.translate('analysis.toastr.statSuccessMsg', { count: total }),
+            this.translocoService.translate('analysis.toastr.statSuccessTitle'),
+            { timeOut: 5000, progressBar: true }
+          );
+        },
+        error: () => {
+          this.isLoadingStat = false;
+          this.toastr.error(
+            this.translocoService.translate('analysis.toastr.statErrorMsg'),
+            this.translocoService.translate('common.error'),
+            { timeOut: 5000, progressBar: true }
+          );
+        }
     });
   }
 
@@ -209,10 +236,11 @@ export class AnalysisComponent implements OnInit {
   }
 
   getTypeLabel(t: string): string {
+    const isFr = this.translocoService.getActiveLang() === 'fr';
     const map: Record<string, string> = {
-      predictive : '🎯 Prédictif',
-      correlation: '📈 Corrélation',
-      hierarchy  : '🗂️ Hiérarchie'
+      predictive : isFr ? '🎯 Prédictif' : '🎯 Predictive',
+      correlation: isFr ? '📈 Corrélation' : '📈 Correlation',
+      hierarchy  : isFr ? '🗂️ Hiérarchie' : '🗂️ Hierarchy'
     };
     return map[t] ?? t;
   }

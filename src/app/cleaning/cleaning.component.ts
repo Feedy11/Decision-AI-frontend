@@ -12,11 +12,12 @@ import { CleaningService } from '../core/services/cleaning.service';
 import { IaServicesService } from '../core/services/ia-services.service';
 import { WorkflowService } from '../core/services/workflow.service';
 import { ToastrService } from 'ngx-toastr';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import * as Highcharts from 'highcharts';
 
 @Component({
   selector: 'app-cleaning',
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, TranslocoPipe],
   templateUrl: './cleaning.component.html',
   styleUrl: './cleaning.component.css'
 })
@@ -91,7 +92,8 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
     private iaService  : IaServicesService,
     private toastr     : ToastrService,
     private wf         : WorkflowService,
-    private router     : Router
+    private router     : Router,
+    public translocoService: TranslocoService
   ) {}
 
   ngOnInit(): void {
@@ -108,15 +110,17 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   get cleanLoaderTitle(): string {
-    if (this.isScanning) return 'Analyse des erreurs en cours…';
-    return 'Préparation du dataset après import…';
+    const isFr = this.translocoService.getActiveLang() === 'fr';
+    if (this.isScanning) return isFr ? 'Analyse des erreurs en cours…' : 'Analyzing errors in progress...';
+    return isFr ? 'Préparation du dataset après import…' : 'Preparing dataset after import...';
   }
 
   get cleanLoaderHint(): string {
+    const isFr = this.translocoService.getActiveLang() === 'fr';
     if (this.isScanning) {
-      return 'Détection des valeurs manquantes, doublons et aberrations.';
+      return isFr ? 'Détection des valeurs manquantes, doublons et aberrations.' : 'Detecting missing values, duplicates, and outliers.';
     }
-    return 'Le fichier est en cours de traitement. Cela peut prendre quelques instants.';
+    return isFr ? 'Le fichier est en cours de traitement. Cela peut prendre quelques instants.' : 'The file is being processed. This may take a moment.';
   }
 
   ngAfterViewChecked(): void {
@@ -142,7 +146,11 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     this.iaService.getMyDatasets(1, 100).subscribe({
       next: (res) => { this.datasets = res.datasets; },
-      error: () => this.toastr.error('Impossible de charger les datasets.', 'Erreur', { timeOut: 4000 }),
+      error: () => this.toastr.error(
+        this.translocoService.translate('cleaning.toastr.loadDatasetsError'),
+        this.translocoService.translate('common.error'),
+        { timeOut: 4000 }
+      ),
     });
   }
 
@@ -168,8 +176,8 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
         if (status === 'failed') {
           this.isPreparingDataset = false;
           this.toastr.error(
-            'Le traitement du fichier a échoué. Réessayez un import.',
-            'Erreur',
+            this.translocoService.translate('cleaning.toastr.pollFailed'),
+            this.translocoService.translate('common.error'),
             { timeOut: 5000 },
           );
           return;
@@ -177,7 +185,7 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
         if (attempt >= CleaningComponent.POLL_MAX_ATTEMPTS) {
           this.isPreparingDataset = false;
           this.toastr.warning(
-            'Le dataset prend plus de temps que prévu. Vous pouvez lancer le scan manuellement.',
+            this.translocoService.translate('cleaning.toastr.pollSlow'),
             'Info',
             { timeOut: 6000 },
           );
@@ -190,7 +198,11 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
       },
       error: () => {
         this.isPreparingDataset = false;
-        this.toastr.error('Impossible de charger le dataset importé.', 'Erreur', { timeOut: 4000 });
+        this.toastr.error(
+          this.translocoService.translate('cleaning.toastr.loadDatasetError'),
+          this.translocoService.translate('common.error'),
+          { timeOut: 4000 }
+        );
       },
     });
   }
@@ -222,13 +234,14 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
 
         if (r.total_issues === 0) {
           this.toastr.success(
-            'Aucune erreur détectée — données propres !',
+            this.translocoService.translate('cleaning.toastr.scanSuccessClean'),
             'Scan ✓', { timeOut: 3000, progressBar: true }
           );
         } else {
           this.toastr.warning(
-            `${r.total_issues} problème(s) détecté(s)`,
-            'Scan terminé', { timeOut: 4000, progressBar: true }
+            this.translocoService.translate('cleaning.toastr.scanSuccessIssues', { count: r.total_issues }),
+            this.translocoService.translate('cleaning.toastr.scanSuccessTitle'),
+            { timeOut: 4000, progressBar: true }
           );
         }
       },
@@ -236,7 +249,11 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.isScanning = false;
         this.isPreparingDataset = false;
         this.clearPollTimer();
-        this.toastr.error('Erreur lors du scan.', 'Erreur', { timeOut: 4000, progressBar: true });
+        this.toastr.error(
+          this.translocoService.translate('cleaning.toastr.scanError'),
+          this.translocoService.translate('common.error'),
+          { timeOut: 4000, progressBar: true }
+        );
       }
     });
   }
@@ -263,8 +280,9 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.phase       = 'repair';   // ← switch to diff view
         this.repairChartsRendered = false; // reset for re-render
         this.toastr.success(
-          `Nettoyage terminé. ${r.rows_before - r.rows_after} ligne(s) supprimée(s).`,
-          'Nettoyage réussi', { timeOut: 5000, progressBar: true }
+          this.translocoService.translate('cleaning.toastr.cleanSuccess', { deleted: r.rows_before - r.rows_after }),
+          this.translocoService.translate('cleaning.toastr.cleanSuccessTitle'),
+          { timeOut: 5000, progressBar: true }
         );
         this.wf.completeCurrentStep();
         
@@ -276,7 +294,11 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
       },
       error: (err) => {
         this.isCleaning = false;
-        this.toastr.error(err.error?.detail || 'Erreur de nettoyage.', 'Erreur', { timeOut: 5000, progressBar: true });
+        this.toastr.error(
+          err.error?.detail || (this.translocoService.getActiveLang() === 'fr' ? 'Erreur de nettoyage.' : 'Error during cleaning.'),
+          this.translocoService.translate('common.error'),
+          { timeOut: 5000, progressBar: true }
+        );
       }
     });
   }
@@ -315,11 +337,19 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
         this.showCreateProfile = false;
         this.profiles          = [p, ...this.profiles];
         this.newProfile        = { ...DEFAULT_PROFILE };
-        this.toastr.success(`Profil "${p.name}" créé.`, 'Succès', { timeOut: 3000, progressBar: true });
+        this.toastr.success(
+          this.translocoService.translate('cleaning.toastr.profileCreated', { name: p.name }),
+          this.translocoService.translate('common.success'),
+          { timeOut: 3000, progressBar: true }
+        );
       },
       error: () => {
         this.isSavingProfile = false;
-        this.toastr.error('Erreur lors de la création.', 'Erreur', { timeOut: 4000, progressBar: true });
+        this.toastr.error(
+          this.translocoService.translate('cleaning.toastr.profileCreateError'),
+          this.translocoService.translate('common.error'),
+          { timeOut: 4000, progressBar: true }
+        );
       }
     });
   }
@@ -328,10 +358,18 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.cleaningSvc.deleteProfile(id).subscribe({
       next: () => {
         this.profiles = this.profiles.filter(p => p.id !== id);
-        this.toastr.success(`Profil "${name}" supprimé.`, 'Supprimé', { timeOut: 3000, progressBar: true });
+        this.toastr.success(
+          this.translocoService.translate('cleaning.toastr.profileDeleted', { name }),
+          this.translocoService.getActiveLang() === 'fr' ? 'Supprimé' : 'Deleted',
+          { timeOut: 3000, progressBar: true }
+        );
       },
       error: () => {
-        this.toastr.error('Impossible de supprimer ce profil.', 'Erreur', { timeOut: 4000, progressBar: true });
+        this.toastr.error(
+          this.translocoService.translate('cleaning.toastr.profileDeleteError'),
+          this.translocoService.translate('common.error'),
+          { timeOut: 4000, progressBar: true }
+        );
       }
     });
   }
@@ -346,14 +384,20 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
       next: (r) => {
         this.isValidating     = false;
         this.validationResult = r;
-        const msg = r.valid ? 'Dataset valide' : `${r.errors.length} erreur(s) détectée(s)`;
+        const msg = r.valid
+          ? this.translocoService.translate('cleaning.toastr.validationSuccess')
+          : this.translocoService.translate('cleaning.toastr.validationErrors', { count: r.errors.length });
         r.valid
           ? this.toastr.success(msg, 'Validation', { timeOut: 3000, progressBar: true })
           : this.toastr.warning(msg, 'Validation', { timeOut: 4000, progressBar: true });
       },
       error: () => {
         this.isValidating = false;
-        this.toastr.error('Erreur lors de la validation.', 'Erreur', { timeOut: 4000, progressBar: true });
+        this.toastr.error(
+          this.translocoService.translate('cleaning.toastr.validationError'),
+          this.translocoService.translate('common.error'),
+          { timeOut: 4000, progressBar: true }
+        );
       }
     });
   }
@@ -368,7 +412,11 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
       next : (q) => { this.isLoadingQuality = false; this.qualityData = q; },
       error: () => {
         this.isLoadingQuality = false;
-        this.toastr.error("Erreur lors de l'analyse qualité.", 'Erreur', { timeOut: 4000, progressBar: true });
+        this.toastr.error(
+          this.translocoService.translate('cleaning.toastr.qualityError'),
+          this.translocoService.translate('common.error'),
+          { timeOut: 4000, progressBar: true }
+        );
       }
     });
   }
@@ -402,11 +450,12 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   issueLabel(type: IssueType | string): string {
+    const isFr = this.translocoService.getActiveLang() === 'fr';
     const m: Record<string, string> = {
-      missing      : 'Manquant',
-      missing_token: 'Token nul',
-      outlier      : 'Aberrant',
-      duplicate    : 'Doublon',
+      missing      : isFr ? 'Manquant' : 'Missing',
+      missing_token: isFr ? 'Token nul' : 'Null token',
+      outlier      : isFr ? 'Aberrant' : 'Outlier',
+      duplicate    : isFr ? 'Doublon' : 'Duplicate',
     };
     return m[type] ?? type;
   }
@@ -426,16 +475,17 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   operationInfo(op: string): { icon: string; label: string; desc: string } {
+    const isFr = this.translocoService.getActiveLang() === 'fr';
     const m: Record<string, { icon: string; label: string; desc: string }> = {
-      text_cleaning       : { icon: '✂️', label: 'Nettoyage texte',      desc: 'Espaces supprimés, casse uniformisée' },
-      data_types          : { icon: '🔢', label: 'Types corrigés',        desc: 'Textes convertis en nombres ou dates' },
-      outliers            : { icon: '📊', label: 'Valeurs aberrantes',    desc: 'Anomalies détectées et traitées' },
-      missing_values      : { icon: '🕳️', label: 'Valeurs manquantes',    desc: 'Cellules vides remplies ou lignes supprimées' },
-      duplicates          : { icon: '🔁', label: 'Doublons supprimés',    desc: 'Lignes identiques retirées du dataset' },
-      date_standardization: { icon: '📅', label: 'Dates standardisées',   desc: 'Format de date uniformisé (YYYY-MM-DD)' },
-      missing_tokens      : { icon: '🔤', label: 'Tokens nuls nettoyés',  desc: 'Valeurs "na", "?", "--" converties en vide' },
+      text_cleaning       : { icon: '✂️', label: isFr ? 'Nettoyage texte' : 'Text cleaning',      desc: isFr ? 'Espaces supprimés, casse uniformisée' : 'Whitespace trimmed, casing normalized' },
+      data_types          : { icon: '🔢', label: isFr ? 'Types corrigés' : 'Types fixed',        desc: isFr ? 'Textes convertis en nombres ou dates' : 'Texts converted to numbers or dates' },
+      outliers            : { icon: '📊', label: isFr ? 'Valeurs aberrantes' : 'Outliers handled',    desc: isFr ? 'Anomalies détectées et traitées' : 'Anomalies detected and handled' },
+      missing_values      : { icon: '🕳️', label: isFr ? 'Valeurs manquantes' : 'Missing values',    desc: isFr ? 'Cellules vides remplies ou lignes supprimées' : 'Empty cells filled or rows removed' },
+      duplicates          : { icon: '🔁', label: isFr ? 'Doublons supprimés' : 'Duplicates removed',    desc: isFr ? 'Lignes identiques retirées du dataset' : 'Identical rows removed from dataset' },
+      date_standardization: { icon: '📅', label: isFr ? 'Dates standardisées' : 'Dates standardized',   desc: isFr ? 'Format de date uniformisé (YYYY-MM-DD)' : 'Date format standardized (YYYY-MM-DD)' },
+      missing_tokens      : { icon: '🔤', label: isFr ? 'Tokens nuls nettoyés' : 'Null tokens cleaned',  desc: isFr ? 'Valeurs "na", "?", "--" converties en vide' : 'Values like "na", "?", "--" converted to empty' },
     };
-    return m[op] ?? { icon: '⚙️', label: op, desc: 'Opération de nettoyage' };
+    return m[op] ?? { icon: '⚙️', label: op, desc: isFr ? 'Opération de nettoyage' : 'Cleaning operation' };
   }
 
   /** Check if a cleaning operation actually had an impact (used for badge green state) */
@@ -489,6 +539,13 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
     const cleanCount    = Math.max(1, (totalRows || total + 10) - total);
     const self = this;
 
+    const isFr = this.translocoService.getActiveLang() === 'fr';
+    const cleanLabel = isFr ? 'Données propres' : 'Clean data';
+    const missingLabel = isFr ? 'Manquantes' : 'Missing';
+    const tokenLabel = isFr ? 'Tokens nuls' : 'Null tokens';
+    const outlierLabel = isFr ? 'Aberrantes' : 'Outliers';
+    const dupLabel = isFr ? 'Dupliquées' : 'Duplicates';
+
     Highcharts.chart(container, {
       chart: {
         type: 'pie',
@@ -502,7 +559,9 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
       accessibility: { point: { valueSuffix: '%' } },
       tooltip: {
         headerFormat: '',
-        pointFormat: '<span style="color:{point.color}">●</span> <b>{point.name}</b><br/>Quantité: <b>{point.y}</b> ({point.percentage:.1f}%)',
+        pointFormat: isFr
+          ? '<span style="color:{point.color}">●</span> <b>{point.name}</b><br/>Quantité: <b>{point.y}</b> ({point.percentage:.1f}%)'
+          : '<span style="color:{point.color}">●</span> <b>{point.name}</b><br/>Quantity: <b>{point.y}</b> ({point.percentage:.1f}%)',
         style: { fontSize: '12px' }
       },
       plotOptions: {
@@ -538,13 +597,13 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
       },
       series: [{
         type: 'pie' as any,
-        name: 'Données',
+        name: isFr ? 'Données' : 'Data',
         data: [
-          { name: 'Données propres',    y: cleanCount,   color: '#22C55E', filterKey: null,             sliced: false },
-          ...(missingCount > 0  ? [{ name: 'Manquantes',   y: missingCount,  color: '#EF4444', filterKey: 'missing'       }] : []),
-          ...(tokenCount   > 0  ? [{ name: 'Tokens nuls',  y: tokenCount,    color: '#F59E0B', filterKey: 'missing_token' }] : []),
-          ...(outlierCount > 0  ? [{ name: 'Aberrantes',   y: outlierCount,  color: '#8B5CF6', filterKey: 'outlier'       }] : []),
-          ...(dupCount     > 0  ? [{ name: 'Dupliquées',   y: dupCount,      color: '#3B82F6', filterKey: 'duplicate'     }] : []),
+          { name: cleanLabel,    y: cleanCount,   color: '#22C55E', filterKey: null,             sliced: false },
+          ...(missingCount > 0  ? [{ name: missingLabel,   y: missingCount,  color: '#EF4444', filterKey: 'missing'       }] : []),
+          ...(tokenCount   > 0  ? [{ name: tokenLabel,  y: tokenCount,    color: '#F59E0B', filterKey: 'missing_token' }] : []),
+          ...(outlierCount > 0  ? [{ name: outlierLabel,   y: outlierCount,  color: '#8B5CF6', filterKey: 'outlier'       }] : []),
+          ...(dupCount     > 0  ? [{ name: dupLabel,   y: dupCount,      color: '#3B82F6', filterKey: 'duplicate'     }] : []),
         ]
       }] as any
     });
@@ -567,7 +626,10 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
       .forEach(c => c.destroy());
 
     const r = this.cleanResult;
-    const categories = ['Lignes', 'Manquants', 'Doublons', 'Outliers', 'Types'];
+    const isFr = this.translocoService.getActiveLang() === 'fr';
+    const categories = isFr 
+      ? ['Lignes', 'Manquants', 'Doublons', 'Outliers', 'Types']
+      : ['Rows', 'Missing', 'Duplicates', 'Outliers', 'Types'];
 
     // Avant data
     const avantData = [
@@ -608,7 +670,7 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
       },
       tooltip: {
         headerFormat: '<b>{point.key}</b><br/>',
-        pointFormat: 'Quantité : <b>{point.y}</b>',
+        pointFormat: isFr ? 'Quantité : <b>{point.y}</b>' : 'Quantity: <b>{point.y}</b>',
         style: { fontSize: '12px' }
       },
       plotOptions: {
@@ -687,7 +749,8 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   formatDate(iso: string): string {
-    return new Date(iso).toLocaleDateString('fr-FR', {
+    const isFr = this.translocoService.getActiveLang() === 'fr';
+    return new Date(iso).toLocaleDateString(isFr ? 'fr-FR' : 'en-US', {
       day: '2-digit', month: 'short', year: 'numeric',
       hour: '2-digit', minute: '2-digit'
     });
@@ -701,6 +764,7 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     // missing values filled
     const mv = changes['missing_values'];
+    const isFr = this.translocoService.getActiveLang() === 'fr';
     if (mv?.missing_before) {
       Object.entries(mv.missing_before as Record<string, number>).forEach(([col, cnt]) => {
         const after = (mv.missing_after ?? {})[col] ?? 0;
@@ -710,8 +774,8 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
             row_number : '—',
             column     : col,
             change_type: 'filled_missing',
-            before     : `${cnt} valeur(s) nulle(s)`,
-            after      : `${filled} remplie(s) (${mv.fill_strategy ?? 'auto'})`,
+            before     : isFr ? `${cnt} valeur(s) nulle(s)` : `${cnt} null value(s)`,
+            after      : isFr ? `${filled} remplie(s) (${mv.fill_strategy ?? 'auto'})` : `${filled} filled (${mv.fill_strategy ?? 'auto'})`,
           });
         }
       });
@@ -722,10 +786,10 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
     if (dup?.duplicates_removed > 0) {
       rows.push({
         row_number : '—',
-        column     : '(lignes)',
+        column     : isFr ? '(lignes)' : '(rows)',
         change_type: 'row_removed_duplicate',
-        before     : `${dup.duplicates_found} doublon(s) trouvé(s)`,
-        after      : `${dup.duplicates_removed} supprimé(s)`,
+        before     : isFr ? `${dup.duplicates_found} doublon(s) trouvé(s)` : `${dup.duplicates_found} duplicate(s) found`,
+        after      : isFr ? `${dup.duplicates_removed} supprimé(s)` : `${dup.duplicates_removed} deleted`,
       });
     }
 
@@ -737,7 +801,7 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
           row_number : '—',
           column     : col,
           change_type: out.action === 'cap' ? 'value_capped' : 'row_removed',
-          before     : `${cnt} aberrant(s)`,
+          before     : isFr ? `${cnt} aberrant(s)` : `${cnt} outlier(s)`,
           after      : `action: ${out.action}`,
         });
       });
@@ -808,10 +872,11 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     // 1. Try matching by a stable key (ID/date/etc.). This avoids marking
     // row-deletion shifts as cell edits in the cleaned preview.
+    const isFr = this.translocoService.getActiveLang() === 'fr';
     const keyedOldRow = findOldRowByKey();
     if (keyedOldRow) {
       if (isDifferent(keyedOldRow[col], row[col])) {
-        return keyedOldRow[col] !== null ? keyedOldRow[col] : 'vide';
+        return keyedOldRow[col] !== null ? keyedOldRow[col] : (isFr ? 'vide' : 'empty');
       }
       return null;
     }
@@ -823,14 +888,15 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     const oldRow = this.oldPreviewData.rows[index];
     if (oldRow && isDifferent(oldRow[col], row[col])) {
-      return oldRow[col] !== null ? oldRow[col] : 'vide';
+      return oldRow[col] !== null ? oldRow[col] : (isFr ? 'vide' : 'empty');
     }
     return null;
   }
 
   /** Format a value for display: numbers get 2 decimal places if they have decimals */
   formatCellValue(val: any): string {
-    if (val === null || val === undefined) return 'vide';
+    const isFr = this.translocoService.getActiveLang() === 'fr';
+    if (val === null || val === undefined) return isFr ? 'vide' : 'empty';
     if (typeof val === 'number' || (typeof val === 'string' && !isNaN(Number(val)) && val.trim() !== '')) {
       const n = Number(val);
       if (!Number.isInteger(n)) {

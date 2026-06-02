@@ -5,11 +5,12 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastrService } from 'ngx-toastr';
 import { IA_API_BASE } from '../../core/config/api-base';
+import { TranslocoService, TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslocoPipe],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
 })
@@ -69,7 +70,8 @@ export class ProfileComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private toastr: ToastrService,
-    private http: HttpClient
+    private http: HttpClient,
+    private translocoService: TranslocoService
   ) { }
 
   ngOnInit(): void {
@@ -81,6 +83,7 @@ export class ProfileComponent implements OnInit {
     if (savedPrefs) {
       try {
         this.preferences = { ...this.preferences, ...JSON.parse(savedPrefs) };
+        this.translocoService.setActiveLang(this.preferences.language);
       } catch { /* ignore */ }
     }
 
@@ -216,9 +219,12 @@ export class ProfileComponent implements OnInit {
     });
   }
   savePreferences(): void {
+    const selectedLang = this.preferences.language;
+    this.translocoService.setActiveLang(selectedLang);
     localStorage.setItem('preferences', JSON.stringify(this.preferences));
-    this.successPreferences = 'Préférences enregistrées avec succès.';
-    this.toastr.success('Préférences enregistrées !');
+    
+    this.successPreferences = this.translocoService.translate('profile.preferences.success');
+    this.toastr.success(this.successPreferences);
     setTimeout(() => this.successPreferences = '', 3000);
   }
 

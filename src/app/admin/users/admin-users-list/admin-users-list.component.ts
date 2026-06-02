@@ -5,11 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserPublic } from '../../../models/user.model';
 import { ToastrService } from 'ngx-toastr';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-admin-users-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, TranslocoPipe],
   templateUrl: './admin-users-list.component.html',
   styleUrls: ['./admin-users-list.component.css']
 })
@@ -35,7 +36,8 @@ export class AdminUserListComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private router     : Router,
-    private toastr     : ToastrService
+    private toastr     : ToastrService,
+    private translocoService: TranslocoService
   ) {}
 
   ngOnInit(): void {
@@ -56,10 +58,10 @@ export class AdminUserListComponent implements OnInit {
       },
       error: () => {
         this.isLoading = false;
-        this.errorMsg  = "Erreur lors du chargement des utilisateurs. Vérifiez vos permissions.";
+        this.errorMsg  = this.translocoService.translate('admin.users.toastr.loadErrorMessage');
         this.toastr.error(
-          "Impossible de charger les utilisateurs.",
-          'Erreur de chargement',
+          this.translocoService.translate('admin.users.toastr.loadError'),
+          this.translocoService.translate('admin.users.toastr.loadErrorTitle'),
           { timeOut: 4000, progressBar: true }
         );
       }
@@ -122,12 +124,12 @@ export class AdminUserListComponent implements OnInit {
         this.showDeleteModal = false;
         this.userToDelete    = null;
 
-        this.successMsg = "L'utilisateur a été supprimé avec succès.";
+        this.successMsg = this.translocoService.translate('admin.users.toastr.deleteSuccessMessage');
         setTimeout(() => this.successMsg = '', 3000);
 
         this.toastr.success(
-          `${name} a été supprimé.`,
-          'Suppression réussie ',
+          this.translocoService.translate('admin.users.toastr.deletedUser', { name }),
+          this.translocoService.translate('admin.users.toastr.deleteSuccessTitle'),
           { timeOut: 3000, progressBar: true }
         );
 
@@ -136,11 +138,11 @@ export class AdminUserListComponent implements OnInit {
       error: () => {
         this.isDeleting      = false;
         this.showDeleteModal = false;
-        this.errorMsg        = "Erreur lors de la suppression de l'utilisateur.";
+        this.errorMsg        = this.translocoService.translate('admin.users.toastr.deleteErrorMessage');
 
         this.toastr.error(
-          "Impossible de supprimer cet utilisateur.",
-          'Erreur de suppression ',
+          this.translocoService.translate('admin.users.toastr.deleteError'),
+          this.translocoService.translate('admin.users.toastr.deleteErrorTitle'),
           { timeOut: 5000, progressBar: true }
         );
       }

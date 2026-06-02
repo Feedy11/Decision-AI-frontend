@@ -8,9 +8,9 @@ import { IaServicesService }      from '../core/services/ia-services.service';
 import { WorkflowService }        from '../core/services/workflow.service';
 import { Dataset }                from '../models/Dataset.model';
 import { RecentUpload } from '../models/upload.model';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 type UploadStatus = 'idle' | 'uploading' | 'success' | 'error';
-
 
 const ACCEPTED_EXTS = ['.csv', '.xlsx', '.xls'];
 const MAX_SIZE_MB   = 100;
@@ -18,7 +18,7 @@ const MAX_SIZE_MB   = 100;
 @Component({
   selector   : 'app-upload',
   standalone : true,
-  imports    : [CommonModule, RouterModule],
+  imports    : [CommonModule, RouterModule, TranslocoPipe],
   templateUrl: './upload.component.html',
   styleUrl   : './upload.component.css'
 })
@@ -39,7 +39,8 @@ export class UploadComponent implements OnInit {
     private toastr   : ToastrService,
     private auth     : AuthService,
     private iaService: IaServicesService,
-    private wf       : WorkflowService
+    private wf       : WorkflowService,
+    private translocoService: TranslocoService
   ) {}
 
   ngOnInit(): void {
@@ -89,15 +90,21 @@ export class UploadComponent implements OnInit {
     const ext = '.' + file.name.split('.').pop()?.toLowerCase();
 
     if (!ACCEPTED_EXTS.includes(ext)) {
-      this.toastr.error(`Format non supporté : ${ext}. Utilisez CSV, XLSX ou XLS.`,
-        'Fichier invalide', { timeOut: 4000, progressBar: true });
+      const msg = this.translocoService.getActiveLang() === 'fr'
+        ? `Format non supporté : ${ext}. Utilisez CSV, XLSX ou XLS.`
+        : `Unsupported format: ${ext}. Use CSV, XLSX or XLS.`;
+      this.toastr.error(msg,
+        this.translocoService.translate('upload.fileInvalid'), { timeOut: 4000, progressBar: true });
       return;
     }
 
     const sizeMB = file.size / 1024 / 1024;
     if (sizeMB > MAX_SIZE_MB) {
-      this.toastr.error(`Le fichier dépasse ${MAX_SIZE_MB} MB (${sizeMB.toFixed(1)} MB).`,
-        'Fichier trop lourd', { timeOut: 4000, progressBar: true });
+      const msg = this.translocoService.getActiveLang() === 'fr'
+        ? `Le fichier dépasse ${MAX_SIZE_MB} MB (${sizeMB.toFixed(1)} MB).`
+        : `File exceeds ${MAX_SIZE_MB} MB (${sizeMB.toFixed(1)} MB).`;
+      this.toastr.error(msg,
+        this.translocoService.translate('upload.fileTooLarge'), { timeOut: 4000, progressBar: true });
       return;
     }
 
@@ -108,8 +115,11 @@ export class UploadComponent implements OnInit {
     this.uploadProgress = 0;
     this.lastDataset    = null;
 
-    this.toastr.info(`${file.name} sélectionné (${this.fileSize})`,
-      'Fichier prêt', { timeOut: 2500, progressBar: true });
+    this.toastr.info(
+      this.translocoService.getActiveLang() === 'fr'
+        ? `${file.name} sélectionné (${this.fileSize})`
+        : `${file.name} selected (${this.fileSize})`,
+      this.translocoService.translate('upload.fileReady'), { timeOut: 2500, progressBar: true });
   }
 
   //Supprimer le fichier sélectionné
@@ -134,8 +144,8 @@ export class UploadComponent implements OnInit {
     const token = this.auth.getToken();
     if (!token) {
       this.uploadStatus = 'error';
-      this.errorMessage = 'Session expirée. Reconnectez-vous.';
-      this.toastr.error(this.errorMessage, 'Non authentifié', { timeOut: 5000, progressBar: true });
+      this.errorMessage = this.translocoService.translate('upload.sessionExpired');
+      this.toastr.error(this.errorMessage, this.translocoService.translate('upload.notAuthenticated'), { timeOut: 5000, progressBar: true });
       return;
     }
 
@@ -155,9 +165,11 @@ export class UploadComponent implements OnInit {
           this.lastDataset  = event.body;
           this.uploadStatus = 'success';
           this.wf.setDatasetId(event.body.id); // Set the workflow context
-          this.toastr.success(
-            `${this.selectedFile?.name} importé ! ID : #${event.body.id}`,
-            'Import réussi ', { timeOut: 5000, progressBar: true }
+          const msg = this.translocoService.getActiveLang() === 'fr'
+            ? `${this.selectedFile?.name} importé ! ID : #${event.body.id}`
+            : `${this.selectedFile?.name} imported! ID: #${event.body.id}`;
+          this.toastr.success(msg,
+            this.translocoService.translate('upload.importSuccess'), { timeOut: 5000, progressBar: true }
           );
           this.loadRecentDatasets();
           // Unlock next workflow step
@@ -166,8 +178,8 @@ export class UploadComponent implements OnInit {
       },
       error: (err) => {
         this.uploadStatus = 'error';
-        this.errorMessage = err.error?.detail || 'Erreur lors de l\'import.';
-        this.toastr.error(this.errorMessage, 'Erreur d\'import ', { timeOut: 5000, progressBar: true });
+        this.errorMessage = err.error?.detail || this.translocoService.translate('upload.importError');
+        this.toastr.error(this.errorMessage, this.translocoService.translate('upload.importError'), { timeOut: 5000, progressBar: true });
       }
     });
   }
@@ -177,10 +189,13 @@ export class UploadComponent implements OnInit {
     this.iaService.deleteDataset(id).subscribe({
       next: () => {
         this.recentUploads = this.recentUploads.filter(r => r.id !== id);
-        this.toastr.success(`${name} supprimé.`, 'Suppression réussie', { timeOut: 3000, progressBar: true });
+        const msg = this.translocoService.getActiveLang() === 'fr'
+          ? `${name} supprimé.`
+          : `${name} deleted.`;
+        this.toastr.success(msg, this.translocoService.translate('upload.deleteSuccess'), { timeOut: 3000, progressBar: true });
       },
       error: () => {
-        this.toastr.error('Impossible de supprimer ce dataset.', 'Erreur', { timeOut: 3000, progressBar: true });
+        this.toastr.error(this.translocoService.translate('datasets.deleteError'), this.translocoService.translate('common.error'), { timeOut: 3000, progressBar: true });
       }
     });
   }

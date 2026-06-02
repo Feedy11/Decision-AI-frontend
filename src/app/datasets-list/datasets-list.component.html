@@ -3,8 +3,8 @@
   <!-- Header -->
   <div class="page-header">
     <div>
-      <h1>Mes datasets</h1>
-      <p>Gérez et consultez tous vos fichiers importés</p>
+      <h1>{{ 'datasets.title' | transloco }}</h1>
+      <p>{{ 'datasets.subtitle' | transloco }}</p>
     </div>
     <button class="btn-upload-new" routerLink="/upload">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -12,7 +12,7 @@
         <polyline points="17 8 12 3 7 8"></polyline>
         <line x1="12" y1="3" x2="12" y2="15"></line>
       </svg>
-      Importer un fichier
+      {{ 'datasets.importFile' | transloco }}
     </button>
   </div>
 
@@ -23,7 +23,7 @@
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
         <circle cx="12" cy="7" r="4"></circle>
       </svg>
-      Mes datasets
+      {{ 'datasets.myDatasets' | transloco }}
     </button>
     <button class="tab-btn" [class.active]="activeTab === 'all'" (click)="setTab('all')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -32,7 +32,7 @@
         <rect x="3" y="14" width="7" height="7"></rect>
         <rect x="14" y="14" width="7" height="7"></rect>
       </svg>
-      Tous les datasets
+      {{ 'datasets.allDatasets' | transloco }}
       <span class="tab-count">{{ totalAll }}</span>
     </button>
   </div>
@@ -50,13 +50,13 @@
         <input
           type="text"
           class="search-input"
-          placeholder="Rechercher un fichier..."
+          [placeholder]="'datasets.searchPlaceholder' | transloco"
           [(ngModel)]="searchTerm"
           (ngModelChange)="onSearch()"
         />
       </div>
       <div class="toolbar-right">
-        <span class="total-count">{{ filteredDatasets.length }} dataset(s)</span>
+        <span class="total-count">{{ 'datasets.datasetsCount' | transloco: { count: filteredDatasets.length } }}</span>
       </div>
     </div>
 
@@ -65,7 +65,7 @@
       <svg class="spin" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5">
         <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
       </svg>
-      Chargement...
+      {{ 'common.loading' | transloco }}
     </div>
 
     <!-- Table -->
@@ -73,14 +73,14 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>Fichier</th>
-            <th *ngIf="isAdmin && activeTab === 'all'">Propriétaire (ID)</th>
-            <th>Type</th>
-            <th>Taille</th>
-            <th>Lignes</th>
-            <th>Statut</th>
-            <th>Date</th>
-            <th class="text-right">Actions</th>
+            <th>{{ 'datasets.file' | transloco }}</th>
+            <th *ngIf="isAdmin && activeTab === 'all'">{{ 'datasets.owner' | transloco }}</th>
+            <th>{{ 'datasets.type' | transloco }}</th>
+            <th>{{ 'datasets.size' | transloco }}</th>
+            <th>{{ 'datasets.rows' | transloco }}</th>
+            <th>{{ 'datasets.status' | transloco }}</th>
+            <th>{{ 'datasets.date' | transloco }}</th>
+            <th class="text-right">{{ 'datasets.actions' | transloco }}</th>
           </tr>
         </thead>
         <tbody>
@@ -91,8 +91,8 @@
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                   <polyline points="14 2 14 8 20 8"></polyline>
                 </svg>
-                <p>Aucun dataset trouvé</p>
-                <button class="btn-upload-new sm" routerLink="/upload">Importer maintenant</button>
+                <p>{{ 'datasets.noDataset' | transloco }}</p>
+                <button class="btn-upload-new sm" routerLink="/upload">{{ 'datasets.importNow' | transloco }}</button>
               </div>
             </td>
           </tr>
@@ -112,7 +112,7 @@
               </div>
             </td>
             <td *ngIf="isAdmin && activeTab === 'all'">
-              <span class="type-chip" style="background: #E2E8F0; color: #475569;">Utilisateur #{{ d['user_id'] || 'N/A' }}</span>
+              <span class="type-chip" style="background: #E2E8F0; color: #475569;">{{ 'navbar.user' | transloco }} #{{ d['user_id'] || 'N/A' }}</span>
             </td>
             <td><span class="type-chip">{{ d.file_type.toUpperCase() }}</span></td>
             <td class="muted-cell">{{ formatSize(d.file_size) }}</td>
@@ -124,7 +124,7 @@
             </td>
             <td class="muted-cell">{{ formatDate(d.created_at) }}</td>
             <td class="actions-cell">
-              <button class="btn-icon-sm" title="Supprimer" (click)="confirmDelete(d)">
+              <button class="btn-icon-sm" [title]="'common.delete' | transloco" (click)="confirmDelete(d)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="3 6 5 6 21 6"></polyline>
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
@@ -139,13 +139,12 @@
     <!-- Pagination -->
     <div class="pagination" *ngIf="totalPages > 1 && !isLoading">
       <span class="page-info">
-        {{ (currentPage - 1) * pageSize + 1 }} – {{ Math.min(currentPage * pageSize, filteredDatasets.length) }}
-        sur {{ filteredDatasets.length }}
+        {{ 'datasets.paginationInfo' | transloco: { start: (currentPage - 1) * pageSize + 1, end: Math.min(currentPage * pageSize, filteredDatasets.length), total: filteredDatasets.length } }}
       </span>
       <div class="page-controls">
-        <button class="btn-page" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">Préc</button>
+        <button class="btn-page" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">{{ 'datasets.prev' | transloco }}</button>
         <span class="page-current">{{ currentPage }} / {{ totalPages }}</span>
-        <button class="btn-page" [disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)">Suiv</button>
+        <button class="btn-page" [disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)">{{ 'datasets.next' | transloco }}</button>
       </div>
     </div>
   </div>
@@ -160,18 +159,18 @@
             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
           </svg>
         </div>
-        <h3>Supprimer ce dataset ?</h3>
+        <h3>{{ 'datasets.deleteTitle' | transloco }}</h3>
       </div>
       <div class="modal-body">
-        <p>Êtes-vous sûr de vouloir supprimer <strong>{{ datasetToDelete?.original_filename }}</strong> ?<br/>Cette action est irréversible.</p>
+        <p>{{ 'datasets.deleteConfirm' | transloco }} <strong>{{ datasetToDelete?.original_filename }}</strong> ?<br/>{{ 'datasets.deleteIrreversible' | transloco }}</p>
       </div>
       <div class="modal-actions">
-        <button class="btn-cancel" (click)="cancelDelete()" [disabled]="isDeleting">Annuler</button>
+        <button class="btn-cancel" (click)="cancelDelete()" [disabled]="isDeleting">{{ 'common.cancel' | transloco }}</button>
         <button class="btn-save btn-danger" (click)="deleteDataset()" [disabled]="isDeleting">
           <svg *ngIf="isDeleting" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
           </svg>
-          {{ isDeleting ? 'Suppression...' : 'Oui, supprimer' }}
+          {{ isDeleting ? ('datasets.deleting' | transloco) : ('datasets.confirmDelete' | transloco) }}
         </button>
       </div>
     </div>

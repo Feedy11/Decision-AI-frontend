@@ -4,7 +4,7 @@
   class="chat-fab"
   [class.open]="isOpen"
   (click)="togglePanel()"
-  title="{{ isOpen ? 'Fermer le chat' : 'Ouvrir l\'assistant IA' }}"
+  [attr.title]="isOpen ? ('chat.closeChat' | transloco) : ('chat.openAssistant' | transloco)"
 >
   <svg *ngIf="!isOpen" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -28,23 +28,23 @@
         </svg>
       </div>
       <div>
-        <span class="chat-title">Assistant IA</span>
+        <span class="chat-title">{{ 'chat.aiAssistant' | transloco }}</span>
         <span class="chat-status">
           <span class="status-dot" [class.online]="!isTyping" [class.typing]="isTyping"></span>
-          {{ isTyping ? 'En train d\'écrire...' : 'En ligne' }}
+          {{ isTyping ? ('chat.typing' | transloco) : ('chat.online' | transloco) }}
         </span>
       </div>
     </div>
     <div style="display:flex; gap:4px">
       <!-- Effacer -->
-      <button class="hdr-btn" (click)="clearMessages()" title="Effacer">
+      <button class="hdr-btn" (click)="clearMessages()" [attr.title]="'chat.clear' | transloco">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="3 6 5 6 21 6"></polyline>
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
         </svg>
       </button>
       <!-- Fermer (X) -->
-      <button class="hdr-btn" (click)="togglePanel()" title="Fermer">
+      <button class="hdr-btn" (click)="togglePanel()" [attr.title]="'chat.close' | transloco">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -60,7 +60,7 @@
       <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
       <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
     </svg>
-    <span>Contexte : <strong>{{ activeDatasetName }}</strong></span>
+    <span>{{ 'chat.context' | transloco }} : <strong>{{ activeDatasetName }}</strong></span>
     <button class="ctx-clear" (click)="clearContext()">×</button>
   </div>
 
@@ -72,7 +72,7 @@
         <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
         <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
       </svg>
-      <span>Sélectionnez un dataset :</span>
+      <span>{{ 'chat.selectDataset' | transloco }}</span>
     </div>
     <div class="picker-list">
       <button
@@ -84,10 +84,10 @@
         {{ ds.original_filename }}
       </button>
       <div class="picker-empty" *ngIf="datasetsLoading">
-        Chargement des datasets…
+        {{ 'chat.loadingDatasets' | transloco }}
       </div>
       <div class="picker-empty" *ngIf="!datasetsLoading && datasets.length === 0">
-        Aucun dataset disponible. Uploadez-en un d'abord.
+        {{ 'chat.noDatasets' | transloco }}
       </div>
     </div>
   </div>
@@ -98,10 +98,10 @@
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
       </svg>
-      {{ showConvList ? 'Masquer' : 'Conversations' }} ({{ conversations.length }})
+      {{ showConvList ? ('chat.hide' | transloco) : ('chat.conversations' | transloco) }} ({{ conversations.length }})
     </button>
-    <button class="conv-new-btn" (click)="createNewConversation()" title="Nouvelle conversation">+</button>
-    <button class="conv-new-btn" *ngIf="isAdmin" (click)="rebuildIndex()" title="Reconstruire l'index">
+    <button class="conv-new-btn" (click)="createNewConversation()" [attr.title]="'chat.newConversation' | transloco">+</button>
+    <button class="conv-new-btn" *ngIf="isAdmin" (click)="rebuildIndex()" [attr.title]="'chat.rebuildIndex' | transloco">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="23 4 23 10 17 10"></polyline>
         <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
@@ -130,11 +130,11 @@
           <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
         </svg>
       </div>
-      <h3>Bonjour, je suis votre assistant IA</h3>
-      <p>Posez-moi des questions sur vos données, vos KPIs ou demandez-moi d'analyser un dataset.</p>
+      <h3>{{ 'chat.welcomeTitle' | transloco }}</h3>
+      <p>{{ 'chat.welcomeSubtitle' | transloco }}</p>
       <div class="suggestions">
-        <button class="suggestion-chip" *ngFor="let s of suggestions" (click)="sendSuggestion(s)">
-          {{ s }}
+        <button class="suggestion-chip" *ngFor="let k of suggestionKeys" (click)="sendSuggestionKey(k)">
+          {{ k | transloco }}
         </button>
       </div>
     </div>
@@ -184,8 +184,8 @@
 
   <!-- Input area -->
   <div class="chat-input-area">
-    <div class="quick-actions" *ngIf="messages.length > 0 && quickActions.length > 0">
-      <button class="quick-btn" *ngFor="let q of quickActions" (click)="sendSuggestion(q)">{{ q }}</button>
+    <div class="quick-actions" *ngIf="messages.length > 0 && quickActionKeys.length > 0">
+      <button class="quick-btn" *ngFor="let k of quickActionKeys" (click)="sendSuggestionKey(k)">{{ k | transloco }}</button>
     </div>
     <div class="input-row">
       <textarea
@@ -193,7 +193,7 @@
         [(ngModel)]="inputText"
         (keydown)="onKeydown($event)"
         [disabled]="isTyping"
-        placeholder="Posez une question sur vos données..."
+        [placeholder]="'chat.inputPlaceholder' | transloco"
         rows="1"
         #inputRef
       ></textarea>
@@ -208,7 +208,7 @@
       </button>
     </div>
     <div class="input-hint">
-      <kbd>Enter</kbd> envoyer · <kbd>Shift+Enter</kbd> nouvelle ligne
+      <kbd>Enter</kbd> {{ 'chat.enterSend' | transloco }} · <kbd>Shift+Enter</kbd> {{ 'chat.shiftEnterNewline' | transloco }}
     </div>
   </div>
 

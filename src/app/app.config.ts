@@ -20,9 +20,21 @@ import {
 } from 'lucide-angular';
 
 import { HIGHCHARTS_GLOBAL_OPTIONS } from './shared/highcharts/highcharts-global-defaults';
+import { provideTransloco } from '@jsverse/transloco';
+import { TranslocoHttpLoader } from './core/services/transloco-loader';
+import { isDevMode } from '@angular/core';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideTransloco({
+      config: {
+        availableLangs: ['en', 'fr'],
+        defaultLang: 'fr',
+        reRenderOnLangChange: true,
+        prodMode: !isDevMode(),
+      },
+      loader: TranslocoHttpLoader
+    }),
     provideHighcharts({
       instance: () => import('highcharts/esm/highcharts').then(m => m.default),
       modules: () => [

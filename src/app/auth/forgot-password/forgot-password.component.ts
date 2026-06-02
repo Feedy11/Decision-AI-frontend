@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [FormsModule, CommonModule, RouterModule],
+  imports: [FormsModule, CommonModule, RouterModule, TranslocoPipe],
   templateUrl: './forgot-password.component.html',
   styleUrl: './forgot-password.component.css'
 })
@@ -23,7 +24,10 @@ export class ForgotPasswordComponent implements OnDestroy {
 
   private cooldownTimer: any = null;
 
-  constructor(private authService: AuthService) { }
+  constructor(
+    private authService: AuthService,
+    private translocoService: TranslocoService
+  ) { }
 
   /**
    * POST /api/v1/password-recovery/{email}
@@ -35,12 +39,12 @@ export class ForgotPasswordComponent implements OnDestroy {
     this.errorMsg = '';
 
     if (!this.email.trim()) {
-      this.emailError = 'L\'adresse email est obligatoire.';
+      this.emailError = this.translocoService.translate('login.emailRequired');
       return;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(this.email.trim())) {
-      this.emailError = 'Format d\'email invalide.';
+      this.emailError = this.translocoService.translate('login.emailInvalid');
       return;
     }
 
@@ -61,9 +65,9 @@ export class ForgotPasswordComponent implements OnDestroy {
       error: (err) => {
         this.isLoading = false;
         if (err.status === 0) {
-          this.errorMsg = 'Impossible de joindre le serveur.';
+          this.errorMsg = this.translocoService.translate('login.serverError');
         } else {
-          this.errorMsg = err?.error?.detail || 'Une erreur est survenue.';
+          this.errorMsg = err?.error?.detail || this.translocoService.translate('chat.streamError');
         }
       }
     });

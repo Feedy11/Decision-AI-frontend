@@ -46,8 +46,8 @@
           </div>
 
           <div class="step__text">
-            <span class="step__label">{{ step.label }}</span>
-            <span class="step__desc">{{ step.description }}</span>
+            <span class="step__label">{{ 'workflow.' + step.id + '.label' | transloco }}</span>
+            <span class="step__desc">{{ 'workflow.' + step.id + '.desc' | transloco }}</span>
           </div>
         </div>
 
@@ -65,18 +65,18 @@
               [disabled]="currentIndex === 0"
               (click)="onPrevious()">
         <lucide-icon name="chevron-left" [size]="16" [strokeWidth]="2"></lucide-icon>
-        Précédent
+        {{ 'stepper.previous' | transloco }}
       </button>
 
       <span class="stepper-counter">
-        Étape {{ currentIndex + 1 }} / {{ steps.length }}
+        {{ 'stepper.step' | transloco }} {{ currentIndex + 1 }} {{ 'stepper.of' | transloco }} {{ steps.length }}
       </span>
 
       <button class="stepper-btn stepper-btn--primary"
               *ngIf="currentIndex < steps.length - 1"
               [disabled]="!wf.canGoNext"
               (click)="onNext()">
-        Suivant
+        {{ 'stepper.next' | transloco }}
         <lucide-icon name="chevron-right" [size]="16" [strokeWidth]="2"></lucide-icon>
       </button>
 
@@ -84,15 +84,15 @@
       <div class="stepper-actions-done" *ngIf="currentIndex === steps.length - 1 && steps[currentIndex].completed">
         <span class="stepper-badge-done">
           <lucide-icon name="check" [size]="16" [strokeWidth]="2.5"></lucide-icon>
-          Terminé
+          {{ 'stepper.done' | transloco }}
         </span>
         
         <button class="stepper-btn stepper-btn--outline" (click)="onExit()">
-          Quitter
+          {{ 'stepper.exit' | transloco }}
         </button>
         <button class="stepper-btn stepper-btn--primary" (click)="onRestart()">
           <lucide-icon name="plus" [size]="16" [strokeWidth]="2"></lucide-icon>
-          Nouveau
+          {{ 'stepper.new' | transloco }}
         </button>
       </div>
     </div>

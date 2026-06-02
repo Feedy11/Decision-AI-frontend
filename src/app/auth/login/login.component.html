@@ -14,27 +14,24 @@
       </div>
 
       <div class="brand-tagline">
-        <h1>Transformez vos données<br/>en décisions</h1>
-        <p>
-          Analyses intelligentes optimisées par l'IA. Importez, analysez et
-          visualisez vos indicateurs clés de performance en quelques secondes.
-        </p>
+        <h1 [innerHTML]="'login.brandTagline' | transloco"></h1>
+        <p>{{ 'login.brandDesc' | transloco }}</p>
       </div>
 
       <div class="brand-stats">
         <div class="stat">
           <span class="stat-number">98%</span>
-          <span class="stat-label">Précision</span>
+          <span class="stat-label">{{ 'login.precision' | transloco }}</span>
         </div>
         <div class="stat-divider"></div>
         <div class="stat">
           <span class="stat-number">3s</span>
-          <span class="stat-label">Avg. aperçu</span>
+          <span class="stat-label">{{ 'login.avgInsight' | transloco }}</span>
         </div>
         <div class="stat-divider"></div>
         <div class="stat">
           <span class="stat-number">500+</span>
-          <span class="stat-label">KPI modèles</span>
+          <span class="stat-label">{{ 'login.kpiModels' | transloco }}</span>
         </div>
       </div>
 
@@ -59,8 +56,8 @@
             </defs>
           </svg>
         </div>
-        <h2>Se connecter</h2>
-        <p>Accédez à votre espace Decision AI</p>
+        <h2>{{ 'login.title' | transloco }}</h2>
+        <p>{{ 'login.subtitle' | transloco }}</p>
       </div>
 
       <!-- Erreur globale backend -->
@@ -78,7 +75,7 @@
 
         <!-- EMAIL -->
         <div class="field-group" [class.has-error]="email?.invalid && email?.touched">
-          <label for="email">Adresse email</label>
+          <label for="email">{{ 'login.email' | transloco }}</label>
 
           <div class="input-wrapper">
             <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24"
@@ -91,7 +88,7 @@
               type="email"
               id="email"
               class="form-input"
-              placeholder="votre@email.com"
+              [placeholder]="'login.emailPlaceholder' | transloco"
               formControlName="email"
               autocomplete="email"
             />
@@ -99,18 +96,18 @@
 
           <!-- Erreurs email -->
           <span class="field-error" *ngIf="email?.touched && email?.hasError('required')">
-            L'adresse email est obligatoire.
+            {{ 'login.emailRequired' | transloco }}
           </span>
           <span class="field-error" *ngIf="email?.touched && email?.hasError('email')">
-            Format d'email invalide.
+            {{ 'login.emailInvalid' | transloco }}
           </span>
         </div>
 
         <!-- PASSWORD -->
         <div class="field-group" [class.has-error]="password?.invalid && password?.touched">
           <label for="password">
-            Mot de passe
-            <a routerLink="/pass" class="forgot-link">Mot de passe oublié ?</a>
+            {{ 'login.password' | transloco }}
+            <a routerLink="/pass" class="forgot-link">{{ 'login.forgotPassword' | transloco }}</a>
           </label>
 
           <div class="input-wrapper">
@@ -147,16 +144,16 @@
 
           <!-- Erreurs password -->
           <span class="field-error" *ngIf="password?.touched && password?.hasError('required')">
-            Le mot de passe est obligatoire.
+            {{ 'login.passwordRequired' | transloco }}
           </span>
           <span class="field-error" *ngIf="password?.touched && password?.hasError('minlength')">
-            Minimum 6 caractères requis.
+            {{ 'login.passwordMinLength' | transloco }}
           </span>
         </div>
 
         <!-- SUBMIT -->
         <button type="submit" class="btn-primary" [disabled]="loginForm.invalid || isLoading">
-          <span *ngIf="!isLoading">Se connecter</span>
+          <span *ngIf="!isLoading">{{ 'login.submitBtn' | transloco }}</span>
           <span class="btn-loader" *ngIf="isLoading">
             <svg class="spin" width="18" height="18" viewBox="0 0 24 24"
                  fill="none" stroke="currentColor" stroke-width="2.5">
@@ -164,7 +161,7 @@
                        M16.24 16.24l2.83 2.83M2 12h4M18 12h4
                        M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
             </svg>
-            Connexion...
+            {{ 'login.loading' | transloco }}
           </span>
         </button>
 
@@ -177,7 +174,7 @@
           <line x1="12" y1="8" x2="12" y2="12"></line>
           <line x1="12" y1="16" x2="12.01" y2="16"></line>
         </svg>
-        L'accès à votre compte est géré par votre administrateur.
+        {{ 'login.infoNote' | transloco }}
       </div>
 
     </div>

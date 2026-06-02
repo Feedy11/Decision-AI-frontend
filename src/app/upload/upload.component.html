@@ -6,15 +6,15 @@
 
       <div class="header-divider"></div>
       <div>
-        <h1>Importer des données</h1>
-        <p>Importez vos fichiers CSV ou Excel pour analyser vos KPIs automatiquement</p>
+        <h1>{{ 'upload.title' | transloco }}</h1>
+        <p>{{ 'upload.subtitle' | transloco }}</p>
       </div>
     </div>
     <span class="ai-badge">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
       </svg>
-      Analyse IA activée
+      {{ 'upload.aiBadge' | transloco }}
     </span>
   </div>
 
@@ -32,8 +32,8 @@
           </svg>
         </div>
         <div>
-          <h2>Importer un fichier</h2>
-          <p>Glissez-déposez ou sélectionnez votre fichier de données</p>
+          <h2>{{ 'upload.cardTitle' | transloco }}</h2>
+          <p>{{ 'upload.cardSubtitle' | transloco }}</p>
         </div>
       </div>
 
@@ -64,13 +64,13 @@
               <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
             </svg>
           </div>
-          <p class="drop-title">{{ isDragging ? 'Relâchez pour importer' : 'Glissez-déposez votre fichier ici' }}</p>
-          <p class="drop-or">ou</p>
+          <p class="drop-title">{{ isDragging ? ('upload.dropRelease' | transloco) : ('upload.dropHere' | transloco) }}</p>
+          <p class="drop-or">{{ 'upload.or' | transloco }}</p>
           <button class="btn-browse" type="button" (click)="fileInput.click(); $event.stopPropagation()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
             </svg>
-            Parcourir les fichiers
+            {{ 'upload.browse' | transloco }}
           </button>
           <div class="format-chips">
             <span class="chip">CSV</span>
@@ -91,7 +91,7 @@
             <span class="file-name">{{ selectedFile.name }}</span>
             <span class="file-size">{{ fileSize }}</span>
           </div>
-          <button class="btn-remove" (click)="removeFile(); $event.stopPropagation()" title="Supprimer">
+          <button class="btn-remove" (click)="removeFile(); $event.stopPropagation()" [title]="'common.delete' | transloco">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -103,7 +103,7 @@
       <!-- ── PROGRESS BAR ── -->
       <div class="progress-wrap" *ngIf="uploadStatus === 'uploading'">
         <div class="progress-top">
-          <span>Envoi en cours...</span>
+          <span>{{ 'upload.uploading' | transloco }}</span>
           <span class="progress-pct">{{ uploadProgress }}%</span>
         </div>
         <div class="progress-track">
@@ -127,7 +127,7 @@
           <svg *ngIf="uploadStatus === 'uploading'" class="spin" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
           </svg>
-          {{ uploadStatus === 'uploading' ? 'Import en cours...' : 'Importer le fichier' }}
+          {{ uploadStatus === 'uploading' ? ('upload.importing' | transloco) : ('upload.importBtn' | transloco) }}
         </button>
 
         <button class="btn-new" *ngIf="uploadStatus === 'success' || uploadStatus === 'error'" (click)="reset()">
@@ -135,7 +135,7 @@
             <polyline points="1 4 1 10 7 10"></polyline>
             <path d="M3.51 15a9 9 0 1 0 .49-3.5"></path>
           </svg>
-          Nouveau fichier
+          {{ 'upload.newFile' | transloco }}
         </button>
       </div>
 
@@ -150,7 +150,7 @@
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
           </svg>
-          Formats supportés
+          {{ 'upload.supportedFormats' | transloco }}
         </div>
         <div class="format-list">
           <div class="format-row">
@@ -175,14 +175,14 @@
             <circle cx="12" cy="12" r="10"></circle>
             <polyline points="12 6 12 12 16 14"></polyline>
           </svg>
-          Imports récents
+          {{ 'upload.recentImports' | transloco }}
         </div>
         <div class="recent-empty" *ngIf="recentUploads.length === 0">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
           </svg>
-          <p>Aucun import récent</p>
+          <p>{{ 'upload.noRecentImports' | transloco }}</p>
         </div>
         <ul class="recent-list" *ngIf="recentUploads.length > 0">
           <li *ngFor="let r of recentUploads">
@@ -200,7 +200,7 @@
               <span class="recent-status" [class]="getStatusClass(r.status)">
                 {{ getStatusLabel(r.status) }}
               </span>
-              <button class="recent-delete" (click)="deleteDataset(r.id, r.name)" title="Supprimer">
+              <button class="recent-delete" (click)="deleteDataset(r.id, r.name)" [title]="'common.delete' | transloco">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="3 6 5 6 21 6"></polyline>
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>

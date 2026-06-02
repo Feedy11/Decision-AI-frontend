@@ -4,13 +4,13 @@
   <div class="page-header header-flex">
     <div>
       <div class="breadcrumb">
-        <a routerLink="/admin/users" class="breadcrumb-link">Utilisateurs</a>
+        <a routerLink="/admin/users" class="breadcrumb-link">{{ 'admin.users.users' | transloco }}</a>
         <svg class="breadcrumb-sep" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="9 18 15 12 9 6"></polyline>
         </svg>
-        <span>{{ isEditMode ? 'Modifier' : 'Ajouter' }}</span>
+        <span>{{ isEditMode ? ('admin.userForm.editAction' | transloco) : ('admin.userForm.addAction' | transloco) }}</span>
       </div>
-      <h1>{{ isEditMode ? 'Modifier utilisateur' : 'Ajouter un utilisateur' }}</h1>
+      <h1>{{ isEditMode ? ('admin.userForm.editTitle' | transloco) : ('admin.userForm.createTitle' | transloco) }}</h1>
     </div>
   </div>
 
@@ -25,8 +25,8 @@
             </svg>
           </div>
           <div>
-            <h3>Informations du compte</h3>
-            <p>Veuillez {{ isEditMode ? 'mettre à jour' : 'remplir' }} les informations ci-dessous.</p>
+            <h3>{{ 'admin.userForm.accountInfoTitle' | transloco }}</h3>
+            <p>{{ isEditMode ? ('admin.userForm.accountInfoEdit' | transloco) : ('admin.userForm.accountInfoCreate' | transloco) }}</p>
           </div>
         </div>
 
@@ -50,44 +50,44 @@
           <svg class="spin" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5">
             <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
           </svg>
-          Chargement...
+          {{ 'common.loading' | transloco }}
         </div>
 
         <form *ngIf="!isLoading" class="form" [formGroup]="userForm" (ngSubmit)="onSubmit()">
           
           <div class="field">
-            <label>Nom complet <span class="req">*</span></label>
-            <input type="text" class="form-input" formControlName="fullName" placeholder="Nom complet" />
+            <label>{{ 'admin.userForm.fullName' | transloco }} <span class="req">*</span></label>
+            <input type="text" class="form-input" formControlName="fullName" [placeholder]="'admin.userForm.fullName' | transloco" />
           </div>
 
           <div class="field" style="margin-top: 14px;">
-            <label>Adresse email <span class="req">*</span></label>
+            <label>{{ 'admin.userForm.email' | transloco }} <span class="req">*</span></label>
             <div class="input-wrap">
               <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                 <polyline points="22,6 12,13 2,6"></polyline>
               </svg>
-              <input type="email" class="form-input has-icon" formControlName="email" placeholder="votre@email.com" />
+              <input type="email" class="form-input has-icon" formControlName="email" [placeholder]="'login.emailPlaceholder' | transloco" />
             </div>
           </div>
 
           <div class="field">
-            <label>Mot de passe <span class="req" *ngIf="!isEditMode">*</span> <span class="hint" *ngIf="isEditMode">(Laisser vide pour ne pas modifier)</span></label>
+            <label>{{ 'admin.userForm.password' | transloco }} <span class="req" *ngIf="!isEditMode">*</span> <span class="hint" *ngIf="isEditMode">({{ 'admin.userForm.leaveBlankHint' | transloco }})</span></label>
             <div class="input-wrap">
               <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
               </svg>
-              <input type="password" class="form-input has-icon" formControlName="password" placeholder="Min. 8 caractères" />
+              <input type="password" class="form-input has-icon" formControlName="password" [placeholder]="'admin.userForm.passwordPlaceholder' | transloco" />
             </div>
           </div>
 
           <div class="form-row">
             <div class="field">
-              <label>Rôle <span class="req">*</span></label>
+              <label>{{ 'admin.userForm.role' | transloco }} <span class="req">*</span></label>
               <select class="form-select" formControlName="role">
-                <option value="user">Utilisateur standard</option>
-                <option value="admin">Administrateur</option>
+                <option value="user">{{ 'admin.userForm.standardUser' | transloco }}</option>
+                <option value="admin">{{ 'admin.userForm.administrator' | transloco }}</option>
               </select>
             </div>
           </div>
@@ -95,8 +95,8 @@
           <div class="pref-list" style="margin-top: 10px; margin-bottom: 5px;">
             <div class="pref-row">
               <div>
-                <span class="pref-name">Compte actif</span>
-                <span class="pref-hint">Autoriser cet utilisateur à se connecter</span>
+                <span class="pref-name">{{ 'admin.userForm.activeAccount' | transloco }}</span>
+                <span class="pref-hint">{{ 'admin.userForm.activeAccountHint' | transloco }}</span>
               </div>
               <label class="toggle">
                 <input type="checkbox" formControlName="isActive">
@@ -106,7 +106,7 @@
           </div>
 
           <div class="form-actions">
-            <button type="button" class="btn-cancel" routerLink="/admin/users">Annuler</button>
+            <button type="button" class="btn-cancel" routerLink="/admin/users">{{ 'common.cancel' | transloco }}</button>
             <button type="submit" class="btn-save" [disabled]="userForm.invalid || isSaving">
               <svg *ngIf="!isSaving" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <polyline points="20 6 9 17 4 12"></polyline>
@@ -114,7 +114,7 @@
               <svg *ngIf="isSaving" class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
               </svg>
-              {{ isSaving ? 'Sauvegarde...' : 'Sauvegarder' }}
+              {{ isSaving ? ('common.saving' | transloco) : ('admin.userForm.save' | transloco) }}
             </button>
           </div>
         </form>

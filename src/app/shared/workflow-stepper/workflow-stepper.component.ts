@@ -5,11 +5,12 @@ import { Subscription, filter } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
 import { WorkflowService } from '../../core/services/workflow.service';
 import { WorkflowStep } from '../../models/WorkflowStep.model';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-workflow-stepper',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, TranslocoPipe],
   templateUrl: './workflow-stepper.component.html',
   styleUrls: ['./workflow-stepper.component.css']
 })

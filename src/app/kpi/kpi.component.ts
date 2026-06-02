@@ -3,6 +3,7 @@ import { CommonModule }        from '@angular/common';
 import { FormsModule }         from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { ToastrService }       from 'ngx-toastr';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { DashboardService }    from '../core/services/dashboard.service';
 import { IaServicesService }   from '../core/services/ia-services.service';
 import { WorkflowService }     from '../core/services/workflow.service';
@@ -16,7 +17,7 @@ import { Dataset } from '../models/Dataset.model';
 @Component({
   selector   : 'app-kpi',
   standalone : true,
-  imports    : [CommonModule, FormsModule, RouterModule],
+  imports    : [CommonModule, FormsModule, RouterModule, TranslocoPipe],
   templateUrl: './kpi.component.html',
   styleUrls  : ['./kpi.component.css']
 })
@@ -40,7 +41,8 @@ export class KpiComponent implements OnInit {
     private iaService: IaServicesService,
     private toastr   : ToastrService,
     private wf       : WorkflowService,
-    private router   : Router
+    private router   : Router,
+    private translocoService: TranslocoService
   ) {}
 
   ngOnInit(): void {
@@ -84,8 +86,9 @@ export class KpiComponent implements OnInit {
         this.isLoadingDashboard = false;
         if (list.length === 0) {
           this.toastr.warning(
-            'Aucun dashboard trouvé. Générez un dashboard depuis la page Dashboard.',
-            'Aucun dashboard', { timeOut: 5000, progressBar: true }
+            this.translocoService.translate('kpi.toastr.noDashboardMsg'),
+            this.translocoService.translate('kpi.toastr.noDashboardTitle'),
+            { timeOut: 5000, progressBar: true }
           );
           return;
         }
@@ -95,7 +98,11 @@ export class KpiComponent implements OnInit {
       },
       error: () => {
         this.isLoadingDashboard = false;
-        this.toastr.error('Erreur de chargement du dashboard.', 'Erreur', { timeOut: 4000, progressBar: true });
+        this.toastr.error(
+          this.translocoService.translate('kpi.toastr.loadDashboardError'),
+          this.translocoService.translate('common.error'),
+          { timeOut: 4000, progressBar: true }
+        );
       }
     });
   }
@@ -111,8 +118,9 @@ export class KpiComponent implements OnInit {
         this.isExecuting   = false;
         this.executeResult = res;
         this.toastr.success(
-          `${this.successfulKpis.length} KPIs calculés.`,
-          'KPIs prêts', { timeOut: 3000, progressBar: true }
+          this.translocoService.translate('kpi.toastr.calculatedMsg', { count: this.successfulKpis.length }),
+          this.translocoService.translate('kpi.toastr.readyTitle'),
+          { timeOut: 3000, progressBar: true }
         );
         // Track KPI count for profile stats
         const currentKpiCount = parseInt(localStorage.getItem('kpi_count') || '0', 10);
@@ -120,7 +128,11 @@ export class KpiComponent implements OnInit {
       },
       error: () => {
         this.isExecuting = false;
-        this.toastr.error('Erreur lors du calcul des KPIs.', 'Erreur', { timeOut: 4000, progressBar: true });
+        this.toastr.error(
+          this.translocoService.translate('kpi.toastr.computeError'),
+          this.translocoService.translate('common.error'),
+          { timeOut: 4000, progressBar: true }
+        );
       }
     });
   }
@@ -141,7 +153,10 @@ export class KpiComponent implements OnInit {
   getKpiValue(kpi: KpiExecutionResult): string {
     if (kpi.formatted_value) return kpi.formatted_value;
     if (kpi.value !== null && kpi.value !== undefined)
-      return Number(kpi.value).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
+      return Number(kpi.value).toLocaleString(
+        this.translocoService.getActiveLang() === 'fr' ? 'fr-FR' : 'en-US',
+        { maximumFractionDigits: 2 }
+      );
     return '—';
   }
 
@@ -151,7 +166,8 @@ export class KpiComponent implements OnInit {
   }
 
   formatDate(iso: string): string {
-    return new Date(iso).toLocaleDateString('fr-FR', {
+    const locale = this.translocoService.getActiveLang() === 'fr' ? 'fr-FR' : 'en-US';
+    return new Date(iso).toLocaleDateString(locale, {
       day: '2-digit', month: 'short', year: 'numeric',
       hour: '2-digit', minute: '2-digit'
     });

@@ -4,8 +4,8 @@
   <div class="page-header">
     <div class="header-left">
       <div>
-        <h1>KPIs</h1>
-        <p>Indicateurs clés calculés depuis votre dernier dashboard IA</p>
+        <h1>{{ 'kpi.titleShort' | transloco }}</h1>
+        <p>{{ 'kpi.subtitleComputed' | transloco }}</p>
       </div>
     </div>
     <span class="ai-badge">
@@ -25,7 +25,7 @@
         (ngModelChange)="onDatasetChange()"
         style="width:340px"
       >
-        <option [ngValue]="null">-- Sélectionner un dataset --</option>
+        <option [ngValue]="null">{{ 'kpi.selectDataset' | transloco }}</option>
         <option *ngFor="let d of datasets" [ngValue]="d.id">
           #{{ d.id }} — {{ d.original_filename }}
         </option>
@@ -45,7 +45,7 @@
         <svg *ngIf="isExecuting" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
         </svg>
-        {{ isExecuting ? 'Calcul...' : 'Recalculer' }}
+        {{ isExecuting ? ('kpi.calculatingShort' | transloco) : ('kpi.recalculate' | transloco) }}
       </button>
 
       <!-- Info dashboard source -->
@@ -54,7 +54,7 @@
           <circle cx="12" cy="12" r="10"></circle>
           <polyline points="12 6 12 12 16 14"></polyline>
         </svg>
-        Dashboard #{{ lastDashboard.id }} · {{ formatDate(lastDashboard.created_at) }}
+        {{ 'kpi.dashboardLabel' | transloco }} #{{ lastDashboard.id }} · {{ formatDate(lastDashboard.created_at) }}
       </div>
     </div>
   </div>
@@ -64,7 +64,7 @@
     <svg class="spin" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5">
       <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
     </svg>
-    {{ isLoadingDashboard ? 'Chargement du dashboard...' : 'Calcul des KPIs...' }}
+    {{ isLoadingDashboard ? ('kpi.loadingDashboard' | transloco) : ('kpi.calculatingKpis' | transloco) }}
   </div>
 
   <!-- KPIs calculés -->
@@ -112,19 +112,19 @@
             <line x1="3" y1="12" x2="3.01" y2="12"></line>
             <line x1="3" y1="18" x2="3.01" y2="18"></line>
           </svg>
-          Détail des KPIs
+          {{ 'kpi.detailsTitle' | transloco }}
         </span>
-        <span class="total-count">{{ successfulKpis.length }} calculés · {{ failedKpis.length }} erreurs</span>
+        <span class="total-count">{{ 'kpi.totals' | transloco: { success: successfulKpis.length, failed: failedKpis.length } }}</span>
       </div>
       <div class="table-container">
         <table class="data-table">
           <thead>
             <tr>
-              <th>KPI</th>
-              <th>Colonne cible</th>
-              <th>Valeur calculée</th>
-              <th>Formule</th>
-              <th>Statut</th>
+              <th>{{ 'kpi.table.kpi' | transloco }}</th>
+              <th>{{ 'kpi.table.targetColumn' | transloco }}</th>
+              <th>{{ 'kpi.table.calculatedValue' | transloco }}</th>
+              <th>{{ 'kpi.table.formula' | transloco }}</th>
+              <th>{{ 'kpi.table.status' | transloco }}</th>
             </tr>
           </thead>
           <tbody>
@@ -149,7 +149,7 @@
                 <span class="muted-cell" *ngIf="!getKpiSpec(kpi.kpi_name)">{{ kpi.function_used || '—' }}</span>
               </td>
               <td>
-                <span class="status-badge status-processed">✓ OK</span>
+                <span class="status-badge status-processed">✓ {{ 'kpi.table.ok' | transloco }}</span>
               </td>
             </tr>
             <!-- KPIs en erreur -->
@@ -159,13 +159,13 @@
               <td><span class="muted-cell">—</span></td>
               <td><span class="muted-cell">—</span></td>
               <td>
-                <span class="status-badge status-failed" [title]="kpi.error || ''">✗ Erreur</span>
+                <span class="status-badge status-failed" [title]="kpi.error || ''">✗ {{ 'kpi.table.error' | transloco }}</span>
               </td>
             </tr>
             <!-- Vide -->
             <tr *ngIf="successfulKpis.length === 0 && failedKpis.length === 0">
               <td colspan="5" class="empty-cell">
-                <div class="empty-state"><p>Aucun KPI disponible.</p></div>
+                <div class="empty-state"><p>{{ 'kpi.noKpis' | transloco }}</p></div>
               </td>
             </tr>
           </tbody>
@@ -178,10 +178,10 @@
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
       </svg>
-      <h3>Aucun dashboard trouvé</h3>
-      <p>Générez d'abord un dashboard depuis la page <strong>Dashboard IA</strong> pour ce dataset.</p>
+      <h3>{{ 'kpi.noDashboardTitle' | transloco }}</h3>
+      <p>{{ 'kpi.noDashboardText' | transloco }}</p>
       <a routerLink="/dashboard" class="btn-save" style="text-decoration:none; display:inline-flex">
-        Aller au Dashboard IA
+        {{ 'kpi.goToDashboard' | transloco }}
       </a>
     </div>
   </div>
@@ -191,8 +191,8 @@
     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
     </svg>
-    <h3>Sélectionnez un dataset</h3>
-    <p>Choisissez un dataset pour afficher ses KPIs calculés par l'IA.</p>
+    <h3>{{ 'kpi.selectDatasetTitle' | transloco }}</h3>
+    <p>{{ 'kpi.selectDatasetHint' | transloco }}</p>
   </div>
 
 </div>

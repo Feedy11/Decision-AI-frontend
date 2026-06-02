@@ -4,11 +4,12 @@ import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder,FormGroup,Validators,} from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { WorkflowService } from '../../core/services/workflow.service';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, TranslocoPipe],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css'],
 })
@@ -21,7 +22,8 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private wf: WorkflowService
+    private wf: WorkflowService,
+    private translocoService: TranslocoService
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -54,10 +56,9 @@ export class LoginComponent {
         if (detail) {
           this.errorMsg = detail;
         } else if (err.status === 0) {
-          this.errorMsg =
-            'Impossible de joindre le serveur. Vérifiez que le backend est démarré.';
+          this.errorMsg = this.translocoService.translate('login.serverError');
         } else {
-          this.errorMsg = 'Email ou mot de passe incorrect.';
+          this.errorMsg = this.translocoService.translate('login.invalidCredentials');
         }
       },
     });

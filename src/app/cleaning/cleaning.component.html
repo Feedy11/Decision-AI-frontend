@@ -6,15 +6,15 @@
 
       <div class="header-divider"></div>
       <div>
-        <h1>Nettoyage des données</h1>
-        <p>Appliquez des règles de nettoyage et analysez la qualité de vos données</p>
+        <h1>{{ 'cleaning.title' | transloco }}</h1>
+        <p>{{ translocoService.getActiveLang() === 'fr' ? 'Appliquez des règles de nettoyage et analysez la qualité de vos données' : 'Apply cleaning rules and analyze the quality of your data' }}</p>
       </div>
     </div>
     <span class="ai-badge">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
       </svg>
-      IA activée
+      {{ 'upload.aiBadge' | transloco }}
     </span>
   </div>
 
@@ -25,21 +25,21 @@
         <polyline points="3 6 5 6 21 6"></polyline>
         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
       </svg>
-      Nettoyer
+      {{ 'cleaning.tabs.clean' | transloco }}
     </button>
     <button class="tab-btn" [class.active]="activeTab==='profiles'" (click)="setTab('profiles')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
         <polyline points="14 2 14 8 20 8"></polyline>
       </svg>
-      Profils
+      {{ 'cleaning.tabs.profiles' | transloco }}
     </button>
     <button class="tab-btn" [class.active]="activeTab==='history'" (click)="setTab('history')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"></circle>
         <polyline points="12 6 12 12 16 14"></polyline>
       </svg>
-      Historique
+      {{ 'cleaning.tabs.history' | transloco }}
     </button>
   </div>
 
@@ -60,14 +60,14 @@
                 <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
             </div>
-            <div><h2>Analyse des erreurs</h2><p>Détection automatique avant nettoyage</p></div>
+            <div><h2>{{ 'cleaning.scan.title' | transloco }}</h2><p>{{ 'cleaning.scan.subtitle' | transloco }}</p></div>
           </div>
 
           <!-- Dataset selector -->
           <div class="field" style="margin-bottom:16px" [class.field--dimmed]="isCleanPhaseLoading">
-            <label>Dataset à analyser <span class="req">*</span></label>
+            <label>{{ 'cleaning.scan.selectLabel' | transloco }} <span class="req">*</span></label>
             <select class="form-select" [(ngModel)]="selectedDatasetId" [disabled]="isCleanPhaseLoading">
-              <option [ngValue]="null">-- Sélectionner un dataset --</option>
+              <option [ngValue]="null">{{ 'cleaning.selectDataset' | transloco }}</option>
               <option *ngFor="let d of datasets" [ngValue]="d.id">
                 #{{ d.id }} — {{ d.original_filename }} ({{ d.status }})
               </option>
@@ -89,21 +89,21 @@
             <!-- Summary badges -->
             <div class="scan-summary">
               <span class="scan-total" [class.scan-ok]="scanResult.total_issues === 0">
-                {{ scanResult.total_issues }} problème(s) détecté(s)
-                <span *ngIf="scanResult.cached" class="cached-badge">⚡ pré-calculé</span>
+                {{ scanResult.total_issues }} {{ 'cleaning.scan.errorsDetected' | transloco }}
+                <span *ngIf="scanResult.cached" class="cached-badge">⚡ {{ 'cleaning.scan.cached' | transloco }}</span>
               </span>
               <div class="scan-badges">
                 <span *ngIf="scanResult.summary['missing']"       class="sbadge sbadge-error">
-                  ⬜ {{ scanResult.summary['missing'] }} manquant(s)
+                  ⬜ {{ scanResult.summary['missing'] }} {{ 'cleaning.missingValues' | transloco }}
                 </span>
                 <span *ngIf="scanResult.summary['missing_token']" class="sbadge sbadge-error">
-                  🔤 {{ scanResult.summary['missing_token'] }} token(s) nul(s)
+                  🔤 {{ scanResult.summary['missing_token'] }} {{ translocoService.getActiveLang() === 'fr' ? 'token(s) nul(s)' : 'null token(s)' }}
                 </span>
                 <span *ngIf="scanResult.summary['outlier']"       class="sbadge sbadge-warn">
-                  📊 {{ scanResult.summary['outlier'] }} aberrant(s)
+                  📊 {{ scanResult.summary['outlier'] }} {{ 'cleaning.outliers' | transloco }}
                 </span>
                 <span *ngIf="scanResult.summary['duplicate']"     class="sbadge sbadge-warn">
-                  🔁 {{ scanResult.summary['duplicate'] }} doublon(s)
+                  🔁 {{ scanResult.summary['duplicate'] }} {{ 'cleaning.duplicates' | transloco }}
                 </span>
               </div>
             </div>
@@ -111,10 +111,10 @@
             <!-- View Toggle -->
             <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom: 12px;" *ngIf="previewData">
                <button class="tab-btn" [class.active]="!showPreview" (click)="showPreview = false" style="padding:6px 12px; font-size:0.75rem;">
-                 📋 Rapport d'erreurs
+                 📋 {{ 'cleaning.scan.report' | transloco }}
                </button>
                <button class="tab-btn" [class.active]="showPreview" (click)="showPreview = true" style="padding:6px 12px; font-size:0.75rem;">
-                 🗃️ Aperçu des données
+                 🗃️ {{ 'cleaning.scan.preview' | transloco }}
                </button>
             </div>
 
@@ -129,7 +129,7 @@
                 <tbody>
                   <tr *ngFor="let row of previewData.rows">
                     <td *ngFor="let col of previewData.columns">
-                      <span [class.muted]="row[col] === null">{{ formatCellValue(row[col]) }}</span>
+                       <span [class.muted]="row[col] === null">{{ formatCellValue(row[col]) }}</span>
                     </td>
                   </tr>
                 </tbody>
@@ -141,7 +141,7 @@
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5">
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
-              <p>Aucune erreur détectée — vos données sont propres !</p>
+              <p>{{ 'cleaning.scan.noIssues' | transloco }}</p>
             </div>
 
             <!-- Issues table -->
@@ -150,20 +150,20 @@
               <!-- Active filter indicator -->
               <div class="filter-bar" *ngIf="activeIssueFilter">
                 <span class="filter-label">
-                  Filtré par : <strong>{{ issueLabel(activeIssueFilter) }}</strong>
-                  ({{ totalFilteredIssues }} résultat(s))
+                  {{ 'cleaning.scan.filteredBy' | transloco }} <strong>{{ issueLabel(activeIssueFilter) }}</strong>
+                  {{ 'cleaning.scan.resultsCount' | transloco: { count: totalFilteredIssues } }}
                 </span>
-                <button class="filter-clear" (click)="setIssueFilter(null)">✕ Effacer le filtre</button>
+                <button class="filter-clear" (click)="setIssueFilter(null)">✕ {{ 'cleaning.scan.clearFilter' | transloco }}</button>
               </div>
 
               <table class="scan-table">
                 <thead>
                   <tr>
-                    <th>Ligne</th>
-                    <th>Colonne</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                    <th>Valeur actuelle</th>
+                    <th>{{ 'cleaning.scan.headers.row' | transloco }}</th>
+                    <th>{{ 'cleaning.scan.headers.column' | transloco }}</th>
+                    <th>{{ 'cleaning.scan.headers.type' | transloco }}</th>
+                    <th>{{ 'cleaning.scan.headers.description' | transloco }}</th>
+                    <th>{{ 'cleaning.scan.headers.currentValue' | transloco }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -172,7 +172,7 @@
                       [class.row-warn]="issue.severity === 'warning'">
                     <td><span class="row-pill">{{ issue.row_number }}</span></td>
                     <td><span class="col-pill" *ngIf="issue.column">{{ issue.column }}</span>
-                        <span class="muted" *ngIf="!issue.column">(ligne entière)</span></td>
+                        <span class="muted" *ngIf="!issue.column">{{ 'cleaning.scan.entireRow' | transloco }}</span></td>
                     <td>
                       <span class="issue-pill issue-{{ issue.issue_type }}">
                         {{ issueIcon(issue.issue_type) }} {{ issueLabel(issue.issue_type) }}
@@ -183,7 +183,7 @@
                         <span class="muted" *ngIf="issue.current_value === null">—</span></td>
                   </tr>
                   <tr *ngIf="paginatedIssues.length === 0">
-                    <td colspan="5" class="empty-cell"><div class="empty-state"><p>Aucun problème pour ce filtre.</p></div></td>
+                    <td colspan="5" class="empty-cell"><div class="empty-state"><p>{{ 'cleaning.scan.noIssuesFilter' | transloco }}</p></div></td>
                   </tr>
                 </tbody>
               </table>
@@ -191,23 +191,22 @@
               <!-- Pagination -->
               <div class="pagination-bar" *ngIf="totalPages > 1">
                 <span class="pagination-info">
-                  Affichage {{ (currentPage - 1) * pageSize + 1 }}–{{ currentPage * pageSize > totalFilteredIssues ? totalFilteredIssues : currentPage * pageSize }}
-                  sur {{ totalFilteredIssues }}
+                  {{ 'cleaning.scan.paginationInfo' | transloco: { start: (currentPage - 1) * pageSize + 1, end: (currentPage * pageSize > totalFilteredIssues ? totalFilteredIssues : currentPage * pageSize), total: totalFilteredIssues } }}
                 </span>
                 <div class="pagination-controls">
-                  <button class="pg-btn" [disabled]="currentPage === 1" (click)="goToPage(1)" title="Première page">
+                  <button class="pg-btn" [disabled]="currentPage === 1" (click)="goToPage(1)" [title]="'cleaning.scan.firstPage' | transloco">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>
                   </button>
-                  <button class="pg-btn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)" title="Page précédente">
+                  <button class="pg-btn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)" [title]="'cleaning.scan.prevPage' | transloco">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
                   </button>
                   <button *ngFor="let p of visiblePages"
                           class="pg-btn pg-num" [class.pg-active]="p === currentPage"
                           (click)="goToPage(p)">{{ p }}</button>
-                  <button class="pg-btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)" title="Page suivante">
+                  <button class="pg-btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)" [title]="'cleaning.scan.nextPage' | transloco">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                   </button>
-                  <button class="pg-btn" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)" title="Dernière page">
+                  <button class="pg-btn" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)" [title]="'cleaning.scan.lastPage' | transloco">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>
                   </button>
                 </div>
@@ -225,7 +224,7 @@
                 <svg *ngIf="isScanning" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
                 </svg>
-                {{ isScanning ? 'Scan...' : 'Scanner' }}
+                {{ isScanning ? ('cleaning.scan.scanning' | transloco) : ('cleaning.scan.btnScan' | transloco) }}
               </button>
 
               <button class="btn-save"
@@ -237,7 +236,7 @@
                 <svg *ngIf="isCleaning" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
                 </svg>
-                {{ isCleaning ? 'Nettoyage...' : 'Lancer le nettoyage' }}
+                {{ isCleaning ? ('cleaning.cleaningInProgress' | transloco) : ('cleaning.launchCleaning' | transloco) }}
               </button>
             </div>
             
@@ -245,7 +244,7 @@
               <label class="toggle" style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.85rem; font-weight:600; color:#475569;">
                 <input type="checkbox" [(ngModel)]="fillIdentifiersUnknown"/>
                 <span class="track" style="margin:0"><span class="thumb"></span></span>
-                Remplir IDs manquants par "Inconnu"
+                {{ 'cleaning.scan.fillUnknown' | transloco }}
               </label>
             </div>
           </div>
@@ -258,7 +257,7 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
               </svg>
-              Erreurs détectées
+              {{ 'cleaning.scan.errorsDetected' | transloco }}
             </div>
 
             <!-- 3D Pie Chart -->
@@ -274,42 +273,42 @@
                 <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 <path d="M12 3a9 9 0 019 9"></path>
               </svg>
-              <span>Lancez un scan pour voir la répartition</span>
+              <span>{{ 'cleaning.scan.runScanPlaceholder' | transloco }}</span>
             </div>
 
             <!-- Clickable legend buttons -->
             <div class="chart-legend" *ngIf="scanResult">
               <button class="legend-btn" [class.active]="activeIssueFilter === null" (click)="setIssueFilter(null)">
-                <span class="legend-dot" style="background:#22C55E"></span> Tout afficher
+                <span class="legend-dot" style="background:#22C55E"></span> {{ 'cleaning.scan.showAll' | transloco }}
               </button>
               <button class="legend-btn" *ngIf="scanResult.summary['missing']" [class.active]="activeIssueFilter === 'missing'" (click)="setIssueFilter('missing')">
-                <span class="legend-dot" style="background:#EF4444"></span> ⬜ Manquantes ({{ scanResult.summary['missing'] }})
+                <span class="legend-dot" style="background:#EF4444"></span> ⬜ {{ 'cleaning.scan.legend.missing' | transloco }} ({{ scanResult.summary['missing'] }})
               </button>
               <button class="legend-btn" *ngIf="scanResult.summary['missing_token']" [class.active]="activeIssueFilter === 'missing_token'" (click)="setIssueFilter('missing_token')">
-                <span class="legend-dot" style="background:#F59E0B"></span> 🔤 Tokens nuls ({{ scanResult.summary['missing_token'] }})
+                <span class="legend-dot" style="background:#F59E0B"></span> 🔤 {{ 'cleaning.scan.legend.nullTokens' | transloco }} ({{ scanResult.summary['missing_token'] }})
               </button>
               <button class="legend-btn" *ngIf="scanResult.summary['outlier']" [class.active]="activeIssueFilter === 'outlier'" (click)="setIssueFilter('outlier')">
-                <span class="legend-dot" style="background:#8B5CF6"></span> 📊 Aberrantes ({{ scanResult.summary['outlier'] }})
+                <span class="legend-dot" style="background:#8B5CF6"></span> 📊 {{ 'cleaning.scan.legend.outliers' | transloco }} ({{ scanResult.summary['outlier'] }})
               </button>
               <button class="legend-btn" *ngIf="scanResult.summary['duplicate']" [class.active]="activeIssueFilter === 'duplicate'" (click)="setIssueFilter('duplicate')">
-                <span class="legend-dot" style="background:#3B82F6"></span> 🔁 Dupliquées ({{ scanResult.summary['duplicate'] }})
+                <span class="legend-dot" style="background:#3B82F6"></span> 🔁 {{ 'cleaning.scan.legend.duplicates' | transloco }} ({{ scanResult.summary['duplicate'] }})
               </button>
             </div>
           </div>
 
           <!-- Profile selector in side panel -->
           <div class="info-card" style="margin-top:14px">
-            <div class="info-card-header">⚙️ Profil de nettoyage</div>
+            <div class="info-card-header">⚙️ {{ 'cleaning.scan.profileHeader' | transloco }}</div>
             <div class="field" style="padding:10px 0 0">
               <select class="form-select" [(ngModel)]="selectedProfileId">
-                <option [ngValue]="null">-- Profil par défaut --</option>
+                <option [ngValue]="null">-- {{ 'cleaning.scan.defaultProfile' | transloco }} --</option>
                 <option *ngFor="let p of profiles" [ngValue]="p.id">
                   {{ p.name }}{{ p.is_default ? ' ✓' : '' }}
                 </option>
               </select>
             </div>
             <div class="pref-row" style="padding:10px 0 0">
-              <div><span class="pref-name">Sauvegarder comme nouveau</span><span class="pref-hint">Garde l'original intact</span></div>
+              <div><span class="pref-name">{{ 'cleaning.scan.saveAsNew' | transloco }}</span><span class="pref-hint">{{ 'cleaning.scan.saveAsNewHint' | transloco }}</span></div>
               <label class="toggle">
                 <input type="checkbox" [(ngModel)]="saveAsNew"/>
                 <span class="track"><span class="thumb"></span></span>
@@ -334,11 +333,11 @@
             </svg>
           </div>
           <div>
-            <h2>Nettoyage terminé !</h2>
-            <p>{{ cleanResult.rows_before - cleanResult.rows_after }} ligne(s) supprimée(s) · {{ cleanResult.missing_values_handled }} cellule(s) remplie(s)</p>
+            <h2>{{ 'cleaning.repair.successTitle' | transloco }}</h2>
+            <p>{{ 'cleaning.repair.successSubtitle' | transloco: { rowsDeleted: cleanResult.rows_before - cleanResult.rows_after, cellsFilled: cleanResult.missing_values_handled } }}</p>
           </div>
           <button class="btn-cancel" style="margin-left:auto" (click)="goBackToScan()">
-            ← Retour au scan
+            ← {{ 'cleaning.repair.backBtn' | transloco }}
           </button>
         </div>
 
@@ -347,43 +346,43 @@
           <div class="cleaning-badge" [class.cleaning-badge--active]="isOperationPerformed('text_cleaning')">
             <span class="cleaning-badge-icon">✂️</span>
             <span class="cleaning-badge-body">
-              <span class="cleaning-badge-label">Nettoyage texte</span>
-              <span class="cleaning-badge-desc">Espaces supprimés, casse uniformisée</span>
+              <span class="cleaning-badge-label">{{ 'cleaning.repair.operations.text_cleaning.label' | transloco }}</span>
+              <span class="cleaning-badge-desc">{{ 'cleaning.repair.operations.text_cleaning.desc' | transloco }}</span>
             </span>
           </div>
           <div class="cleaning-badge" [class.cleaning-badge--active]="isOperationPerformed('data_types')">
             <span class="cleaning-badge-icon">🔢</span>
             <span class="cleaning-badge-body">
-              <span class="cleaning-badge-label">Types corrigés</span>
-              <span class="cleaning-badge-desc">Textes convertis en nombres ou dates</span>
+              <span class="cleaning-badge-label">{{ 'cleaning.repair.operations.data_types.label' | transloco }}</span>
+              <span class="cleaning-badge-desc">{{ 'cleaning.repair.operations.data_types.desc' | transloco }}</span>
             </span>
           </div>
           <div class="cleaning-badge" [class.cleaning-badge--active]="isOperationPerformed('outliers')">
             <span class="cleaning-badge-icon">📊</span>
             <span class="cleaning-badge-body">
-              <span class="cleaning-badge-label">Valeurs aberrantes</span>
-              <span class="cleaning-badge-desc">Anomalies détectées et traitées</span>
+              <span class="cleaning-badge-label">{{ 'cleaning.repair.operations.outliers.label' | transloco }}</span>
+              <span class="cleaning-badge-desc">{{ 'cleaning.repair.operations.outliers.desc' | transloco }}</span>
             </span>
           </div>
           <div class="cleaning-badge" [class.cleaning-badge--active]="isOperationPerformed('missing_values')">
             <span class="cleaning-badge-icon">🕳️</span>
             <span class="cleaning-badge-body">
-              <span class="cleaning-badge-label">Valeurs manquantes</span>
-              <span class="cleaning-badge-desc">Cellules vides remplies ou lignes supprimées</span>
+              <span class="cleaning-badge-label">{{ 'cleaning.repair.operations.missing_values.label' | transloco }}</span>
+              <span class="cleaning-badge-desc">{{ 'cleaning.repair.operations.missing_values.desc' | transloco }}</span>
             </span>
           </div>
           <div class="cleaning-badge" [class.cleaning-badge--active]="isOperationPerformed('duplicates')">
             <span class="cleaning-badge-icon">🔁</span>
             <span class="cleaning-badge-body">
-              <span class="cleaning-badge-label">Doublons supprimés</span>
-              <span class="cleaning-badge-desc">Lignes identiques retirées du dataset</span>
+              <span class="cleaning-badge-label">{{ 'cleaning.repair.operations.duplicates.label' | transloco }}</span>
+              <span class="cleaning-badge-desc">{{ 'cleaning.repair.operations.duplicates.desc' | transloco }}</span>
             </span>
           </div>
           <div class="cleaning-badge" [class.cleaning-badge--active]="isOperationPerformed('date_standardization')">
             <span class="cleaning-badge-icon">📅</span>
             <span class="cleaning-badge-body">
-              <span class="cleaning-badge-label">Dates standardisées</span>
-              <span class="cleaning-badge-desc">Format de date uniformisé (YYYY-MM-DD)</span>
+              <span class="cleaning-badge-label">{{ 'cleaning.repair.operations.date_standardization.label' | transloco }}</span>
+              <span class="cleaning-badge-desc">{{ 'cleaning.repair.operations.date_standardization.desc' | transloco }}</span>
             </span>
           </div>
         </div>
@@ -391,10 +390,10 @@
         <!-- Toggle View (Moved above) -->
         <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:16px;" *ngIf="previewData">
           <button class="tab-btn" [class.active]="!showPreview" (click)="showRepairPreview(false)" style="padding:6px 12px; font-size:0.75rem;">
-            📋 Résumé
+            📋 {{ 'cleaning.repair.summary' | transloco }}
           </button>
           <button class="tab-btn" [class.active]="showPreview" (click)="showRepairPreview(true)" style="padding:6px 12px; font-size:0.75rem;">
-            🗃️ Aperçu des données nettoyées
+            🗃️ {{ 'cleaning.repair.previewRepaired' | transloco }}
           </button>
         </div>
 
@@ -407,7 +406,7 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
                 </svg>
-                Avant le nettoyage
+                {{ 'cleaning.repair.beforeHeader' | transloco }}
               </div>
               <div class="repair-cmp-inner">
                 <div id="chart-avant" class="repair-chart"></div>
@@ -420,7 +419,7 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
-                Après le nettoyage
+                {{ 'cleaning.repair.afterHeader' | transloco }}
               </div>
               <div class="repair-cmp-inner">
                 <div id="chart-apres" class="repair-chart"></div>
@@ -431,23 +430,23 @@
           <!-- ── Unified Diff Table ── -->
           <div class="upload-card table-card" style="margin-bottom: 20px;">
             <div class="table-toolbar">
-              <h3>Détail des modifications</h3>
+              <h3>{{ 'cleaning.repair.detailsHeader' | transloco }}</h3>
             </div>
             <div class="scan-table-wrap" style="max-height:220px; overflow-y:auto; margin-top:0; border-radius:10px;">
               <table class="scan-table">
                 <thead>
                   <tr>
-                    <th>Colonne</th>
-                    <th>Changement</th>
-                    <th>Avant</th>
-                    <th>Après</th>
+                    <th>{{ 'cleaning.scan.headers.column' | transloco }}</th>
+                    <th>{{ 'cleaning.repair.changeCol' | transloco }}</th>
+                    <th>{{ 'cleaning.repair.beforeCol' | transloco }}</th>
+                    <th>{{ 'cleaning.repair.afterCol' | transloco }}</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr *ngFor="let row of diffRows">
                     <td>
                       <span class="col-pill" *ngIf="row.column">{{ row.column }}</span>
-                      <span class="muted" *ngIf="!row.column">(ligne)</span>
+                      <span class="muted" *ngIf="!row.column">{{ 'cleaning.repair.entireRow' | transloco }}</span>
                     </td>
                     <td><span class="change-pill">{{ changeIcon(row.change_type) }} {{ row.change_type }}</span></td>
                     <td><code class="val-before" style="color: #ef4444; background: #fef2f2; padding: 2px 6px; border-radius: 4px;">{{ row.before ?? '—' }}</code></td>
@@ -455,7 +454,7 @@
                   </tr>
                   <tr *ngIf="diffRows.length === 0">
                     <td colspan="4" class="empty-cell">
-                      <div class="empty-state"><p>Aucune modification.</p></div>
+                      <div class="empty-state"><p>{{ 'cleaning.repair.noChanges' | transloco }}</p></div>
                     </td>
                   </tr>
                 </tbody>
@@ -467,27 +466,27 @@
           <div class="stats-grid repair-stats-grid">
             <div class="stat-chip">
               <span class="stat-chip-val">{{ cleanResult.rows_before }}</span>
-              <span class="stat-chip-label">Lignes avant</span>
+              <span class="stat-chip-label">{{ 'cleaning.repair.stats.rowsBefore' | transloco }}</span>
             </div>
             <div class="stat-chip green">
               <span class="stat-chip-val">{{ cleanResult.rows_after }}</span>
-              <span class="stat-chip-label">Lignes après</span>
+              <span class="stat-chip-label">{{ 'cleaning.repair.stats.rowsAfter' | transloco }}</span>
             </div>
             <div class="stat-chip blue">
               <span class="stat-chip-val">{{ cleanResult.duplicates_removed }}</span>
-              <span class="stat-chip-label">Doublons supprimés</span>
+              <span class="stat-chip-label">{{ 'cleaning.repair.stats.duplicatesRemoved' | transloco }}</span>
             </div>
             <div class="stat-chip orange">
               <span class="stat-chip-val">{{ cleanResult.missing_values_handled }}</span>
-              <span class="stat-chip-label">Valeurs remplies</span>
+              <span class="stat-chip-label">{{ 'cleaning.repair.stats.valuesFilled' | transloco }}</span>
             </div>
             <div class="stat-chip purple">
               <span class="stat-chip-val">{{ cleanResult.outliers_detected }}</span>
-              <span class="stat-chip-label">Outliers traités</span>
+              <span class="stat-chip-label">{{ 'cleaning.repair.stats.outliersHandled' | transloco }}</span>
             </div>
             <div class="stat-chip">
               <span class="stat-chip-val">{{ cleanResult.data_types_fixed }}</span>
-              <span class="stat-chip-label">Types corrigés</span>
+              <span class="stat-chip-label">{{ 'cleaning.repair.stats.typesFixed' | transloco }}</span>
             </div>
           </div>
         </div>
@@ -524,35 +523,42 @@
       <!-- Liste profils -->
       <div class="upload-card table-card">
         <div class="table-toolbar">
-          <span class="total-count">{{ profiles.length }} profil(s)</span>
+          <span class="total-count">{{ 'cleaning.profiles.profilesCount' | transloco: { count: profiles.length } }}</span>
           <button class="btn-save" (click)="showCreateProfile=true">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Nouveau profil
+            {{ 'cleaning.profiles.newProfile' | transloco }}
           </button>
         </div>
 
         <div class="table-loader" *ngIf="isLoadingProfiles">
           <svg class="spin" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-          Chargement...
+          {{ 'common.loading' | transloco }}
         </div>
 
         <div class="table-container" *ngIf="!isLoadingProfiles">
           <table class="data-table">
             <thead>
-              <tr><th>Nom</th><th>Val. manquantes</th><th>Doublons</th><th>Outliers</th><th>Défaut</th><th class="text-right">Actions</th></tr>
+              <tr>
+                <th>{{ 'cleaning.profiles.nameCol' | transloco }}</th>
+                <th>{{ 'cleaning.profiles.missingCol' | transloco }}</th>
+                <th>{{ 'cleaning.duplicates' | transloco }}</th>
+                <th>{{ 'cleaning.outliers' | transloco }}</th>
+                <th>{{ 'cleaning.profiles.defaultCol' | transloco }}</th>
+                <th class="text-right">{{ 'common.actions' | transloco }}</th>
+              </tr>
             </thead>
             <tbody>
               <tr *ngIf="profiles.length === 0">
-                <td colspan="6" class="empty-cell"><div class="empty-state"><p>Aucun profil. Créez-en un !</p></div></td>
+                <td colspan="6" class="empty-cell"><div class="empty-state"><p>{{ 'cleaning.profiles.noProfiles' | transloco }}</p></div></td>
               </tr>
               <tr *ngFor="let p of profiles">
                 <td><div><span class="file-name-cell">{{ p.name }}</span><span class="file-id">{{ p.description }}</span></div></td>
                 <td><span class="type-chip">{{ p.handle_missing }}</span></td>
-                <td><span class="status-badge" [class.status-processed]="p.remove_duplicates" [class.status-failed]="!p.remove_duplicates">{{ p.remove_duplicates ? 'Oui' : 'Non' }}</span></td>
+                <td><span class="status-badge" [class.status-processed]="p.remove_duplicates" [class.status-failed]="!p.remove_duplicates">{{ p.remove_duplicates ? ('common.yes' | transloco) : ('common.no' | transloco) }}</span></td>
                 <td><span class="type-chip">{{ p.outlier_method }} / {{ p.outlier_action }}</span></td>
-                <td><span class="status-badge" [class.status-processed]="p.is_default">{{ p.is_default ? '✓ Défaut' : '—' }}</span></td>
+                <td><span class="status-badge" [class.status-processed]="p.is_default">{{ p.is_default ? ('cleaning.profiles.defaultBadge' | transloco) : '—' }}</span></td>
                 <td class="actions-cell">
-                  <button class="btn-icon-sm" title="Supprimer" (click)="deleteProfile(p.id, p.name)">
+                  <button class="btn-icon-sm" [title]="'common.delete' | transloco" (click)="deleteProfile(p.id, p.name)">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>
                   </button>
                 </td>
@@ -569,73 +575,77 @@
             <div class="card-head-icon">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
             </div>
-            <div><h2>Nouveau profil</h2></div>
+            <div><h2>{{ 'cleaning.profiles.newProfile' | transloco }}</h2></div>
           </div>
 
           <!-- Nom & description -->
-          <div class="field"><label>Nom <span class="req">*</span></label>
-            <input type="text" class="form-input" [(ngModel)]="newProfile.name" placeholder="Ex: Profil ventes"/></div>
-          <div class="field mt12"><label>Description</label>
-            <input type="text" class="form-input" [(ngModel)]="newProfile.description" placeholder="Optionnel"/></div>
+          <div class="field">
+            <label>{{ 'cleaning.profiles.nameCol' | transloco }} <span class="req">*</span></label>
+            <input type="text" class="form-input" [(ngModel)]="newProfile.name" [placeholder]="'cleaning.profiles.namePlaceholder' | transloco"/>
+          </div>
+          <div class="field mt12">
+            <label>{{ 'cleaning.profiles.descLabel' | transloco }}</label>
+            <input type="text" class="form-input" [(ngModel)]="newProfile.description" [placeholder]="'cleaning.profiles.descPlaceholder' | transloco"/>
+          </div>
 
           <!-- Section : Valeurs manquantes -->
           <div class="profile-section">
             <div class="profile-section-title">
-              <span>🕳️ Valeurs manquantes</span>
+              <span>🕳️ {{ 'cleaning.missingValues' | transloco }}</span>
             </div>
 
             <div class="field mt12">
-              <label>Stratégie principale
-                <span class="field-hint">Comment traiter les cellules vides ?</span>
+              <label>{{ 'cleaning.profiles.mainStrategy' | transloco }}
+                <span class="field-hint">{{ 'cleaning.profiles.mainStrategyHint' | transloco }}</span>
               </label>
               <div class="option-cards">
                 <div class="option-card" [class.selected]="newProfile.handle_missing==='fill'" (click)="newProfile.handle_missing='fill'">
                   <span class="option-icon">🔄</span>
                   <span class="option-label">fill</span>
-                  <span class="option-desc">Remplacer par une valeur calculée</span>
+                  <span class="option-desc">{{ 'cleaning.profiles.strategies.fill.desc' | transloco }}</span>
                 </div>
                 <div class="option-card" [class.selected]="newProfile.handle_missing==='drop'" (click)="newProfile.handle_missing='drop'">
                   <span class="option-icon">🗑️</span>
                   <span class="option-label">drop</span>
-                  <span class="option-desc">Supprimer les lignes incomplètes</span>
+                  <span class="option-desc">{{ 'cleaning.profiles.strategies.drop.desc' | transloco }}</span>
                 </div>
                 <div class="option-card" [class.selected]="newProfile.handle_missing==='interpolate'" (click)="newProfile.handle_missing='interpolate'">
                   <span class="option-icon">📐</span>
                   <span class="option-label">interpolate</span>
-                  <span class="option-desc">Calculer mathématiquement entre deux points</span>
+                  <span class="option-desc">{{ 'cleaning.profiles.strategies.interpolate.desc' | transloco }}</span>
                 </div>
               </div>
             </div>
 
             <div class="field mt12" *ngIf="newProfile.handle_missing==='fill'">
-              <label>Méthode de remplissage
-                <span class="field-hint">Quelle valeur utiliser ?</span>
+              <label>{{ 'cleaning.profiles.fillMethod' | transloco }}
+                <span class="field-hint">{{ 'cleaning.profiles.fillMethodHint' | transloco }}</span>
               </label>
               <div class="option-cards">
                 <div class="option-card" [class.selected]="newProfile.missing_fill_strategy==='mean'" (click)="newProfile.missing_fill_strategy='mean'">
                   <span class="option-icon">➗</span>
                   <span class="option-label">mean</span>
-                  <span class="option-desc">Moyenne de la colonne</span>
+                  <span class="option-desc">{{ 'cleaning.profiles.fillStrategies.mean.desc' | transloco }}</span>
                 </div>
                 <div class="option-card" [class.selected]="newProfile.missing_fill_strategy==='median'" (click)="newProfile.missing_fill_strategy='median'">
                   <span class="option-icon">📊</span>
                   <span class="option-label">median</span>
-                  <span class="option-desc">Valeur centrale (ignore les extrêmes)</span>
+                  <span class="option-desc">{{ 'cleaning.profiles.fillStrategies.median.desc' | transloco }}</span>
                 </div>
                 <div class="option-card" [class.selected]="newProfile.missing_fill_strategy==='mode'" (click)="newProfile.missing_fill_strategy='mode'">
                   <span class="option-icon">🔢</span>
                   <span class="option-label">mode</span>
-                  <span class="option-desc">Valeur la plus fréquente</span>
+                  <span class="option-desc">{{ 'cleaning.profiles.fillStrategies.mode.desc' | transloco }}</span>
                 </div>
                 <div class="option-card" [class.selected]="newProfile.missing_fill_strategy==='constant'" (click)="newProfile.missing_fill_strategy='constant'">
                   <span class="option-icon">✍️</span>
                   <span class="option-label">constant</span>
-                  <span class="option-desc">Valeur fixe définie manuellement</span>
+                  <span class="option-desc">{{ 'cleaning.profiles.fillStrategies.constant.desc' | transloco }}</span>
                 </div>
               </div>
               <div *ngIf="newProfile.missing_fill_strategy==='constant'" class="field mt12">
-                <label>Valeur de remplacement <span class="field-hint">Ex: "Inconnu", 0, "N/A"</span></label>
-                <input type="text" class="form-input" [(ngModel)]="newProfile.missing_fill_value" placeholder="Ex: Inconnu"/>
+                <label>{{ 'cleaning.profiles.replacementValue' | transloco }} <span class="field-hint">{{ 'cleaning.profiles.replacementValueHint' | transloco }}</span></label>
+                <input type="text" class="form-input" [(ngModel)]="newProfile.missing_fill_value" [placeholder]="'cleaning.profiles.replacementValuePlaceholder' | transloco"/>
               </div>
             </div>
           </div>
@@ -643,54 +653,54 @@
           <!-- Section : Outliers -->
           <div class="profile-section">
             <div class="profile-section-title">
-              <span>🎯 Outliers (valeurs aberrantes)</span>
+              <span>🎯 {{ 'cleaning.outliers' | transloco }}</span>
             </div>
-            <p class="section-desc">Les outliers sont des anomalies extrêmes (ex: une quantité de 999 quand la normale est 1 ou 2).</p>
+            <p class="section-desc">{{ 'cleaning.profiles.outliersDesc' | transloco }}</p>
 
             <div class="pref-row">
-              <div><span class="pref-name">Activer la détection</span></div>
+              <div><span class="pref-name">{{ 'cleaning.profiles.enableDetection' | transloco }}</span></div>
               <label class="toggle"><input type="checkbox" [(ngModel)]="newProfile.detect_outliers"/><span class="track"><span class="thumb"></span></span></label>
             </div>
 
             <div *ngIf="newProfile.detect_outliers">
               <div class="field mt12">
-                <label>Méthode de détection</label>
+                <label>{{ 'cleaning.profiles.detectionMethod' | transloco }}</label>
                 <div class="option-cards">
                   <div class="option-card" [class.selected]="newProfile.outlier_method==='auto'" (click)="newProfile.outlier_method='auto'">
                     <span class="option-icon">Auto</span>
                     <span class="option-label">Auto</span>
-                    <span class="option-desc">Choisit la meilleure méthode selon la colonne</span>
+                    <span class="option-desc">{{ 'cleaning.profiles.detectionMethods.auto.desc' | transloco }}</span>
                   </div>
                   <div class="option-card" [class.selected]="newProfile.outlier_method==='iqr'" (click)="newProfile.outlier_method='iqr'">
                     <span class="option-icon">📦</span>
                     <span class="option-label">IQR</span>
-                    <span class="option-desc">Interquartile — recommandé pour données normales</span>
+                    <span class="option-desc">{{ 'cleaning.profiles.detectionMethods.iqr.desc' | transloco }}</span>
                   </div>
                   <div class="option-card" [class.selected]="newProfile.outlier_method==='zscore'" (click)="newProfile.outlier_method='zscore'">
                     <span class="option-icon">📉</span>
                     <span class="option-label">Z-Score</span>
-                    <span class="option-desc">Écarts-types depuis la moyenne</span>
+                    <span class="option-desc">{{ 'cleaning.profiles.detectionMethods.zscore.desc' | transloco }}</span>
                   </div>
                 </div>
               </div>
 
               <div class="field mt12">
-                <label>Action sur les outliers</label>
+                <label>{{ 'cleaning.profiles.outlierAction' | transloco }}</label>
                 <div class="option-cards">
                   <div class="option-card" [class.selected]="newProfile.outlier_action==='flag'" (click)="newProfile.outlier_action='flag'">
                     <span class="option-icon">🚩</span>
                     <span class="option-label">flag</span>
-                    <span class="option-desc">Marquer dans une nouvelle colonne (ne détruit pas les données)</span>
+                    <span class="option-desc">{{ 'cleaning.profiles.outlierActions.flag.desc' | transloco }}</span>
                   </div>
                   <div class="option-card" [class.selected]="newProfile.outlier_action==='cap'" (click)="newProfile.outlier_action='cap'">
                     <span class="option-icon">🔒</span>
                     <span class="option-label">cap</span>
-                    <span class="option-desc">Plafonner à la limite acceptable (ne supprime pas)</span>
+                    <span class="option-desc">{{ 'cleaning.profiles.outlierActions.cap.desc' | transloco }}</span>
                   </div>
                   <div class="option-card danger-card" [class.selected]="newProfile.outlier_action==='remove'" (click)="newProfile.outlier_action='remove'">
                     <span class="option-icon">❌</span>
                     <span class="option-label">remove</span>
-                    <span class="option-desc">Supprimer les lignes — irréversible</span>
+                    <span class="option-desc">{{ 'cleaning.profiles.outlierActions.remove.desc' | transloco }}</span>
                   </div>
                 </div>
               </div>
@@ -699,32 +709,32 @@
 
           <!-- Section : Options rapides -->
           <div class="profile-section">
-            <div class="profile-section-title"><span>⚙️ Options rapides</span></div>
+            <div class="profile-section-title"><span>⚙️ {{ 'cleaning.profiles.quickOptionsTitle' | transloco }}</span></div>
             <div class="pref-list">
               <div class="pref-row">
-                <div><span class="pref-name">Supprimer les doublons</span><span class="pref-hint">Supprime les lignes 100% identiques</span></div>
+                <div><span class="pref-name">{{ 'cleaning.profiles.removeDuplicates' | transloco }}</span><span class="pref-hint">{{ 'cleaning.profiles.removeDuplicatesHint' | transloco }}</span></div>
                 <label class="toggle"><input type="checkbox" [(ngModel)]="newProfile.remove_duplicates"/><span class="track"><span class="thumb"></span></span></label>
               </div>
               <div class="pref-row">
-                <div><span class="pref-name">Corriger les types</span><span class="pref-hint">Convertit les textes en nombres/dates si possible</span></div>
+                <div><span class="pref-name">{{ 'cleaning.profiles.fixTypes' | transloco }}</span><span class="pref-hint">{{ 'cleaning.profiles.fixTypesHint' | transloco }}</span></div>
                 <label class="toggle"><input type="checkbox" [(ngModel)]="newProfile.fix_data_types"/><span class="track"><span class="thumb"></span></span></label>
               </div>
               <div class="pref-row">
-                <div><span class="pref-name">Nettoyer les espaces</span><span class="pref-hint">Supprime les espaces avant/après les valeurs texte</span></div>
+                <div><span class="pref-name">{{ 'cleaning.profiles.stripWhitespace' | transloco }}</span><span class="pref-hint">{{ 'cleaning.profiles.stripWhitespaceHint' | transloco }}</span></div>
                 <label class="toggle"><input type="checkbox" [(ngModel)]="newProfile.strip_whitespace"/><span class="track"><span class="thumb"></span></span></label>
               </div>
               <div class="pref-row">
-                <div><span class="pref-name">Standardiser les dates</span><span class="pref-hint">Uniformise le format des colonnes dates</span></div>
+                <div><span class="pref-name">{{ 'cleaning.profiles.standardizeDates' | transloco }}</span><span class="pref-hint">{{ 'cleaning.profiles.standardizeDatesHint' | transloco }}</span></div>
                 <label class="toggle"><input type="checkbox" [(ngModel)]="newProfile.standardize_dates"/><span class="track"><span class="thumb"></span></span></label>
               </div>
             </div>
           </div>
 
           <div class="form-actions" style="border-top:none; padding-top:16px">
-            <button class="btn-cancel" (click)="showCreateProfile=false">Annuler</button>
+            <button class="btn-cancel" (click)="showCreateProfile=false">{{ 'common.cancel' | transloco }}</button>
             <button class="btn-save" [disabled]="!newProfile.name || isSavingProfile" (click)="createProfile()">
               <svg *ngIf="isSavingProfile" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-              {{ isSavingProfile ? 'Sauvegarde...' : 'Créer le profil' }}
+              {{ isSavingProfile ? ('common.saving' | transloco) : ('cleaning.profiles.createBtn' | transloco) }}
             </button>
           </div>
         </div>
@@ -738,20 +748,28 @@
     <div class="upload-card table-card">
       <div class="table-toolbar">
         <select class="form-select" [(ngModel)]="selectedDatasetId" style="width:280px">
-          <option [ngValue]="null">-- Choisir un dataset --</option>
+          <option [ngValue]="null">-- {{ 'cleaning.selectDataset' | transloco }} --</option>
           <option *ngFor="let d of datasets" [ngValue]="d.id">#{{ d.id }} — {{ d.original_filename }}</option>
         </select>
         <button class="btn-save" [disabled]="!selectedDatasetId || isLoadingHistory" (click)="loadHistory()" style="margin-left:10px">
-          Charger l'historique
+          {{ 'cleaning.history.loadBtn' | transloco }}
         </button>
       </div>
       <div class="table-container">
         <table class="data-table">
           <thead>
-            <tr><th>Date</th><th>Lignes avant</th><th>Lignes après</th><th>Doublons</th><th>Manquantes</th><th>Outliers</th><th>Opérations</th></tr>
+            <tr>
+              <th>{{ 'datasets.date' | transloco }}</th>
+              <th>{{ 'cleaning.repair.stats.rowsBefore' | transloco }}</th>
+              <th>{{ 'cleaning.repair.stats.rowsAfter' | transloco }}</th>
+              <th>{{ 'cleaning.duplicates' | transloco }}</th>
+              <th>{{ 'cleaning.missingValues' | transloco }}</th>
+              <th>{{ 'cleaning.outliers' | transloco }}</th>
+              <th>{{ 'cleaning.history.operationsCol' | transloco }}</th>
+            </tr>
           </thead>
           <tbody>
-            <tr *ngIf="history.length === 0"><td colspan="7" class="empty-cell"><div class="empty-state"><p>Aucun historique</p></div></td></tr>
+            <tr *ngIf="history.length === 0"><td colspan="7" class="empty-cell"><div class="empty-state"><p>{{ 'cleaning.history.empty' | transloco }}</p></div></td></tr>
             <tr *ngFor="let h of history">
               <td class="muted-cell">{{ formatDate(h.created_at) }}</td>
               <td class="muted-cell">{{ h.rows_before | number }}</td>
@@ -759,7 +777,7 @@
               <td><span class="type-chip">{{ h.duplicates_removed }}</span></td>
               <td><span class="type-chip">{{ h.missing_values_handled }}</span></td>
               <td><span class="type-chip">{{ h.outliers_detected }}</span></td>
-              <td><span class="op-tag" *ngFor="let op of h.operations_performed">{{ op }}</span></td>
+              <td><span class="op-tag" *ngFor="let op of h.operations_performed">{{ operationInfo(op).label }}</span></td>
             </tr>
           </tbody>
         </table>

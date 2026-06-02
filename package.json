@@ -20,6 +20,7 @@
     "@angular/platform-browser": "19.2.20",
     "@angular/platform-browser-dynamic": "19.2.20",
     "@angular/router": "19.2.20",
+    "@jsverse/transloco": "^8.3.0",
     "highcharts": "^12.6.0",
     "highcharts-angular": "^5.4.0",
     "html2canvas": "^1.4.1",

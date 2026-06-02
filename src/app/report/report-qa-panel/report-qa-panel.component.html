@@ -4,17 +4,17 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
       </svg>
-      Questions sur le rapport
+      {{ 'report-qa-panel.title' | transloco }}
     </h3>
   </div>
 
   <div class="qa-context-banner">
-    <span class="ctx-label">Contexte :</span>
-    <span class="ctx-value">{{ datasetName || 'Dataset' }}</span>
+    <span class="ctx-label">{{ 'report-qa-panel.context' | transloco }}</span>
+    <span class="ctx-value">{{ datasetName || ('report-qa-panel.datasetFallback' | transloco) }}</span>
     <span class="ctx-sep">·</span>
-    <span class="ctx-value">Rapport {{ shortReportId }}</span>
+    <span class="ctx-value">{{ 'report-qa-panel.report' | transloco }} {{ shortReportId }}</span>
     <span class="ctx-sep">·</span>
-    <span class="ctx-value">Section {{ sectionLabel }}</span>
+    <span class="ctx-value">{{ 'report-qa-panel.section' | transloco }} {{ sectionLabel }}</span>
   </div>
 
   <div class="qa-chips" *ngIf="chips.length > 0 && messages.length === 0">
@@ -43,7 +43,7 @@
       </div>
       <div class="qa-msg-bubble">
         <div class="qa-msg-meta" *ngIf="msg.role === 'assistant'">
-          <span>Assistant rapport</span>
+          <span>{{ 'report-qa-panel.assistantTitle' | transloco }}</span>
           <span>{{ sectionLabel }}</span>
         </div>
         <p class="qa-msg-text" *ngIf="msg.content; else typingState">
@@ -74,7 +74,7 @@
         <path d="M8 13h5"></path>
       </svg>
     </div>
-    <p>Posez une question sur ce rapport ou choisissez une suggestion ci-dessus.</p>
+    <p>{{ 'report-qa-panel.emptyText' | transloco }}</p>
   </div>
 
   <form class="qa-input-row" (ngSubmit)="onSubmit()">
@@ -83,7 +83,7 @@
       class="qa-input"
       [(ngModel)]="inputText"
       name="qaInput"
-      placeholder="Ex. Pourquoi la reco #2 ?"
+      [placeholder]="'report-qa-panel.inputPlaceholder' | transloco"
       [disabled]="isTyping"
       autocomplete="off"
     />

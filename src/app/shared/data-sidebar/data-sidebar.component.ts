@@ -8,6 +8,7 @@ import { WorkflowService } from '../../core/services/workflow.service';
 import { filter } from 'rxjs/operators';
 import { LucideAngularModule } from 'lucide-angular';
 import { IA_API_BASE } from '../../core/config/api-base';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 // Routes publiques : on cache la sidebar
 const PUBLIC_ROUTES = ['/login', '/pass', '/reset-password'];
@@ -15,7 +16,7 @@ const PUBLIC_ROUTES = ['/login', '/pass', '/reset-password'];
 @Component({
   selector: 'app-data-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, LucideAngularModule],
+  imports: [CommonModule, RouterModule, LucideAngularModule, TranslocoPipe],
   templateUrl: './data-sidebar.component.html',
   styleUrl: './data-sidebar.component.css'
 })
