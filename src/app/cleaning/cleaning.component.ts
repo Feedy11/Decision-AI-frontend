@@ -53,11 +53,14 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
   saveAsNew    = false;
   isCleaning   = false;
   cleanResult  : CleaningReport | null = null;
+  cleaningOptions: CleaningProfileCreate = { ...DEFAULT_PROFILE, name: 'Run options' };
 
   // Preview data
   previewData  : { columns: string[], rows: any[] } | null = null;
   oldPreviewData: { columns: string[], rows: any[] } | null = null;
+  rawPreviewData: { columns: string[], rows: any[] } | null = null;
   showPreview  = false;
+  repairOptionsOpen = true;
 
   // Validation
   isValidating     = false;
@@ -217,7 +220,10 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     // Fetch raw preview data
     this.cleaningSvc.getPreview(this.selectedDatasetId).subscribe({
-      next: (data) => this.previewData = data,
+      next: (data) => {
+        this.previewData = data;
+        this.rawPreviewData = data;
+      },
       error: () => {}
     });
 
@@ -265,14 +271,16 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
     if (!this.selectedDatasetId) return;
     this.isCleaning  = true;
     this.cleanResult = null;
-    this.oldPreviewData = this.previewData;
+    this.oldPreviewData = this.rawPreviewData ?? this.previewData;
     this.previewData = null;
+    this.showPreview = false;
 
     this.cleaningSvc.cleanDataset(
       this.selectedDatasetId,
       this.selectedProfileId ?? undefined,
       this.saveAsNew,
-      this.fillIdentifiersUnknown ? 'fill_unknown' : 'drop'
+      this.fillIdentifiersUnknown ? 'fill_unknown' : 'drop',
+      this.buildCleaningOverrides()
     ).subscribe({
       next: (r) => {
         this.isCleaning  = false;
@@ -307,6 +315,7 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
   setTab(tab: 'clean' | 'profiles' | 'history'): void {
     this.activeTab = tab;
     if (tab === 'profiles') this.loadProfiles();
+    if (tab === 'history') this.loadHistory();
   }
 
   goBackToScan(): void {
@@ -325,6 +334,33 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
       next : (p) => { this.profiles = p; this.isLoadingProfiles = false; },
       error: () => { this.isLoadingProfiles = false; }
     });
+  }
+
+  syncCleaningOptionsFromProfile(profileId: number | null): void {
+    const profile = profileId ? this.profiles.find(p => p.id === profileId) : null;
+    this.cleaningOptions = profile
+      ? { ...profile }
+      : { ...DEFAULT_PROFILE, name: 'Run options' };
+  }
+
+  private buildCleaningOverrides(): Partial<CleaningProfileCreate> {
+    return {
+      handle_missing: this.cleaningOptions.handle_missing,
+      missing_fill_strategy: this.cleaningOptions.missing_fill_strategy,
+      missing_fill_value: this.cleaningOptions.missing_fill_value,
+      remove_duplicates: this.cleaningOptions.remove_duplicates,
+      fix_data_types: this.cleaningOptions.fix_data_types,
+      detect_outliers: this.cleaningOptions.detect_outliers,
+      outlier_method: this.cleaningOptions.outlier_method,
+      outlier_threshold: this.cleaningOptions.outlier_threshold,
+      outlier_action: this.cleaningOptions.outlier_action,
+      strip_whitespace: this.cleaningOptions.strip_whitespace,
+      standardize_text: this.cleaningOptions.standardize_text,
+      standardize_dates: this.cleaningOptions.standardize_dates,
+      date_format: this.cleaningOptions.date_format,
+      normalize_numeric: this.cleaningOptions.normalize_numeric,
+      normalization_method: this.cleaningOptions.normalization_method,
+    };
   }
 
   createProfile(): void {
@@ -826,6 +862,8 @@ export class CleaningComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   getOldCellValue(row: any, col: string, index: number): any {
     if (!this.oldPreviewData || !this.oldPreviewData.rows) return null;
+    const missingStrategy = this.cleanResult?.cleaning_report?.['changes']?.['missing_values']?.['strategy'];
+    if (missingStrategy === 'drop') return null;
 
     const normalizeValue = (val: any): string => {
       if (val === null || val === undefined) return '';

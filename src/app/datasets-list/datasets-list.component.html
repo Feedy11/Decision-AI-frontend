@@ -112,7 +112,7 @@
               </div>
             </td>
             <td *ngIf="isAdmin && activeTab === 'all'">
-              <span class="type-chip" style="background: #E2E8F0; color: #475569;">{{ 'navbar.user' | transloco }} #{{ d['user_id'] || 'N/A' }}</span>
+              <span class="type-chip" style="background: #E2E8F0; color: #475569;">{{ getUserName(d['user_id']) }}</span>
             </td>
             <td><span class="type-chip">{{ d.file_type.toUpperCase() }}</span></td>
             <td class="muted-cell">{{ formatSize(d.file_size) }}</td>

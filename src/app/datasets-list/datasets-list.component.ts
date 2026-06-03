@@ -43,6 +43,9 @@ export class DatasetsListComponent implements OnInit {
   isDeleting       = false;
   datasetToDelete  : Dataset | null = null;
 
+  // User name resolution
+  userNames: Record<string, string> = {};
+
   constructor(
     private http    : HttpClient,
     private toastr  : ToastrService,
@@ -55,8 +58,27 @@ export class DatasetsListComponent implements OnInit {
     // Admin defaults to seeing all datasets
     if (this.isAdmin) {
       this.activeTab = 'all';
+      this.loadUserNames();
     }
     this.loadDatasets();
+  }
+
+  // Load user names for the owner column
+  private loadUserNames(): void {
+    this.auth.getAllUsers(0, 200).subscribe({
+      next: (res) => {
+        for (const u of res.data) {
+          this.userNames[u.id] = u.full_name || u.email;
+        }
+      },
+      error: () => {} // silently ignore — fallback to ID display
+    });
+  }
+
+  // Get display name for a user_id
+  getUserName(userId: string | null | undefined): string {
+    if (!userId) return 'N/A';
+    return this.userNames[userId] || `#${userId}`;
   }
 
   //Changer de tab
@@ -189,3 +211,4 @@ export class DatasetsListComponent implements OnInit {
   }
 
 }
+

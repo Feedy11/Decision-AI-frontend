@@ -724,6 +724,103 @@ code {
   min-height: 200px;
 }
 
+.repair-actions-panel {
+  padding: 14px;
+  margin-bottom: 18px;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  background: #FAFBFF;
+}
+
+.repair-options-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #1E293B;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-align: left;
+}
+
+.repair-options-toggle svg {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+.repair-actions-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #E2E8F0;
+}
+
+.repair-options-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 10px;
+  align-items: start;
+}
+
+.repair-option-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.repair-option-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.repair-select,
+.repair-input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+.repair-inline-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.repair-pref-row {
+  padding: 0;
+  border-bottom: none;
+}
+
+.repair-regenerate-btn {
+  align-self: start;
+  justify-content: center;
+  white-space: nowrap;
+  min-height: 40px;
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+
 .repair-stats-grid {
   margin-top: 4px;
   margin-bottom: 16px;
@@ -732,6 +829,15 @@ code {
 @media (max-width: 900px) {
   .repair-comparison-parent {
     grid-template-columns: 1fr;
+  }
+
+  .repair-actions-body {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .repair-options-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -757,6 +863,11 @@ code {
 
   .form-actions {
     flex-direction: column;
+  }
+
+  .repair-options-grid,
+  .repair-inline-fields {
+    grid-template-columns: 1fr;
   }
 
   .btn-save,

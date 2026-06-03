@@ -300,7 +300,7 @@
           <div class="info-card" style="margin-top:14px">
             <div class="info-card-header">⚙️ {{ 'cleaning.scan.profileHeader' | transloco }}</div>
             <div class="field" style="padding:10px 0 0">
-              <select class="form-select" [(ngModel)]="selectedProfileId">
+              <select class="form-select" [(ngModel)]="selectedProfileId" (ngModelChange)="syncCleaningOptionsFromProfile($event)">
                 <option [ngValue]="null">-- {{ 'cleaning.scan.defaultProfile' | transloco }} --</option>
                 <option *ngFor="let p of profiles" [ngValue]="p.id">
                   {{ p.name }}{{ p.is_default ? ' ✓' : '' }}
@@ -395,6 +395,140 @@
           <button class="tab-btn" [class.active]="showPreview" (click)="showRepairPreview(true)" style="padding:6px 12px; font-size:0.75rem;">
             🗃️ {{ 'cleaning.repair.previewRepaired' | transloco }}
           </button>
+        </div>
+
+        <div class="repair-actions-panel" *ngIf="showPreview && previewData">
+          <button class="repair-options-toggle"
+                  type="button"
+                  (click)="repairOptionsOpen = !repairOptionsOpen"
+                  [attr.aria-expanded]="repairOptionsOpen">
+            <span>{{ 'cleaning.repair.optionsTitle' | transloco }}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                 [class.rotate-180]="repairOptionsOpen">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+
+          <div class="repair-actions-body" *ngIf="repairOptionsOpen">
+            <div class="repair-options-grid">
+              <div class="repair-option-section">
+                <span class="repair-option-title">{{ 'cleaning.missingValues' | transloco }}</span>
+                <div class="field">
+                  <label>{{ 'cleaning.profiles.mainStrategy' | transloco }}</label>
+                  <select class="form-select repair-select" [(ngModel)]="cleaningOptions.handle_missing" [disabled]="isCleaning">
+                    <option value="fill">fill</option>
+                    <option value="drop">drop</option>
+                    <option value="interpolate">interpolate</option>
+                  </select>
+                </div>
+                <div class="field" *ngIf="cleaningOptions.handle_missing === 'fill'">
+                  <label>{{ 'cleaning.profiles.fillMethod' | transloco }}</label>
+                  <select class="form-select repair-select" [(ngModel)]="cleaningOptions.missing_fill_strategy" [disabled]="isCleaning">
+                    <option value="mean">mean</option>
+                    <option value="median">median</option>
+                    <option value="mode">mode</option>
+                    <option value="constant">constant</option>
+                  </select>
+                </div>
+                <div class="field" *ngIf="cleaningOptions.handle_missing === 'fill' && cleaningOptions.missing_fill_strategy === 'constant'">
+                  <label>{{ 'cleaning.profiles.replacementValue' | transloco }}</label>
+                  <input class="form-input repair-input" type="text" [(ngModel)]="cleaningOptions.missing_fill_value" [disabled]="isCleaning" [placeholder]="'cleaning.profiles.replacementValuePlaceholder' | transloco"/>
+                </div>
+              </div>
+
+              <div class="repair-option-section">
+                <span class="repair-option-title">{{ 'cleaning.outliers' | transloco }}</span>
+                <div class="pref-row repair-pref-row">
+                  <div><span class="pref-name">{{ 'cleaning.profiles.enableDetection' | transloco }}</span></div>
+                  <label class="toggle">
+                    <input type="checkbox" [(ngModel)]="cleaningOptions.detect_outliers" [disabled]="isCleaning"/>
+                    <span class="track"><span class="thumb"></span></span>
+                  </label>
+                </div>
+                <div class="repair-inline-fields" *ngIf="cleaningOptions.detect_outliers">
+                  <div class="field">
+                    <label>{{ 'cleaning.profiles.detectionMethod' | transloco }}</label>
+                    <select class="form-select repair-select" [(ngModel)]="cleaningOptions.outlier_method" [disabled]="isCleaning">
+                      <option value="auto">auto</option>
+                      <option value="iqr">iqr</option>
+                      <option value="mad">mad</option>
+                      <option value="log_iqr">log_iqr</option>
+                      <option value="zscore">zscore</option>
+                      <option value="isolation_forest">isolation_forest</option>
+                      <option value="lof">lof</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>{{ 'cleaning.profiles.outlierAction' | transloco }}</label>
+                    <select class="form-select repair-select" [(ngModel)]="cleaningOptions.outlier_action" [disabled]="isCleaning">
+                      <option value="flag">flag</option>
+                      <option value="cap">cap</option>
+                      <option value="remove">remove</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="repair-option-section">
+                <span class="repair-option-title">{{ 'cleaning.profiles.quickOptionsTitle' | transloco }}</span>
+                <div class="pref-row repair-pref-row">
+                  <div><span class="pref-name">{{ 'cleaning.profiles.removeDuplicates' | transloco }}</span><span class="pref-hint">{{ 'cleaning.profiles.removeDuplicatesHint' | transloco }}</span></div>
+                  <label class="toggle"><input type="checkbox" [(ngModel)]="cleaningOptions.remove_duplicates" [disabled]="isCleaning"/><span class="track"><span class="thumb"></span></span></label>
+                </div>
+                <div class="pref-row repair-pref-row">
+                  <div><span class="pref-name">{{ 'cleaning.profiles.fixTypes' | transloco }}</span><span class="pref-hint">{{ 'cleaning.profiles.fixTypesHint' | transloco }}</span></div>
+                  <label class="toggle"><input type="checkbox" [(ngModel)]="cleaningOptions.fix_data_types" [disabled]="isCleaning"/><span class="track"><span class="thumb"></span></span></label>
+                </div>
+                <div class="pref-row repair-pref-row">
+                  <div><span class="pref-name">{{ 'cleaning.profiles.stripWhitespace' | transloco }}</span><span class="pref-hint">{{ 'cleaning.profiles.stripWhitespaceHint' | transloco }}</span></div>
+                  <label class="toggle"><input type="checkbox" [(ngModel)]="cleaningOptions.strip_whitespace" [disabled]="isCleaning"/><span class="track"><span class="thumb"></span></span></label>
+                </div>
+                <div class="pref-row repair-pref-row">
+                  <div><span class="pref-name">{{ 'cleaning.profiles.standardizeDates' | transloco }}</span><span class="pref-hint">{{ 'cleaning.profiles.standardizeDatesHint' | transloco }}</span></div>
+                  <label class="toggle"><input type="checkbox" [(ngModel)]="cleaningOptions.standardize_dates" [disabled]="isCleaning"/><span class="track"><span class="thumb"></span></span></label>
+                </div>
+              </div>
+
+              <div class="repair-option-section">
+                <span class="repair-option-title">{{ 'cleaning.repair.outputTitle' | transloco }}</span>
+                <div class="pref-row repair-pref-row">
+                  <div>
+                    <span class="pref-name">{{ 'cleaning.scan.saveAsNew' | transloco }}</span>
+                    <span class="pref-hint">{{ 'cleaning.scan.saveAsNewHint' | transloco }}</span>
+                  </div>
+                  <label class="toggle">
+                    <input type="checkbox" [(ngModel)]="saveAsNew" [disabled]="isCleaning"/>
+                    <span class="track"><span class="thumb"></span></span>
+                  </label>
+                </div>
+
+                <div class="pref-row repair-pref-row">
+                  <div>
+                    <span class="pref-name">{{ 'cleaning.scan.fillUnknown' | transloco }}</span>
+                  </div>
+                  <label class="toggle">
+                    <input type="checkbox" [(ngModel)]="fillIdentifiersUnknown" [disabled]="isCleaning"/>
+                    <span class="track"><span class="thumb"></span></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn-save repair-regenerate-btn"
+                    [disabled]="!selectedDatasetId || isCleaning"
+                    (click)="cleanDataset()">
+              <svg *ngIf="!isCleaning" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+                <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
+              </svg>
+              <svg *ngIf="isCleaning" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+              </svg>
+              {{ isCleaning ? ('cleaning.cleaningInProgress' | transloco) : ('cleaning.repair.regenerateBtn' | transloco) }}
+            </button>
+          </div>
         </div>
 
         <div *ngIf="!showPreview">
@@ -747,13 +881,10 @@
   <div *ngIf="activeTab==='history'">
     <div class="upload-card table-card">
       <div class="table-toolbar">
-        <select class="form-select" [(ngModel)]="selectedDatasetId" style="width:280px">
+        <select class="form-select" [(ngModel)]="selectedDatasetId" (ngModelChange)="loadHistory()" style="width:280px">
           <option [ngValue]="null">-- {{ 'cleaning.selectDataset' | transloco }} --</option>
           <option *ngFor="let d of datasets" [ngValue]="d.id">#{{ d.id }} — {{ d.original_filename }}</option>
         </select>
-        <button class="btn-save" [disabled]="!selectedDatasetId || isLoadingHistory" (click)="loadHistory()" style="margin-left:10px">
-          {{ 'cleaning.history.loadBtn' | transloco }}
-        </button>
       </div>
       <div class="table-container">
         <table class="data-table">

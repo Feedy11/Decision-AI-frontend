@@ -37,12 +37,19 @@ export class CleaningService {
   //Nettoyage
 
   //datasets clean
-  cleanDataset(datasetId: number, profileId?: number, saveAsNew = false, missingIdentifierAction = 'drop'): Observable<CleaningReport> {
+  cleanDataset(
+    datasetId: number,
+    profileId?: number,
+    saveAsNew = false,
+    missingIdentifierAction = 'drop',
+    profileOverrides?: Partial<CleaningProfileCreate>,
+  ): Observable<CleaningReport> {
     const body = {
       dataset_id: datasetId,
       profile_id: profileId,
       save_as_new: saveAsNew,
-      missing_identifier_action: missingIdentifierAction
+      missing_identifier_action: missingIdentifierAction,
+      profile_overrides: profileOverrides
     };
     return this.http.post<CleaningReport>(`${this.API}/datasets/${datasetId}/clean`, body);
   }
